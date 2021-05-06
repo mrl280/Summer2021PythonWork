@@ -1,0 +1,15 @@
+Metadata-Version: 1.1
+Name: IDLSave
+Version: 1.0.0
+Summary: IDLSave - a module to read IDL save files into Python
+Home-page: https://github.com/astrofrog/idlsave
+Author: Thomas Robitaille
+Author-email: thomas.robitaille@gmail.com
+License: UNKNOWN
+Description: UNKNOWN
+Keywords: Scientific/Engineering
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Programming Language :: Python
+Classifier: License :: OSI Approved :: MIT License
+Provides: idlsave
