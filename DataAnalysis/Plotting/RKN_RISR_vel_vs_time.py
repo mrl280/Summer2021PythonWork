@@ -22,7 +22,7 @@ if __name__ == '__main__':
     end_time = "22:00:00"  # %H:%M:%S
 
     SD_station = "rkn"
-    SD_time_chunk = start_time[0:2] + "01"
+    SD_time_chunk = start_time[0:2]
     SD_beam_range = [5, 5]
     SD_gate_range = [30, 40]
 

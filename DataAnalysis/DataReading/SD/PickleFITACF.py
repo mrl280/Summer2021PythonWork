@@ -31,7 +31,7 @@ if __name__ == '__main__':
     """
 
     station = "rkn"
-    date = "20190318"
+    date = "20161012"
 
     pattern = '%Y.%m.%d %H:%M:%S.%f'  # This is the pattern we will use to convert time info to epoch
     # Loop through all the files for this station/date and pickle
