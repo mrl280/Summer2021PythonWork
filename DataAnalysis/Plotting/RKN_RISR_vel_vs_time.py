@@ -38,14 +38,14 @@ if __name__ == '__main__':
 
     # Read in SuperDARN data
     loc_root = str((pathlib.Path().parent.absolute()).parent.absolute())
-    SD_in_dir = loc_root + "/SD/data/" + SD_station + year + month + day + "/"
+    SD_in_dir = loc_root + "/DataReading/SD/data/" + SD_station + year + month + day + "/"
     SD_in_file = SD_in_dir + year + month + day + "." + SD_time_chunk + "." + SD_station + ".pkl"
     SD_df = pd.read_pickle(SD_in_file)
 
     # Read in RISR data
     RISR_month = month[1:] if month.startswith('0') else month  # RISR dates don't have the start 0
     RISR_day = day[1:] if day.startswith('0') else day
-    RISR_in_dir = loc_root + "/RISR/data/" + RISR_station + year + RISR_month + RISR_day + "/"
+    RISR_in_dir = loc_root + "/DataReading/RISR/data/" + RISR_station + year + RISR_month + RISR_day + "/"
     RISR_in_file = RISR_in_dir + RISR_station + year + RISR_month + RISR_day + ".LongPulse.pkl"
     RISR_df = pd.read_pickle(RISR_in_file)
 
