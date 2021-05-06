@@ -31,7 +31,7 @@ if __name__ == '__main__':
     """
 
     station = "ran"
-    date = "20161012"
+    date = "201432"
 
     # Loop through all the files for this station/date and pickle all Long Pulse files
     in_dir = "data/" + station + date

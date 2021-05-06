@@ -31,7 +31,7 @@ if __name__ == '__main__':
     """
 
     station = "rkn"
-    date = "20161012"
+    date = "20190318"
 
     pattern = '%Y.%m.%d %H:%M:%S.%f'  # This is the pattern we will use to convert time info to epoch
     # Loop through all the files for this station/date and pickle
@@ -72,11 +72,14 @@ if __name__ == '__main__':
         for record in range(len(fitacf_data)):
 
             # Convert date and time to epoch
-            # Note the conversion of us to s (the 0. are stripped and only the after decimal part is used)
+            # Note the conversion of us to s:
+            #   - the 0. are stripped and only the after decimal part is used)
+            #   - we have to ensure it doesn't flip to scientific notation otherwise time.strptime can't handle it
+            #   - not really a point because calendar.timegm doesn't keep microseconds
             date_time = str(fitacf_data[record]['time.yr']) + "." + str(fitacf_data[record]['time.mo']) + "." \
                         + str(fitacf_data[record]['time.dy']) + " " + str(fitacf_data[record]['time.hr']) + ":" \
                         + str(fitacf_data[record]['time.mt']) + ":" + str(fitacf_data[record]['time.sc']) + "." \
-                        + str((fitacf_data[record]['time.us'] / 1e6))[2:]
+                        + str(f"{fitacf_data[record]['time.us'] / 1e6:.6f}")[2:]
             epoch = calendar.timegm(time.strptime(date_time, pattern))  # Doesn't keep microseconds
 
             # Loop through all the gates
@@ -134,8 +137,8 @@ if __name__ == '__main__':
         df.reset_index(drop=True)
 
         # Save to file
-        # Strip the "xx.xxx.fitacf.bz2" and replace with the station code and pickle file extension
-        out_file = in_file[:len(in_file) - 17]
-        out_file += radar_code_from_station_id(fitacf_data[0]['stid']) + ".pkl"
+        # Strip the trailing "0x.xx.xxx.fitacf.bz2" and replace with the station code and pickle file extension
+        out_file = in_file[:len(in_file) - 20]
+        out_file += "." + radar_code_from_station_id(fitacf_data[0]['stid']) + ".pkl"
         print("Pickling as " + out_file + "...")
         df.to_pickle(out_file)

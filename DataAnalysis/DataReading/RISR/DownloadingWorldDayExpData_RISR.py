@@ -26,9 +26,9 @@ if __name__ == '__main__':
     # Get a list of world day experiments
     worldDayRegex = re.compile("WorldDay*")
     expList = testData.getExperiments(91,       # instrument code
-                                      2016, 1, 1,  # start year, month, and day
+                                      2014, 1, 1,  # start year, month, and day
                                       0, 0, 0,   # start hour, minute and second
-                                      2018, 1, 1,  # end year, month, and day
+                                      2015, 1, 1,  # end year, month, and day
                                       0, 0, 0)   # end hour, minute and second
     worldDayExpList = [exp for exp in expList if re.match(worldDayRegex, exp.name)]
     print("--\nNumber of World Day Experiments here: " + str(len(worldDayExpList)) + "\n")
@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     # Download the data from one of the experiments
     if DOWNLOAD_HDF5:
-        expToDownload = worldDayExpList[6]
+        expToDownload = worldDayExpList[1]
         print("--\nWe are going to download the following experiments:")
         print(expToDownload.name)
         print("Experiment id: " + str(expToDownload.id))
