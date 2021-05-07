@@ -4,6 +4,7 @@ if __name__ == '__main__':
     """
     Read in and look at the parameters in an HDF5 file representing the World Day experiment
     Long Pulse (480) or Alternating Code (AC16-30)
+    Doesn't produce anything, just for looking at the file structure
     """
     # in_file = "ran2020728.4"
     in_file = "ran20161012.4"

@@ -5,7 +5,8 @@ import time
 
 if __name__ == '__main__':
     """
-    Try and read in multiple files to confirm the duration of an event
+    Try and read in multiple RISR h5 files and look at the timestamps
+    Doesn't produce anything, just for looking at the file structure
     """
     # in_dir = "ran2020728"
     in_dir = "ran2017515"
@@ -18,7 +19,7 @@ if __name__ == '__main__':
             data_time = file['/Data/Array Layout/timestamps']
             exp_times += data_time
             print("\n" + filepath)
-            print(np.asarray(data_time)[0:10])
+            print("Here is the start of the time data: " + str(np.asarray(data_time)[0:10]))
             print("Length of time array: " + str(len(data_time)))
             print("First time stamp: " + time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(data_time[0])))
             print("Last time stamp: " + time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(data_time[len(data_time) - 1])))

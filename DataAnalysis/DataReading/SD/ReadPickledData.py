@@ -4,7 +4,8 @@ import pandas as pd
 
 if __name__ == '__main__':
     """
-    Read in pickled SuperDARN data
+    Read in and look at pickled SuperDARN data
+    Doesn't produce anything, just for looking at the file structure
     """
 
     station = "rkn"

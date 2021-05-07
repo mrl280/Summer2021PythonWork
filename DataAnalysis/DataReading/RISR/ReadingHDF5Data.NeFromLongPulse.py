@@ -4,6 +4,7 @@ if __name__ == '__main__':
     """
     Read in and look at the parameters in an HDF5 file representing the World Day experiment
     Long Pulse Uncorrected Ne
+    Doesn't produce anything, just for looking at the file structure
     """
     in_file = "ran2020728.3"
 
