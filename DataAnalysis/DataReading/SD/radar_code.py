@@ -1,6 +1,6 @@
 
 
-def radar_code_from_station_id(id):
+def radar_code(id):
     """
     :param: int id: The station id
     :return: String: 3 character long radar code
