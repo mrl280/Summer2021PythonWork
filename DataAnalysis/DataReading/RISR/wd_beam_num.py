@@ -4,42 +4,46 @@ import math
 import h5py
 
 
-def beam_num_from_id(id):
+def wd_beam_num(beam_id):
     """
-    :param id: The RISR-N beam id
-    :return: The RISR-N beam number (1 - 11) from the world day mode.  May return Nan if the beam id is not recognized.
+    Note: Applicable only when RISR is operating in World Day mode
+    :param beam_id: The RISR-N beam id
+    :return: The RISR-N beam number (1 - 11) from the world-day mode.  May return Nan if the beam id is not recognized.
     """
-    if id == 55748:
+    if beam_id == 55748:
         return 1
-    elif id == 57656:
+    elif beam_id == 57656:   # This WD RISR beam overlaps with rkn beam 5 (gates 30-40)
         return 2
-    elif id == 56954:
+    elif beam_id == 56954:
         return 3
-    elif id == 57782:
+    elif beam_id == 57782:
         return 4
-    elif id == 60551:
+    elif beam_id == 60551:
         return 5
-    elif id == 60617:
+    elif beam_id == 60617:
         return 6
-    elif id == 60683:
+    elif beam_id == 60683:
         return 7
-    elif id == 63443:
+    elif beam_id == 63443:
         return 8
-    elif id == 64280:
+    elif beam_id == 64280:
         return 9
-    elif id == 63587:
+    elif beam_id == 63587:   # This WD RISR beam overlaps with inv beam 12 (gates 31-38)
         return 10
-    elif id == 65486:
+    elif beam_id == 65486:
         return 11
     else:
         return math.nan
 
 
 if __name__ == '__main__':
+    """
+    Testing
+    """
     station = "ran"
     date = "20161012"
 
-    # Loop through all long pulse files and test the beam number conversion
+    # Loop through all long pulse files for this station/date and test the beam number conversion
     in_dir = "data/" + station + date
     for in_file in glob.iglob(in_dir + "/*.h5"):
 
@@ -58,9 +62,9 @@ if __name__ == '__main__':
             for beam in file['/Data/Array Layout/'].keys():
                 a = 1
                 print("Beam id: " + str(file['/Data/Array Layout/' + beam + '/1D Parameters/beamid'][0]))
-                print("Beam number: " + str(beam_num_from_id(file['/Data/Array Layout/' + beam + '/1D Parameters/beamid'][0])))
+                print("Beam number: " + str(
+                    wd_beam_num(file['/Data/Array Layout/' + beam + '/1D Parameters/beamid'][0])))
 
     # Test something that is not valid to make sure we get NaN back
-    print("\n")
-    print(beam_num_from_id(56))
-    print(math.isnan(beam_num_from_id(56)))
+    if wd_beam_num(56) is not math.nan:
+        print("Error: WD beam id 56 should not have a beam number")

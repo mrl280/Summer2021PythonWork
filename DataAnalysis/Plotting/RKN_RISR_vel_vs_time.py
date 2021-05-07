@@ -12,12 +12,14 @@ if __name__ == '__main__':
     Plot SuperDARN and RISR velocity vs time
     """
 
+    # TODO: Update so it will work with multiple SuperDARN data chunks
+
     SAVE_PLOT = False
     pattern = '%Y.%m.%d %H:%M:%S'
 
-    year = "2016"
-    month = "10"
-    day = "12"
+    year = "2014"
+    month = "03"
+    day = "02"
     start_time = "20:00:00"  # %H:%M:%S
     end_time = "22:00:00"  # %H:%M:%S
 

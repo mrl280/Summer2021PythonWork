@@ -2,7 +2,7 @@ import pandas as pd
 import glob
 import h5py
 
-from DataAnalysis.DataReading.RISR.beam_num_from_id import beam_num_from_id
+from DataAnalysis.DataReading.RISR.wd_beam_num import wd_beam_num
 
 if __name__ == '__main__':
     """
@@ -88,7 +88,8 @@ if __name__ == '__main__':
                         # The 1D parameters are just accessed in time
                         # These Could be moved out of this range loop but it is simpler to leave them here)
                         bmid.append(file['/Data/Array Layout/' + beam + '/1D Parameters/beamid'][time_idx])
-                        bmnum.append(beam_num_from_id(file['/Data/Array Layout/' + beam + '/1D Parameters/beamid'][time_idx]))
+                        bmnum.append(
+                            wd_beam_num(file['/Data/Array Layout/' + beam + '/1D Parameters/beamid'][time_idx]))
                         elv.append(file['/Data/Array Layout/' + beam + '/1D Parameters/elm'][time_idx])
                         tfreq.append(file['/Data/Array Layout/' + beam + '/1D Parameters/tfreq'][time_idx])
 
