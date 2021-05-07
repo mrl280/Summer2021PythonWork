@@ -14,6 +14,12 @@ if __name__ == '__main__':
     path = "data/" + in_dir + "/" + in_file
     file = h5py.File(path + ".h5", "r")
 
+    # The file type is held in the CKINDAT parameter of experimental notes
+    exp_notes = file['/Metadata/Experiment Notes']
+    file_type = str(exp_notes[25][0])
+    file_type = file_type[10:len(file_type) - 1].rstrip()  # Strip out everything but the file type name
+    print("File type: " + file_type + "\n")
+
     # Look at the data layout description
     data_layout_desc = file['/Data/Array Layout/Layout Description']
     print(data_layout_desc[()])
