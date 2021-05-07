@@ -11,7 +11,7 @@ if __name__ == '__main__':
     station = "rkn"
     date = "20161012"
 
-    in_dir = "data/" + station + date
+    in_dir = "data/" + station + "/" + station + date
     in_file = in_dir + "/" + station + date + ".pkl"
     df = pd.read_pickle(in_file)
     print(df.head())
