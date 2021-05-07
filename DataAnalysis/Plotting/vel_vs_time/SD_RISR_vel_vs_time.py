@@ -56,10 +56,14 @@ if __name__ == '__main__':
                       & (SD_df['bmnum'] >= SD_beam_range[0]) & (SD_df['bmnum'] <= SD_beam_range[1])]  # filter beams
     SD_df.reset_index(drop=True, inplace=True)
 
+    # Filter RISR data
     RISR_df = RISR_df.loc[(RISR_df['time'] >= start_epoch) & (RISR_df['time'] <= end_epoch)  # filer times
                           & (RISR_df['wd_bmnum'] >= RISR_wd_beam_range[0])
                           & (RISR_df['wd_bmnum'] <= RISR_wd_beam_range[1])]  # filter beams
     RISR_df.reset_index(drop=True, inplace=True)
+
+    # RISR-N and RKN velocities are going opposite directions, flip RISR so toward is +ve
+    RISR_df['los_ion_vel'] = RISR_df['los_ion_vel'].apply(lambda x: x * -1)
 
     # Recover decimal times from epoch times
     SD_decimal_time = []
@@ -143,21 +147,26 @@ if __name__ == '__main__':
             RISR_bin_medians, RISR_bin_centers = [], []
 
         # Set up the plot
-        fig, ax = plt.subplots(figsize=(8, 6), dpi=300, nrows=2, ncols=1)
+        fig, ax = plt.subplots(figsize=(8, 9), dpi=300, nrows=3, ncols=1)
         plt.subplots_adjust(hspace=0.4)
         fig.suptitle(SD_station + " and " + RISR_station + " LOS Velocity Evolution; "
-                     + str(start_hour_here) + "-" + str(end_hour_here) + " UT; "
-                     + "as produced by " + str(os.path.basename(__file__)),
-                     fontsize=12.5)
+                     + str(start_hour_here) + "-" + str(end_hour_here) + " UT"
+                     + "\nNote: Positive Velocity Means Towards the Radars"
+                     + "\nAs produced by " + str(os.path.basename(__file__)),
+                     fontsize=13)
+
+        # Apply common subplot formatting
+        for i in range(ax.size):
+            ax[i].set_ylim([-600, 600])
+            ax[i].set_xlim([start_hour_here, end_hour_here])
+            ax[i].xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+            ax[i].grid(which='major', axis='y', linestyle='--', linewidth=0.5)
+            ax[i].plot(ax[i].get_ylim(), [0, 0], linestyle='-', linewidth=0.5, color='black')
+            ax[i].set_xlabel('Time [UT]')
+            ax[i].set_ylabel('LOS Velocity [m/s]')
 
         # Plot SuperDARN data on the first set of axis
         ax[0].title.set_text(SD_station + "; " + SD_beam_string + "; " + SD_gate_string)
-        ax[0].set_xlabel('Time [UT]')
-        ax[0].set_ylabel('LOS Velocity [m/s]')
-        ax[0].set_ylim([-600, 600])
-        ax[0].set_xlim([start_hour_here, end_hour_here])
-        ax[0].xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-        ax[0].grid(which='major', axis='y', linestyle='--', linewidth=0.5)
         ax[0].plot(ax[0].get_ylim(), [0, 0], linestyle='-', linewidth=0.5, color='black')
         ax[0].scatter(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], c='k', s=4, label='Raw Scatter')
         ax[0].errorbar(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], yerr=restricted_SD_df['vel_err'],
@@ -167,18 +176,17 @@ if __name__ == '__main__':
 
         # Plot RISR data on the second plot
         ax[1].title.set_text(RISR_station + "; " + RISR_beam_string)
-        ax[1].set_xlabel('Time [UT]')
-        ax[1].set_ylabel('LOS Ion Velocity [m/s]')
-        ax[1].set_ylim([-600, 600])
-        ax[1].set_xlim([start_hour_here, end_hour_here])
-        ax[1].xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-        ax[1].grid(which='major', axis='y', linestyle='--', linewidth=0.5)
-        ax[1].plot(ax[1].get_ylim(), [0, 0], linestyle='-', linewidth=0.5, color='black')
         ax[1].scatter(restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], c='k', s=4, label='Raw Scatter')
         # ax[1].errorbar(restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'],
         #                yerr=restricted_RISR_df['los_ion_vel_err'], fmt='none', color='black', linewidth=0.75)
         ax[1].scatter(RISR_bin_centers, RISR_bin_medians, marker='D', s=50, c='b', label='Binned Medians')
         ax[1].legend(loc='upper right')
+
+        # Plot both sets of medians on the third subplot
+        ax[2].title.set_text(SD_station + " " + RISR_station + " Velocity Comparison")
+        ax[2].scatter(SD_bin_centers, SD_bin_medians, marker='o', s=50, c='r', label=SD_station + ' Binned Medians')
+        ax[2].scatter(RISR_bin_centers, RISR_bin_medians, marker='D', s=50, c='b', label=RISR_station + ' Binned Medians')
+        ax[2].legend(loc='upper right')
 
         if SHOW_PLOTS:
             plt.show()

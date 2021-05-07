@@ -31,3 +31,8 @@ RISR file types:
         Experiment data derived from Long Pulse measurements
         Contains 1D parameters that vary with time (e.g. beam id, frequency, and power info)
         Contains 2D parameters that vary with time and corrected geomagnetic latitude (e.g. Ne and altitude)
+
+
+Note:
+    SuperDARN velocities: positive = toward
+    RISR velcoties: positive = away
