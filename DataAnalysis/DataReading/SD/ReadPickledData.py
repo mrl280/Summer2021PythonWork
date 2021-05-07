@@ -9,11 +9,10 @@ if __name__ == '__main__':
     """
 
     station = "rkn"
-    date = "20190318"
-    start_time = "00"
+    date = "20161012"
 
-    in_dir = "data/" + station + date + "/"
-    in_file = in_dir + date + "." + start_time + "." + station + ".pkl"
+    in_dir = "data/" + station + date
+    in_file = in_dir + "/" + station + date + ".pkl"
     df = pd.read_pickle(in_file)
     print(df.head())
 
