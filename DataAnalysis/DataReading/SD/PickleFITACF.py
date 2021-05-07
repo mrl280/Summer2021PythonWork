@@ -32,7 +32,7 @@ if __name__ == '__main__':
     """
 
     station = "rkn"
-    date = "20161012"
+    date = "20190318"
 
     pattern = '%Y.%m.%d %H:%M:%S.%f'  # This is the pattern we will use to convert time info to epoch
 
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     elv_high = []
 
     # Loop through all the files for this station/date
-    in_dir = "data/" + station + date
+    in_dir = "data/" + station + "/" + station + date
     for in_file in glob.iglob(in_dir + "/*.fitacf.bz2"):
 
         # Unpack and open the file
