@@ -1,4 +1,5 @@
 import calendar
+import math
 import time
 import os
 import pathlib
@@ -13,8 +14,8 @@ if __name__ == '__main__':
     Plot SuperDARN and RISR velocity vs time
     """
 
-    SAVE_PLOTS = False
-    SHOW_PLOTS = True
+    SAVE_PLOTS = True
+    SHOW_PLOTS = False
 
     year = "2014"
     month = "03"
@@ -65,6 +66,13 @@ if __name__ == '__main__':
     # RISR-N and RKN velocities are going opposite directions, flip RISR so toward is +ve
     RISR_df['los_ion_vel'] = RISR_df['los_ion_vel'].apply(lambda x: x * -1)
 
+    # The Beams are not quite aligned
+    # TODO: Confirm the angle between beams
+    if SD_station == "rkn":
+        RISR_df['los_ion_vel'] = RISR_df['los_ion_vel'].apply(lambda x: x / math.sin(math.radians(49.9)))
+    else:
+        print("Waring: No adjustments have been made to compensate for the angle between beams")
+
     # Recover decimal times from epoch times
     SD_decimal_time = []
     RISR_decimal_time = []
@@ -104,7 +112,7 @@ if __name__ == '__main__':
     # Loop thorough and plot 2 hour chunks of data
     length_of_chunks_h = 2
     num_of_chunks = int(24 / length_of_chunks_h)
-    for chunk_num in range(1):
+    for chunk_num in range(num_of_chunks):
 
         # Computer start and end epochs and build restricted data frames
         start_hour_here = 0 + 2 * chunk_num
@@ -152,7 +160,7 @@ if __name__ == '__main__':
         fig.suptitle(SD_station + " and " + RISR_station + " LOS Velocity Evolution; "
                      + str(start_hour_here) + "-" + str(end_hour_here) + " UT"
                      + "\nNote: Positive Velocity Means Towards the Radars"
-                     + "\nAs produced by " + str(os.path.basename(__file__)),
+                     + "\nProduced by " + str(os.path.basename(__file__)),
                      fontsize=13)
 
         # Apply common subplot formatting
@@ -172,7 +180,7 @@ if __name__ == '__main__':
         ax[0].errorbar(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], yerr=restricted_SD_df['vel_err'],
                        fmt='none', color='black', linewidth=0.75)
         ax[0].scatter(SD_bin_centers, SD_bin_medians, marker='o', s=50, c='r', label='Binned Medians')
-        ax[0].legend(loc='upper right')
+        ax[0].legend(loc='lower right')
 
         # Plot RISR data on the second plot
         ax[1].title.set_text(RISR_station + "; " + RISR_beam_string)
@@ -180,13 +188,22 @@ if __name__ == '__main__':
         # ax[1].errorbar(restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'],
         #                yerr=restricted_RISR_df['los_ion_vel_err'], fmt='none', color='black', linewidth=0.75)
         ax[1].scatter(RISR_bin_centers, RISR_bin_medians, marker='D', s=50, c='b', label='Binned Medians')
-        ax[1].legend(loc='upper right')
+        ax[1].legend(loc='lower right')
 
         # Plot both sets of medians on the third subplot
         ax[2].title.set_text(SD_station + " " + RISR_station + " Velocity Comparison")
-        ax[2].scatter(SD_bin_centers, SD_bin_medians, marker='o', s=50, c='r', label=SD_station + ' Binned Medians')
-        ax[2].scatter(RISR_bin_centers, RISR_bin_medians, marker='D', s=50, c='b', label=RISR_station + ' Binned Medians')
-        ax[2].legend(loc='upper right')
+        try:
+            ax[2].scatter(SD_bin_centers - 0.005, SD_bin_medians, marker='o', s=50, c='r', label=SD_station + ' Binned Medians')
+        except:
+            pass
+        try:
+            ax[2].scatter(RISR_bin_centers + 0.005, RISR_bin_medians, marker='D', s=50, c='b', label=RISR_station + ' Binned Medians')
+        except:
+            pass
+        try:
+            ax[2].legend(loc='lower right')
+        except:
+            pass
 
         if SHOW_PLOTS:
             plt.show()
