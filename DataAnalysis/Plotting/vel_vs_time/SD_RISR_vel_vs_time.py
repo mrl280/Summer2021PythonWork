@@ -12,14 +12,17 @@ import pandas as pd
 if __name__ == '__main__':
     """
     Plot SuperDARN and RISR velocity vs time
+    
+    RISR Velocities are flipped and divided by sin(49.9 deg)
+    
     """
 
     SAVE_PLOTS = True
     SHOW_PLOTS = False
 
-    year = "2014"
-    month = "03"
-    day = "04"
+    year = "2014"   # yyyy
+    month = "03"    # mm
+    day = "04"      # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
@@ -71,7 +74,7 @@ if __name__ == '__main__':
     if SD_station == "rkn":
         RISR_df['los_ion_vel'] = RISR_df['los_ion_vel'].apply(lambda x: x / math.sin(math.radians(49.9)))
     else:
-        print("Waring: No adjustments have been made to compensate for the angle between beams")
+        print("Waring: No adjustments have been made to compensate for the angle between beams.")
 
     # Recover decimal times from epoch times
     SD_decimal_time = []
@@ -136,7 +139,8 @@ if __name__ == '__main__':
         n_bins = int(length_of_chunks_h / 0.25)  # 15 minute (1/4 hour) bins
         try:
             SD_bin_medians, SD_bin_edges, SD_binnumber = stats.binned_statistic(
-                restricted_SD_df['decimal_time'], restricted_SD_df['vel'], 'median', bins=n_bins)
+                restricted_SD_df['decimal_time'], restricted_SD_df['vel'], 'median', bins=n_bins,
+                range=(start_hour_here, end_hour_here))
             SD_bin_width = (SD_bin_edges[1] - SD_bin_edges[0])
             SD_bin_centers = SD_bin_edges[1:] - SD_bin_width / 2
         except:
@@ -146,7 +150,8 @@ if __name__ == '__main__':
 
         try:
             RISR_bin_medians, RISR_bin_edges, RISR_binnumber = stats.binned_statistic(
-                restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], 'median', bins=n_bins)
+                restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], 'median', bins=n_bins,
+                range=(start_hour_here, end_hour_here))
             RISR_bin_width = (RISR_bin_edges[1] - RISR_bin_edges[0])
             RISR_bin_centers = RISR_bin_edges[1:] - RISR_bin_width / 2
         except:
