@@ -8,7 +8,7 @@ if __name__ == '__main__':
     """
 
     station = "ran"
-    date = "20161012"
+    date = "201432"
     start_time = "0001"
 
     in_dir = "data/" + station + date + "/"

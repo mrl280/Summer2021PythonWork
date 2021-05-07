@@ -4,6 +4,7 @@ import os
 import pathlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
+from scipy import stats
 
 import pandas as pd
 
@@ -12,9 +13,8 @@ if __name__ == '__main__':
     Plot SuperDARN and RISR velocity vs time
     """
 
-    # TODO: Update so it will work with multiple SuperDARN data chunks
-
-    SAVE_PLOT = True
+    SAVE_PLOTS = False
+    SHOW_PLOTS = True
 
     year = "2014"
     month = "03"
@@ -40,7 +40,6 @@ if __name__ == '__main__':
 
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
-    print(loc_root)
     SD_in_dir = loc_root + "/DataReading/SD/data/" + SD_station + "/" + SD_station + year + month + day
     SD_in_file = SD_in_dir + "/" + SD_station + year + month + day + ".pkl"
     SD_df = pd.read_pickle(SD_in_file)
@@ -99,23 +98,56 @@ if __name__ == '__main__':
         os.makedirs(out_dir)
 
     # Loop thorough and plot 2 hour chunks of data
-    for chunk_num in range(2):
+    length_of_chunks_h = 2
+    num_of_chunks = int(24 / length_of_chunks_h)
+    for chunk_num in range(1):
 
         # Computer start and end epochs and build restricted data frames
         start_hour_here = 0 + 2 * chunk_num
         end_hour_here = 2 + 2 * chunk_num
-        start_date_time_here = year + "." + month + "." + day + " " + str(0 + 2 * chunk_num) + ":00:00"
-        end_date_time_here = year + "." + month + "." + day + " " + str(1 + 2 * chunk_num) + ":00:00"
-        start_epoch_here = calendar.timegm(time.strptime(start_date_time, pattern))
-        end_epoch_here = calendar.timegm(time.strptime(end_date_time, pattern))
+        start_date_time_here = year + "." + month + "." + day + " " + str(start_hour_here) + ":00:00"
+        if end_hour_here == 24:
+            end_date_time_here = year + "." + month + "." + day + " 23:59:59"
+        else:
+            end_date_time_here = year + "." + month + "." + day + " " + str(end_hour_here) + ":00:00"
+        start_epoch_here = calendar.timegm(time.strptime(start_date_time_here, pattern))
+        end_epoch_here = calendar.timegm(time.strptime(end_date_time_here, pattern))
 
-        restricted_SD_df = SD_df[(SD_df['time'] >= start_epoch_here) & (SD_df['time'] <= end_epoch_here)]
-        restricted_RISR_df = RISR_df[(RISR_df['time'] >= start_epoch_here) & (RISR_df['time'] <= end_epoch_here)]
+        # Build a restricted data frame based just on the times here
+        restricted_SD_df = SD_df.loc[(SD_df['time'] >= start_epoch_here) & (SD_df['time'] <= end_epoch_here)]
+        restricted_RISR_df = RISR_df.loc[(RISR_df['time'] >= start_epoch_here) & (RISR_df['time'] <= end_epoch_here)]
+
+        # We have to remove all nan values because median can't handle them
+        restricted_RISR_df = restricted_RISR_df[restricted_RISR_df['los_ion_vel'].notna()]
+
+        # Compute binned medians
+        n_bins = int(length_of_chunks_h / 0.25)  # 15 minute (1/4 hour) bins
+        try:
+            SD_bin_medians, SD_bin_edges, SD_binnumber = stats.binned_statistic(
+                restricted_SD_df['decimal_time'], restricted_SD_df['vel'], 'median', bins=n_bins)
+            SD_bin_width = (SD_bin_edges[1] - SD_bin_edges[0])
+            SD_bin_centers = SD_bin_edges[1:] - SD_bin_width / 2
+        except:
+            print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + SD_station
+                  + " has no data here")
+            SD_bin_medians, SD_bin_centers = [], []
+
+        try:
+            RISR_bin_medians, RISR_bin_edges, RISR_binnumber = stats.binned_statistic(
+                restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], 'median', bins=n_bins)
+            RISR_bin_width = (RISR_bin_edges[1] - RISR_bin_edges[0])
+            RISR_bin_centers = RISR_bin_edges[1:] - RISR_bin_width / 2
+        except:
+            print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + RISR_station
+                  + " has no data here")
+            RISR_bin_medians, RISR_bin_centers = [], []
 
         # Set up the plot
         fig, ax = plt.subplots(figsize=(8, 6), dpi=300, nrows=2, ncols=1)
         plt.subplots_adjust(hspace=0.4)
-        fig.suptitle("RKN and RISR LOS Velocity Evolution; as produced by " + str(os.path.basename(__file__)),
+        fig.suptitle(SD_station + " and " + RISR_station + " LOS Velocity Evolution; "
+                     + str(start_hour_here) + "-" + str(end_hour_here) + " UT; "
+                     + "as produced by " + str(os.path.basename(__file__)),
                      fontsize=12.5)
 
         # Plot SuperDARN data on the first set of axis
@@ -127,9 +159,11 @@ if __name__ == '__main__':
         ax[0].xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         ax[0].grid(which='major', axis='y', linestyle='--', linewidth=0.5)
         ax[0].plot(ax[0].get_ylim(), [0, 0], linestyle='-', linewidth=0.5, color='black')
-        ax[0].plot(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], 'r.', markersize=5)
+        ax[0].scatter(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], c='k', s=4, label='Raw Scatter')
         ax[0].errorbar(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], yerr=restricted_SD_df['vel_err'],
                        fmt='none', color='black', linewidth=0.75)
+        ax[0].scatter(SD_bin_centers, SD_bin_medians, marker='o', s=50, c='r', label='Binned Medians')
+        ax[0].legend(loc='upper right')
 
         # Plot RISR data on the second plot
         ax[1].title.set_text(RISR_station + "; " + RISR_beam_string)
@@ -140,13 +174,16 @@ if __name__ == '__main__':
         ax[1].xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         ax[1].grid(which='major', axis='y', linestyle='--', linewidth=0.5)
         ax[1].plot(ax[1].get_ylim(), [0, 0], linestyle='-', linewidth=0.5, color='black')
-        ax[1].plot(restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], 'r.', markersize=5)
+        ax[1].scatter(restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], c='k', s=4, label='Raw Scatter')
         # ax[1].errorbar(restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'],
         #                yerr=restricted_RISR_df['los_ion_vel_err'], fmt='none', color='black', linewidth=0.75)
+        ax[1].scatter(RISR_bin_centers, RISR_bin_medians, marker='D', s=50, c='b', label='Binned Medians')
+        ax[1].legend(loc='upper right')
 
-        # plt.show()
+        if SHOW_PLOTS:
+            plt.show()
 
-        if SAVE_PLOT:
+        if SAVE_PLOTS:
             cur_path = os.path.dirname(__file__)  # where we are
             fig.savefig(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_time_"
                         + year + month + day + " " + str(start_hour_here) + "-" + str(end_hour_here) + "UT"
