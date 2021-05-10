@@ -160,9 +160,9 @@ def PickleFITACF(station, date):
                        'hour': hour,
                        'minute': minute,
                        'second': second,
-                       'beammNumber': bmnum,
-                       'beamAzimuth': bmazm,
-                       'intgrtnTime': intt,
+                       'bmnum': bmnum,
+                       'bmazm': bmazm,
+                       'intt': intt,
                        'gate': slist,
                        'transFreq': tfreq,
                        'firstRang': frang,
@@ -174,16 +174,16 @@ def PickleFITACF(station, date):
                        'qflg': qflg,
                        'gflg': gflg,
                        'vel': v,
-                       'vel_err': v_e,
+                       'velErr': v_e,
                        'pwr': p_l,
-                       'pwr_err': p_l_e,
+                       'pwrErr': p_l_e,
                        'wdt': w_l,
-                       'wdt_err': w_l_e,
+                       'wdtErr': w_l_e,
                        'stdDevLambda': sd_l,
                        'stdDevPhase': sd_phi,
                        'elv': elv,
-                       'elv_low': elv_low,
-                       'elv_high': elv_high
+                       'elvLow': elv_low,
+                       'elvHigh': elv_high
                        })
 
     # Save to file
@@ -194,13 +194,5 @@ def PickleFITACF(station, date):
 
 if __name__ == '__main__':
     station = "rkn"
-    date = "20161012"
+    date = "20140303"
     PickleFITACF(station, date)
-
-    # Filter with the ground and quality flags
-    # df = df.loc[(df['gflg'] == 0) & (df['qflg'] == 1) & (df['pwr'] >= 3.0)]
-
-    # Drop the ground scatter and quality flags and re-index
-    # df.drop(['gflg', 'qflg'], inplace=True, axis=1)
-    # df.reset_index(drop=True, inplace=True)
-

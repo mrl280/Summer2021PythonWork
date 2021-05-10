@@ -9,6 +9,8 @@ from scipy import stats
 
 import pandas as pd
 
+from DataAnalysis.DataReading.SD.basic_SD_df_filter import basic_SD_df_filter
+
 if __name__ == '__main__':
     """
     Plot SuperDARN and RISR velocity vs time
@@ -17,8 +19,8 @@ if __name__ == '__main__':
     
     """
 
-    SAVE_PLOTS = True
-    SHOW_PLOTS = False
+    SAVE_PLOTS = False
+    SHOW_PLOTS = True
 
     year = "2014"   # yyyy
     month = "03"    # mm
@@ -55,7 +57,8 @@ if __name__ == '__main__':
     RISR_df = pd.read_pickle(RISR_in_file)
 
     # Filter SuperDARN data
-    SD_df = SD_df.loc[(SD_df['time'] >= start_epoch) & (SD_df['time'] <= end_epoch)  # filer times
+    SD_df = basic_SD_df_filter(SD_df)
+    SD_df = SD_df.loc[(SD_df['epoch'] >= start_epoch) & (SD_df['epoch'] <= end_epoch)  # filer times
                       & (SD_df['gate'] >= SD_gate_range[0]) & (SD_df['gate'] <= SD_gate_range[1])  # filter gates
                       & (SD_df['bmnum'] >= SD_beam_range[0]) & (SD_df['bmnum'] <= SD_beam_range[1])]  # filter beams
     SD_df.reset_index(drop=True, inplace=True)
@@ -79,10 +82,10 @@ if __name__ == '__main__':
     # Recover decimal times from epoch times
     SD_decimal_time = []
     RISR_decimal_time = []
-    for t in range(len(SD_df['time'])):
-        hour = str.split(time.strftime(pattern, time.gmtime(SD_df['time'][t])))[1][0:2]
-        min = str.split(time.strftime(pattern, time.gmtime(SD_df['time'][t])))[1][3:5]
-        sec = str.split(time.strftime(pattern, time.gmtime(SD_df['time'][t])))[1][6:8]
+    for t in range(len(SD_df['epoch'])):
+        hour = str.split(time.strftime(pattern, time.gmtime(SD_df['epoch'][t])))[1][0:2]
+        min = str.split(time.strftime(pattern, time.gmtime(SD_df['epoch'][t])))[1][3:5]
+        sec = str.split(time.strftime(pattern, time.gmtime(SD_df['epoch'][t])))[1][6:8]
         SD_decimal_time.append(float(hour) + float(min) / 60.0 + float(sec) / 3600.0)
     for t in range(len(RISR_df['time'])):
         hour = str.split(time.strftime(pattern, time.gmtime(RISR_df['time'][t])))[1][0:2]
@@ -115,7 +118,7 @@ if __name__ == '__main__':
     # Loop thorough and plot 2 hour chunks of data
     length_of_chunks_h = 2
     num_of_chunks = int(24 / length_of_chunks_h)
-    for chunk_num in range(num_of_chunks):
+    for chunk_num in range(1):
 
         # Computer start and end epochs and build restricted data frames
         start_hour_here = 0 + 2 * chunk_num
@@ -129,7 +132,7 @@ if __name__ == '__main__':
         end_epoch_here = calendar.timegm(time.strptime(end_date_time_here, pattern))
 
         # Build a restricted data frame based just on the times here
-        restricted_SD_df = SD_df.loc[(SD_df['time'] >= start_epoch_here) & (SD_df['time'] <= end_epoch_here)]
+        restricted_SD_df = SD_df.loc[(SD_df['epoch'] >= start_epoch_here) & (SD_df['epoch'] <= end_epoch_here)]
         restricted_RISR_df = RISR_df.loc[(RISR_df['time'] >= start_epoch_here) & (RISR_df['time'] <= end_epoch_here)]
 
         # We have to remove all nan values because median can't handle them
@@ -192,7 +195,7 @@ if __name__ == '__main__':
                        fmt='none', color='red', linewidth=1)
         ax[0].scatter(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], s=4, facecolor='none',
                       edgecolors='k', linewidths=0.75, label='Raw Scatter')
-        ax[0].errorbar(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], yerr=restricted_SD_df['vel_err'],
+        ax[0].errorbar(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], yerr=restricted_SD_df['velErr'],
                        fmt='none', color='black', linewidth=0.75)
 
         # Plot RISR data on the second plot
