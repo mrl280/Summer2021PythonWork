@@ -1,5 +1,7 @@
 from madrigalWeb import madrigalWeb
 import re
+import os
+import pathlib
 
 if __name__ == '__main__':
     """
@@ -8,7 +10,8 @@ if __name__ == '__main__':
     Optionally Download Experiment Data
     """
     # To prevent downloading when you just want to browse instruments and experiments
-    DOWNLOAD_HDF5 = False
+    DOWNLOAD_HDF5 = True
+    Arr_offset_to_download = 9  # Browse first to find this
 
     madrigalUrl = "http://isr.sri.com/madrigal/"  # NOTE: Different instruments are at different URLs
     testData = madrigalWeb.MadrigalData(madrigalUrl)
@@ -41,7 +44,7 @@ if __name__ == '__main__':
 
     # Download the data from one of the experiments
     if DOWNLOAD_HDF5:
-        expToDownload = worldDayExpList[1]
+        expToDownload = worldDayExpList[Arr_offset_to_download]
         print("--\nWe are going to download the following experiments:")
         print(expToDownload.name)
         print("Experiment id: " + str(expToDownload.id))
@@ -52,6 +55,15 @@ if __name__ == '__main__':
                       + "/ran" + str(expToDownload.startyear) + str(expToDownload.startmonth) + str(expToDownload.startday)
         fileList = testData.getExperimentFiles(expToDownload.id)
         i = 1
+
+        # Ensure out directory
+        loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
+        out_dir = loc_root + "/DataReading/RISR/data/ran" \
+                  + str(expToDownload.startyear) + str(expToDownload.startmonth) + str(expToDownload.startday)
+        print(out_dir)
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
         for file in fileList:
             print("Downloading: " + file.name + " as " + destination + "." + str(i) + ".h5")
             testData.downloadFile(file.name, destination + "." + str(i) + ".h5", "Michael Luciuk", "mrl280@usask.ca",
