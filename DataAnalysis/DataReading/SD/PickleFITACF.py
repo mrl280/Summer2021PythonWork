@@ -5,7 +5,8 @@ import pandas as pd
 import time
 import glob
 
-if __name__ == '__main__':
+
+def PickleFITACF(station, date):
     """
     Take a fitACF file, turn it into a reduced Pandas DataFrame, and pickle it for later
     More on fitACF here: https://radar-software-toolkit-rst.readthedocs.io/en/latest/references/general/fitacf/
@@ -14,12 +15,25 @@ if __name__ == '__main__':
     
     Parameters of Interest:
         Scalar Parameters
-            - Time (Saved as epoch - seconds since 1970.01.01)
+            - Epoch time (seconds since 1970.01.01)
                     This is a combination of year 'time.yr', month 'time.mo', day 'time.dy', 
                     hour 'time.hr', minute 'time.mt', second 'time.sc', and microsecond 'time.us'
+            - Year
+            - Month
+            - Day
+            - Hour
+            - Minute
+            - Second (included microseconds)
+            - Beam azimuth 'bmazm'
+            - Integration Seconds (include microseconds) 'intt' 
             - Beam Number 'bmnum' (starting at Beam 0)
             - Transmitted Frequency 'tfreq' (in KHz)
             - Station Identifier 'stid'
+            - Distance to the first range gate 'frang'
+            - Range separation 'rsep' 
+            - Control program name or command line, or comment buffer 'combf' 
+            - Major version number of the FITACF algorithm 'fitacf.revision.major'
+            - Minor version number of the FITACF algorithm 'fitacf.revision.minor'
         
         Vector Parameters
             - Range Gate 'slist'
@@ -28,19 +42,30 @@ if __name__ == '__main__':
             - Velocity 'v' with Error 'v_e'
             - Power (actually SNR) from lambda fit 'p_l' with Error 'p_l_e'
             - Spectral width from lambda fit (w_l) 'w_l' with Error 'w_l_e'
+            - Standard deviation of lambda fit 'sd_l' and phase fit 'sd_phi'
             - Elevation angle 'elv' with low 'elv_low' and high 'elv_high' estimates
     """
-
-    station = "rkn"
-    date = "20190318"
 
     pattern = '%Y.%m.%d %H:%M:%S.%f'  # This is the pattern we will use to convert time info to epoch
 
     # Pre-allocate lists for the scalar parameters
     # Station id will be the same for the whole event, so we will build it at the end
-    times = []  # time is the name of a library used herein
+    epoch = []
+    year = []
+    month = []
+    day = []
+    hour = []
+    minute = []
+    second = []
     bmnum = []
+    bmazm = []
+    intt = []
     tfreq = []
+    frang = []
+    rsep = []
+    combf = []
+    fitACF_rev_major = []
+    fitACF_rev_minor = []
 
     # Pre-allocate lists for the vector parameters
     slist = []
@@ -52,6 +77,8 @@ if __name__ == '__main__':
     p_l_e = []
     w_l = []
     w_l_e = []
+    sd_l = []
+    sd_phi = []
     elv = []
     elv_low = []
     elv_high = []
@@ -82,7 +109,7 @@ if __name__ == '__main__':
                         + str(fitacf_data[record]['time.dy']) + " " + str(fitacf_data[record]['time.hr']) + ":" \
                         + str(fitacf_data[record]['time.mt']) + ":" + str(fitacf_data[record]['time.sc']) + "." \
                         + str(f"{fitacf_data[record]['time.us'] / 1e6:.6f}")[2:]
-            epoch = calendar.timegm(time.strptime(date_time, pattern))  # Doesn't keep microseconds
+            epoch_here = calendar.timegm(time.strptime(date_time, pattern))  # Doesn't keep microseconds
 
             try:
                 num_gates_reporting = len(fitacf_data[record]['slist'])
@@ -102,24 +129,52 @@ if __name__ == '__main__':
                 p_l_e.append(fitacf_data[record]['p_l_e'][gate_idx])
                 w_l.append(fitacf_data[record]['w_l'][gate_idx])
                 w_l_e.append(fitacf_data[record]['w_l_e'][gate_idx])
+                sd_l.append(fitacf_data[record]['sd_l'][gate_idx])
+                sd_phi.append(fitacf_data[record]['sd_phi'][gate_idx])
                 elv.append(fitacf_data[record]['elv'][gate_idx])
                 elv_low.append(fitacf_data[record]['elv_low'][gate_idx])
                 elv_high.append(fitacf_data[record]['elv_high'][gate_idx])
 
                 # Build up the scalar data, these values are the same for every gate
                 # These could be pulled out of this loop but it is simpler to leave them here
+                epoch.append(epoch_here)
+                year.append(fitacf_data[record]['time.yr'])
+                month.append(fitacf_data[record]['time.mo'])
+                day.append(fitacf_data[record]['time.dy'])
+                hour.append(fitacf_data[record]['time.hr'])
+                minute.append(fitacf_data[record]['time.mt'])
+                second.append(fitacf_data[record]['time.sc'] + fitacf_data[record]['time.us'] / 1e6)
                 bmnum.append(fitacf_data[record]['bmnum'])
+                bmazm.append(fitacf_data[record]['bmazm'])
+                intt.append(fitacf_data[record]['intt.sc'] + fitacf_data[record]['intt.us'] / 1e6)
                 tfreq.append(fitacf_data[record]['tfreq'])
-                times.append(epoch)
+                frang.append(fitacf_data[record]['frang'])
+                rsep.append(fitacf_data[record]['rsep'])
+                fitACF_rev_major.append(fitacf_data[record]['fitacf.revision.major'])
+                fitACF_rev_minor.append(fitacf_data[record]['fitacf.revision.minor'])
+                combf.append(fitacf_data[record]['combf'])
 
     # Put the data into a dataframe
-    print("Building and filtering the data frame...")
-    stid = [station] * len(times)
-    df = pd.DataFrame({'stid': stid,
-                       'time': times,
-                       'bmnum': bmnum,
+    print("Building the data frame...")
+    stid = [station] * len(epoch)
+    df = pd.DataFrame({'stationId': stid,
+                       'epoch': epoch,
+                       'year': year,
+                       'month': month,
+                       'day': day,
+                       'hour': hour,
+                       'minute': minute,
+                       'second': second,
+                       'beammNumber': bmnum,
+                       'beamAzimuth': bmazm,
+                       'intgrtnTime': intt,
                        'gate': slist,
-                       'tfreq': tfreq,
+                       'transFreq': tfreq,
+                       'firstRang': frang,
+                       'fitACFMajorRev': fitACF_rev_major,
+                       'fitACFMinorRev': fitACF_rev_minor,
+                       'CtrlPrgrm': combf,
+
                        'qflg': qflg,
                        'gflg': gflg,
                        'vel': v,
@@ -128,18 +183,28 @@ if __name__ == '__main__':
                        'pwr_err': p_l_e,
                        'wdt': w_l,
                        'wdt_err': w_l_e,
+                       'stdDevLambda': sd_l,
+                       'stdDevPhase': sd_phi,
                        'elv': elv,
                        'elv_low': elv_low,
-                       'elv_high': elv_high})
-
-    # Filter with the ground and quality flags
-    df = df.loc[(df['gflg'] == 0) & (df['qflg'] == 1) & (df['pwr'] >= 3.0)]
-
-    # Drop the ground scatter and quality flags and re-index
-    df.drop(['gflg', 'qflg'], inplace=True, axis=1)
-    df.reset_index(drop=True, inplace=True)
+                       'elv_high': elv_high
+                       })
 
     # Save to file
     out_file = in_dir + "/" + station + date + ".pkl"
     print("Pickling as " + out_file + "...")
     df.to_pickle(out_file)
+
+
+if __name__ == '__main__':
+    station = "rkn"
+    date = "20190318"
+    PickleFITACF(station, date)
+
+    # Filter with the ground and quality flags
+    # df = df.loc[(df['gflg'] == 0) & (df['qflg'] == 1) & (df['pwr'] >= 3.0)]
+
+    # Drop the ground scatter and quality flags and re-index
+    # df.drop(['gflg', 'qflg'], inplace=True, axis=1)
+    # df.reset_index(drop=True, inplace=True)
+

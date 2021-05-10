@@ -50,7 +50,7 @@ if __name__ == '__main__':
     data_array_beam56954 = file['/Data/Array Layout/Array with beamid=57656 ']
     print("Beam 56954 Keys: " + str(data_array_beam56954.keys()))
     data_range = file['/Data/Array Layout/Array with beamid=56954 /range']
-    print(data_range)
+    print(data_range[()])
     data_time = file['/Data/Array Layout/Array with beamid=56954 /timestamps']
     print(str(data_time))
     print(data_time[0])

@@ -17,12 +17,12 @@ if __name__ == '__main__':
     
     """
 
-    SAVE_PLOTS = False
-    SHOW_PLOTS = True
+    SAVE_PLOTS = True
+    SHOW_PLOTS = False
 
     year = "2014"   # yyyy
     month = "03"    # mm
-    day = "04"      # dd
+    day = "03"      # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     # Loop thorough and plot 2 hour chunks of data
     length_of_chunks_h = 2
     num_of_chunks = int(24 / length_of_chunks_h)
-    for chunk_num in range(1):
+    for chunk_num in range(num_of_chunks):
 
         # Computer start and end epochs and build restricted data frames
         start_hour_here = 0 + 2 * chunk_num
