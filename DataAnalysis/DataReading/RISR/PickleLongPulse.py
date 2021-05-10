@@ -34,7 +34,7 @@ if __name__ == '__main__':
     date = "201432"
 
     # Loop through all the files for this station/date and pickle all Long Pulse files
-    in_dir = "data/" + station + date
+    in_dir = "data/" + station + "/" + station + date
     for in_file in glob.iglob(in_dir + "/*.h5"):
 
         try:
@@ -53,7 +53,7 @@ if __name__ == '__main__':
             print("\n" + in_file + " is a " + file_type + " file, reading in data...")
 
             # Pre-allocate list for 1D parameters (only vary with time)
-            times = []  # time is the name of a library used herein
+            epoch = []
             ranges = []
             bmid = []
             bmnum = []
@@ -82,7 +82,7 @@ if __name__ == '__main__':
                 # Loop through all the times and ranges here
                 for time_idx, time in enumerate(file['/Data/Array Layout/' + beam + '/timestamps']):
                     for range_idx, range in enumerate(file['/Data/Array Layout/' + beam + '/range']):
-                        times.append(time)
+                        epoch.append(time)
                         ranges.append(range)
 
                         # The 1D parameters are just accessed in time
@@ -111,8 +111,8 @@ if __name__ == '__main__':
             # Put the data into a dataframe
             print("Building data frame...")
             df = pd.DataFrame(
-                {'stationId': [station] * len(times),
-                 'epoch': times,
+                {'stationId': [station] * len(epoch),
+                 'epoch': epoch,
                  'range': ranges,
                  'bmId': bmid,
                  'wdBmnum': bmnum,

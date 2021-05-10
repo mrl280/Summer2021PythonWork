@@ -7,16 +7,23 @@ if __name__ == '__main__':
     Doesn't produce anything, just for looking at the file structure
     """
     # in_file = "ran2020728.4"
-    in_file = "ran20161012.4"
+    # in_file = "ran20161012.4" # This one is an example of a RISR-N long pulse file
+    in_file = "ras2016923.4"
 
-    in_dir = in_file[:-2]
+    station = in_file[0:3]
+    in_dir = station + "/" + in_file[:-2]
     path = "data/" + in_dir + "/" + in_file
     file = h5py.File(path + ".h5", "r")
 
     # The file type is held in the CKINDAT parameter of experimental notes
     exp_notes = file['/Metadata/Experiment Notes']
-    file_type = str(exp_notes[25][0])
-    file_type = file_type[10:len(file_type) - 1].rstrip() # Strip out everything but the file type name
+    if station == "ran":
+        file_type = str(exp_notes[25][0])
+    elif station == "ras":
+        file_type = str(exp_notes[39][0])
+    else:
+        raise Exception("Station " + station + " not recognized")
+    file_type = file_type[10:len(file_type) - 1].rstrip()  # Strip out everything but the file type name
     print("File type: " + file_type)
 
     # Look at the data layout description
