@@ -46,7 +46,7 @@ def PickleFITACF(station, date):
             - Elevation angle 'elv' with low 'elv_low' and high 'elv_high' estimates
     """
 
-    pattern = '%Y.%m.%d %H:%M:%S.%f'  # This is the pattern we will use to convert time info to epoch
+    pattern = '%Y.%m.%d %H:%M:%S'  # This is the pattern we will use to convert time info to epoch
 
     # Pre-allocate lists for the scalar parameters
     # Station id will be the same for the whole event, so we will build it at the end
@@ -101,14 +101,9 @@ def PickleFITACF(station, date):
         for record in range(len(fitacf_data)):
 
             # Convert date and time to epoch
-            # Note the conversion of us to s:
-            #   - the 0. are stripped and only the after decimal part is used)
-            #   - we have to ensure it doesn't flip to scientific notation otherwise time.strptime can't handle it
-            #   - not really necessary because calendar.timegm doesn't keep microseconds anyway
             date_time = str(fitacf_data[record]['time.yr']) + "." + str(fitacf_data[record]['time.mo']) + "." \
                         + str(fitacf_data[record]['time.dy']) + " " + str(fitacf_data[record]['time.hr']) + ":" \
-                        + str(fitacf_data[record]['time.mt']) + ":" + str(fitacf_data[record]['time.sc']) + "." \
-                        + str(f"{fitacf_data[record]['time.us'] / 1e6:.6f}")[2:]
+                        + str(fitacf_data[record]['time.mt']) + ":" + str(fitacf_data[record]['time.sc'])
             epoch_here = calendar.timegm(time.strptime(date_time, pattern))  # Doesn't keep microseconds
 
             try:
@@ -171,6 +166,7 @@ def PickleFITACF(station, date):
                        'gate': slist,
                        'transFreq': tfreq,
                        'firstRang': frang,
+                       'rangeSep': rsep,
                        'fitACFMajorRev': fitACF_rev_major,
                        'fitACFMinorRev': fitACF_rev_minor,
                        'CtrlPrgrm': combf,
@@ -198,7 +194,7 @@ def PickleFITACF(station, date):
 
 if __name__ == '__main__':
     station = "rkn"
-    date = "20190318"
+    date = "20161012"
     PickleFITACF(station, date)
 
     # Filter with the ground and quality flags
