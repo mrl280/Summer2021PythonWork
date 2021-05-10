@@ -17,8 +17,8 @@ if __name__ == '__main__':
     
     """
 
-    SAVE_PLOTS = True
-    SHOW_PLOTS = False
+    SAVE_PLOTS = False
+    SHOW_PLOTS = True
 
     year = "2014"   # yyyy
     month = "03"    # mm
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     RISR_df['los_ion_vel'] = RISR_df['los_ion_vel'].apply(lambda x: x * -1)
 
     # The Beams are not quite aligned
-    # TODO: Confirm the angle between beams
+    # TODO: Confirm the angle between beams - might change based on magnetic field direction
     if SD_station == "rkn":
         RISR_df['los_ion_vel'] = RISR_df['los_ion_vel'].apply(lambda x: x / math.sin(math.radians(49.9)))
     else:
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     # Loop thorough and plot 2 hour chunks of data
     length_of_chunks_h = 2
     num_of_chunks = int(24 / length_of_chunks_h)
-    for chunk_num in range(num_of_chunks):
+    for chunk_num in range(1):
 
         # Computer start and end epochs and build restricted data frames
         start_hour_here = 0 + 2 * chunk_num
@@ -135,29 +135,35 @@ if __name__ == '__main__':
         # We have to remove all nan values because median can't handle them
         restricted_RISR_df = restricted_RISR_df[restricted_RISR_df['los_ion_vel'].notna()]
 
-        # Compute binned medians
-        n_bins = int(length_of_chunks_h / 0.25)  # 15 minute (1/4 hour) bins
+        # Compute binned medians and standard deviations
+        n_bins = int(length_of_chunks_h / (1 / 12))  # 5 minute (1/12 hour) bins
         try:
             SD_bin_medians, SD_bin_edges, SD_binnumber = stats.binned_statistic(
                 restricted_SD_df['decimal_time'], restricted_SD_df['vel'], 'median', bins=n_bins,
+                range=(start_hour_here, end_hour_here))
+            SD_bin_stds, x, xx = stats.binned_statistic(
+                restricted_SD_df['decimal_time'], restricted_SD_df['vel'], 'std', bins=n_bins,
                 range=(start_hour_here, end_hour_here))
             SD_bin_width = (SD_bin_edges[1] - SD_bin_edges[0])
             SD_bin_centers = SD_bin_edges[1:] - SD_bin_width / 2
         except:
             print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + SD_station
                   + " has no data here")
-            SD_bin_medians, SD_bin_centers = [], []
+            SD_bin_medians, SD_bin_centers, SD_bin_stds = [], [], []
 
         try:
             RISR_bin_medians, RISR_bin_edges, RISR_binnumber = stats.binned_statistic(
                 restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], 'median', bins=n_bins,
+                range=(start_hour_here, end_hour_here))
+            RISR_bin_stds, x, xx = stats.binned_statistic(
+                restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], 'std', bins=n_bins,
                 range=(start_hour_here, end_hour_here))
             RISR_bin_width = (RISR_bin_edges[1] - RISR_bin_edges[0])
             RISR_bin_centers = RISR_bin_edges[1:] - RISR_bin_width / 2
         except:
             print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + RISR_station
                   + " has no data here")
-            RISR_bin_medians, RISR_bin_centers = [], []
+            RISR_bin_medians, RISR_bin_centers, RISR_bin_stds = [], [], []
 
         # Set up the plot
         fig, ax = plt.subplots(figsize=(8, 9), dpi=300, nrows=3, ncols=1)
@@ -180,35 +186,52 @@ if __name__ == '__main__':
 
         # Plot SuperDARN data on the first set of axis
         ax[0].title.set_text(SD_station + "; " + SD_beam_string + "; " + SD_gate_string)
-        ax[0].plot(ax[0].get_ylim(), [0, 0], linestyle='-', linewidth=0.5, color='black')
-        ax[0].scatter(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], c='k', s=4, label='Raw Scatter')
+        ax[0].scatter(SD_bin_centers, SD_bin_medians, marker='o', s=40, facecolor='none',
+                      edgecolors='r', linewidths=2, label='Binned Medians')
+        ax[0].errorbar(SD_bin_centers, SD_bin_medians, yerr=SD_bin_stds,
+                       fmt='none', color='red', linewidth=1)
+        ax[0].scatter(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], s=4, facecolor='none',
+                      edgecolors='k', linewidths=0.75, label='Raw Scatter')
         ax[0].errorbar(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], yerr=restricted_SD_df['vel_err'],
                        fmt='none', color='black', linewidth=0.75)
-        ax[0].scatter(SD_bin_centers, SD_bin_medians, marker='o', s=50, c='r', label='Binned Medians')
-        ax[0].legend(loc='lower right')
 
         # Plot RISR data on the second plot
         ax[1].title.set_text(RISR_station + "; " + RISR_beam_string)
-        ax[1].scatter(restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], c='k', s=4, label='Raw Scatter')
-        # ax[1].errorbar(restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'],
-        #                yerr=restricted_RISR_df['los_ion_vel_err'], fmt='none', color='black', linewidth=0.75)
-        ax[1].scatter(RISR_bin_centers, RISR_bin_medians, marker='D', s=50, c='b', label='Binned Medians')
-        ax[1].legend(loc='lower right')
+        ax[1].scatter(RISR_bin_centers, RISR_bin_medians, marker='D', s=40, facecolor='none',
+                      edgecolors='b', linewidths=2, label='Binned Medians')
+        ax[1].errorbar(RISR_bin_centers, RISR_bin_medians, yerr=RISR_bin_stds,
+                       fmt='none', color='blue', linewidth=1)
+        ax[1].scatter(restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], s=4, facecolor='none',
+                      edgecolors='k', linewidths=0.75, label='Raw Scatter')
+        ax[1].errorbar(restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'],
+                       yerr=restricted_RISR_df['los_ion_vel_err'], fmt='none', color='black', linewidth=0.75)
 
         # Plot both sets of medians on the third subplot
         ax[2].title.set_text(SD_station + " " + RISR_station + " Velocity Comparison")
         try:
-            ax[2].scatter(SD_bin_centers - 0.005, SD_bin_medians, marker='o', s=50, c='r', label=SD_station + ' Binned Medians')
+            ax[2].scatter(SD_bin_centers + 0.005, SD_bin_medians, marker='o', s=40, facecolor='none',
+                          edgecolors='r', linewidths=2, label=SD_station + ' Binned Medians')
+            ax[2].errorbar(SD_bin_centers + 0.005, SD_bin_medians, yerr=SD_bin_stds,
+                           fmt='none', color='red', linewidth=1)
         except:
             pass
         try:
-            ax[2].scatter(RISR_bin_centers + 0.005, RISR_bin_medians, marker='D', s=50, c='b', label=RISR_station + ' Binned Medians')
+            ax[2].scatter(RISR_bin_centers - 0.005, RISR_bin_medians, marker='D', s=40, facecolor='none',
+                          edgecolors='b', linewidths=2, label=RISR_station + ' Binned Medians')
+            ax[2].errorbar(RISR_bin_centers - 0.005, RISR_bin_medians, yerr=RISR_bin_stds,
+                           fmt='none', color='blue', linewidth=1)
         except:
             pass
-        try:
-            ax[2].legend(loc='lower right')
-        except:
-            pass
+
+        # Add in legends
+        for i in range(ax.size):
+            # Shrink the current axis to make space for the legend
+            box = ax[i].get_position()
+            ax[i].set_position([box.x0, box.y0 + box.height * 0.15, box.width, box.height * 0.85])
+            try:
+                ax[i].legend(bbox_to_anchor=(0.5, -0.50), fancybox=True, ncol=2, loc='lower center')
+            except:
+                pass
 
         if SHOW_PLOTS:
             plt.show()
