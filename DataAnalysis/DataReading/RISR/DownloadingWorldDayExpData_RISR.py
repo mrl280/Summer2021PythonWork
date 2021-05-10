@@ -9,29 +9,51 @@ if __name__ == '__main__':
     Filter for World Day Experiments
     Optionally Download Experiment Data
     """
-    # To prevent downloading when you just want to browse instruments and experiments
-    DOWNLOAD_HDF5 = True
-    Arr_offset_to_download = 9  # Browse first to find this
 
-    madrigalUrl = "http://isr.sri.com/madrigal/"  # NOTE: Different instruments are at different URLs
+    # Choose which radar to use
+    RISRN = False
+    RISRC = True
+
+    DOWNLOAD_HDF5 = True  # To prevent downloading when you just want to browse instruments and experiments
+
+    Arr_offset_to_download = 19  # Browse first to find this
+
+    if RISRN and RISRC:
+        raise Exception("You cannot choose both RISR-N and C because their data lives in different places")
+    if not RISRN and not RISRC:
+        raise Exception("You have to to pick one of RISR-N or C")
+
+    # NOTE: Different instruments are at different URLs
+    if RISRN:
+        madrigalUrl = "http://isr.sri.com/madrigal/"
+    else:
+        madrigalUrl = "https://madrigal.phys.ucalgary.ca/"
     testData = madrigalWeb.MadrigalData(madrigalUrl)
 
     # List all of the instruments
     instList = testData.getAllInstruments()
+    inst_code = 0
+    radar_nmonic = ""
     for inst in instList:
         #  91: Resolute Bay North IS Radar (http://isr.sri.com/madrigal/)
-        if inst.code == 91:
+        if inst.code == 91 and RISRN:
+            inst_code = 91
             print(inst)
+            radar_nmonic = inst.mnemonic
         #  92: Resolute Bay Canada IS Radar (https://madrigal.phys.ucalgary.ca/)
-        # if inst.code == 92:
-        #     print(inst)
+        if inst.code == 92 and RISRC:
+            inst_code = 92
+            print(inst)
+            radar_nmonic = inst.mnemonic
+    if inst_code == 0 or radar_nmonic == "":
+        raise Exception("Something went wrong, inst_code and radar_nmonic were not set.")
 
     # Get a list of world day experiments
     worldDayRegex = re.compile("WorldDay*")
-    expList = testData.getExperiments(91,       # instrument code
-                                      2014, 1, 1,  # start year, month, and day
+    expList = testData.getExperiments(inst_code,       # instrument code
+                                      2016, 1, 1,  # start year, month, and day
                                       0, 0, 0,   # start hour, minute and second
-                                      2015, 1, 1,  # end year, month, and day
+                                      2017, 1, 1,  # end year, month, and day
                                       0, 0, 0)   # end hour, minute and second
     worldDayExpList = [exp for exp in expList if re.match(worldDayRegex, exp.name)]
     print("--\nNumber of World Day Experiments here: " + str(len(worldDayExpList)) + "\n")
@@ -51,19 +73,20 @@ if __name__ == '__main__':
         print("Experiment date: " + str(expToDownload.startyear) + "." + str(expToDownload.startmonth) + "." +
               str(expToDownload.startday) + " - " + str(expToDownload.endyear) + "." + str(expToDownload.endmonth) + "."
               + str(expToDownload.endday))
-        destination = "data/ran" + str(expToDownload.startyear) + str(expToDownload.startmonth) + str(expToDownload.startday) \
-                      + "/ran" + str(expToDownload.startyear) + str(expToDownload.startmonth) + str(expToDownload.startday)
+        destination = "data/" + radar_nmonic + "/" + radar_nmonic \
+                      + str(expToDownload.startyear) + str(expToDownload.startmonth) + str(expToDownload.startday) \
+                      + "/" + radar_nmonic + str(expToDownload.startyear) + str(expToDownload.startmonth) + str(expToDownload.startday)
         fileList = testData.getExperimentFiles(expToDownload.id)
         i = 1
 
         # Ensure out directory
         loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
-        out_dir = loc_root + "/DataReading/RISR/data/ran" \
+        out_dir = loc_root + "/DataReading/RISR/data/" + radar_nmonic + "/" + radar_nmonic \
                   + str(expToDownload.startyear) + str(expToDownload.startmonth) + str(expToDownload.startday)
-        print(out_dir)
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
 
+        # Actually download
         for file in fileList:
             print("Downloading: " + file.name + " as " + destination + "." + str(i) + ".h5")
             testData.downloadFile(file.name, destination + "." + str(i) + ".h5", "Michael Luciuk", "mrl280@usask.ca",
