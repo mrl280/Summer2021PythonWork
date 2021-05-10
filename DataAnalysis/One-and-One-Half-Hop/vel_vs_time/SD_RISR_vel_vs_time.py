@@ -51,7 +51,7 @@ if __name__ == '__main__':
     SD_df = pd.read_pickle(SD_in_file)
 
     # Read in RISR data
-    RISR_in_dir = loc_root + "/DataReading/RISR/data/" + RISR_station + year + RISR_exp_start_month + RISR_exp_start_day
+    RISR_in_dir = loc_root + "/DataReading/RISR/data/" + RISR_station + "/" + RISR_station + year + RISR_exp_start_month + RISR_exp_start_day
     RISR_in_file = RISR_in_dir + "/" + RISR_station + year + RISR_exp_start_month + RISR_exp_start_day \
                    + ".LongPulse.pkl"
     RISR_df = pd.read_pickle(RISR_in_file)
@@ -64,18 +64,18 @@ if __name__ == '__main__':
     SD_df.reset_index(drop=True, inplace=True)
 
     # Filter RISR data
-    RISR_df = RISR_df.loc[(RISR_df['time'] >= start_epoch) & (RISR_df['time'] <= end_epoch)  # filer times
-                          & (RISR_df['wd_bmnum'] >= RISR_wd_beam_range[0])
-                          & (RISR_df['wd_bmnum'] <= RISR_wd_beam_range[1])]  # filter beams
+    RISR_df = RISR_df.loc[(RISR_df['epoch'] >= start_epoch) & (RISR_df['epoch'] <= end_epoch)  # filer times
+                          & (RISR_df['wdBmnum'] >= RISR_wd_beam_range[0])
+                          & (RISR_df['wdBmnum'] <= RISR_wd_beam_range[1])]  # filter beams
     RISR_df.reset_index(drop=True, inplace=True)
 
     # RISR-N and RKN velocities are going opposite directions, flip RISR so toward is +ve
-    RISR_df['los_ion_vel'] = RISR_df['los_ion_vel'].apply(lambda x: x * -1)
+    RISR_df['losIonVel'] = RISR_df['losIonVel'].apply(lambda x: x * -1)
 
     # The Beams are not quite aligned
     # TODO: Confirm the angle between beams - might change based on magnetic field direction
     if SD_station == "rkn":
-        RISR_df['los_ion_vel'] = RISR_df['los_ion_vel'].apply(lambda x: x / math.sin(math.radians(49.9)))
+        RISR_df['losIonVel'] = RISR_df['losIonVel'].apply(lambda x: x / math.sin(math.radians(49.9)))
     else:
         print("Waring: No adjustments have been made to compensate for the angle between beams.")
 
@@ -87,13 +87,13 @@ if __name__ == '__main__':
         min = str.split(time.strftime(pattern, time.gmtime(SD_df['epoch'][t])))[1][3:5]
         sec = str.split(time.strftime(pattern, time.gmtime(SD_df['epoch'][t])))[1][6:8]
         SD_decimal_time.append(float(hour) + float(min) / 60.0 + float(sec) / 3600.0)
-    for t in range(len(RISR_df['time'])):
-        hour = str.split(time.strftime(pattern, time.gmtime(RISR_df['time'][t])))[1][0:2]
-        min = str.split(time.strftime(pattern, time.gmtime(RISR_df['time'][t])))[1][3:5]
-        sec = str.split(time.strftime(pattern, time.gmtime(RISR_df['time'][t])))[1][6:8]
+    for t in range(len(RISR_df['epoch'])):
+        hour = str.split(time.strftime(pattern, time.gmtime(RISR_df['epoch'][t])))[1][0:2]
+        min = str.split(time.strftime(pattern, time.gmtime(RISR_df['epoch'][t])))[1][3:5]
+        sec = str.split(time.strftime(pattern, time.gmtime(RISR_df['epoch'][t])))[1][6:8]
         RISR_decimal_time.append(float(hour) + float(min) / 60.0 + float(sec) / 3600.0)
-    SD_df['decimal_time'] = SD_decimal_time
-    RISR_df['decimal_time'] = RISR_decimal_time
+    SD_df['decimalTime'] = SD_decimal_time
+    RISR_df['decimalTime'] = RISR_decimal_time
 
     # Build title strings
     if SD_beam_range[0] == SD_beam_range[1]:
@@ -133,19 +133,19 @@ if __name__ == '__main__':
 
         # Build a restricted data frame based just on the times here
         restricted_SD_df = SD_df.loc[(SD_df['epoch'] >= start_epoch_here) & (SD_df['epoch'] <= end_epoch_here)]
-        restricted_RISR_df = RISR_df.loc[(RISR_df['time'] >= start_epoch_here) & (RISR_df['time'] <= end_epoch_here)]
+        restricted_RISR_df = RISR_df.loc[(RISR_df['epoch'] >= start_epoch_here) & (RISR_df['epoch'] <= end_epoch_here)]
 
-        # We have to remove all nan values because median can't handle them
-        restricted_RISR_df = restricted_RISR_df[restricted_RISR_df['los_ion_vel'].notna()]
+        # We have to remove all nan values because median and std can't handle them
+        restricted_RISR_df = restricted_RISR_df[restricted_RISR_df['losIonVel'].notna()]
 
         # Compute binned medians and standard deviations
         n_bins = int(length_of_chunks_h / (1 / 12))  # 5 minute (1/12 hour) bins
         try:
             SD_bin_medians, SD_bin_edges, SD_binnumber = stats.binned_statistic(
-                restricted_SD_df['decimal_time'], restricted_SD_df['vel'], 'median', bins=n_bins,
+                restricted_SD_df['decimalTime'], restricted_SD_df['vel'], 'median', bins=n_bins,
                 range=(start_hour_here, end_hour_here))
             SD_bin_stds, x, xx = stats.binned_statistic(
-                restricted_SD_df['decimal_time'], restricted_SD_df['vel'], 'std', bins=n_bins,
+                restricted_SD_df['decimalTime'], restricted_SD_df['vel'], 'std', bins=n_bins,
                 range=(start_hour_here, end_hour_here))
             SD_bin_width = (SD_bin_edges[1] - SD_bin_edges[0])
             SD_bin_centers = SD_bin_edges[1:] - SD_bin_width / 2
@@ -156,10 +156,10 @@ if __name__ == '__main__':
 
         try:
             RISR_bin_medians, RISR_bin_edges, RISR_binnumber = stats.binned_statistic(
-                restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], 'median', bins=n_bins,
+                restricted_RISR_df['decimalTime'], restricted_RISR_df['losIonVel'], 'median', bins=n_bins,
                 range=(start_hour_here, end_hour_here))
             RISR_bin_stds, x, xx = stats.binned_statistic(
-                restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], 'std', bins=n_bins,
+                restricted_RISR_df['decimalTime'], restricted_RISR_df['losIonVel'], 'std', bins=n_bins,
                 range=(start_hour_here, end_hour_here))
             RISR_bin_width = (RISR_bin_edges[1] - RISR_bin_edges[0])
             RISR_bin_centers = RISR_bin_edges[1:] - RISR_bin_width / 2
@@ -193,9 +193,9 @@ if __name__ == '__main__':
                       edgecolors='r', linewidths=2, label='Binned Medians')
         ax[0].errorbar(SD_bin_centers, SD_bin_medians, yerr=SD_bin_stds,
                        fmt='none', color='red', linewidth=1)
-        ax[0].scatter(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], s=4, facecolor='none',
+        ax[0].scatter(restricted_SD_df['decimalTime'], restricted_SD_df['vel'], s=4, facecolor='none',
                       edgecolors='k', linewidths=0.75, label='Raw Scatter')
-        ax[0].errorbar(restricted_SD_df['decimal_time'], restricted_SD_df['vel'], yerr=restricted_SD_df['velErr'],
+        ax[0].errorbar(restricted_SD_df['decimalTime'], restricted_SD_df['vel'], yerr=restricted_SD_df['velErr'],
                        fmt='none', color='black', linewidth=0.75)
 
         # Plot RISR data on the second plot
@@ -204,10 +204,10 @@ if __name__ == '__main__':
                       edgecolors='b', linewidths=2, label='Binned Medians')
         ax[1].errorbar(RISR_bin_centers, RISR_bin_medians, yerr=RISR_bin_stds,
                        fmt='none', color='blue', linewidth=1)
-        ax[1].scatter(restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'], s=4, facecolor='none',
+        ax[1].scatter(restricted_RISR_df['decimalTime'], restricted_RISR_df['losIonVel'], s=4, facecolor='none',
                       edgecolors='k', linewidths=0.75, label='Raw Scatter')
-        ax[1].errorbar(restricted_RISR_df['decimal_time'], restricted_RISR_df['los_ion_vel'],
-                       yerr=restricted_RISR_df['los_ion_vel_err'], fmt='none', color='black', linewidth=0.75)
+        ax[1].errorbar(restricted_RISR_df['decimalTime'], restricted_RISR_df['losIonVel'],
+                       yerr=restricted_RISR_df['losIonVelErr'], fmt='none', color='black', linewidth=0.75)
 
         # Plot both sets of medians on the third subplot
         ax[2].title.set_text(SD_station + " " + RISR_station + " Velocity Comparison")
