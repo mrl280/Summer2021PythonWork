@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     year = "2014"  # yyyy
     month = "03"  # mm
-    day = "03"  # dd
+    day = "04"  # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
@@ -162,8 +162,8 @@ if __name__ == '__main__':
                 ax[row][col].plot([ax[row][col].get_ylim()[0], ax[row][col].get_ylim()[1]],
                                   [ax[row][col].get_xlim()[0], ax[row][col].get_xlim()[1]],
                                   linestyle='-', linewidth=1, color='red')
-                ax[row][col].set_xlabel(SD_numonic + ' LOS Velocity [m/s]')
-                ax[row][col].set_ylabel(RISR_numonic + ' LOS Velocity [m/s]')
+                ax[row][col].set_xlabel(RISR_numonic + ' LOS Velocity [m/s]')
+                ax[row][col].set_ylabel(SD_numonic + ' LOS Velocity [m/s]')
 
         row = -1
         col = 1
@@ -242,7 +242,7 @@ if __name__ == '__main__':
 
             # Plot SD vs RISR Medians
             ax[row][col].title.set_text(str(start_hour_here) + "-" + str(end_hour_here) + " UT")
-            ax[row][col].scatter(stats_df['SDmedians'], stats_df['RISRmedians'], marker='^', s=25, facecolor='none',
+            ax[row][col].scatter(stats_df['RISRmedians'], stats_df['SDmedians'], marker='^', s=25, facecolor='none',
                           edgecolors='g', linewidths=1, label='Binned Medians')
 
         if SHOW_PLOTS:
