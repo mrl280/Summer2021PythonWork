@@ -8,8 +8,8 @@ from DataAnalysis.DataReading.RISR.wd_beam_num import wd_beam_num
 
 if __name__ == '__main__':
     """
-    Take a RISR-N long pulse file and pickle it
-    Note: Not tested with RISR-C data
+    Take a RISR long pulse file and pickle it
+    Works for both RISR-N and RISR-C, although some RISR-C files seem not to have altitude data
     
     Parameters of Interest:
         Epoch time
