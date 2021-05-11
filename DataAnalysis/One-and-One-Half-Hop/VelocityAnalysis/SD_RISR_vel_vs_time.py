@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from scipy import stats
 from PyPDF2 import PdfFileMerger
+from matplotlib.ticker import MultipleLocator
 
 import pandas as pd
 
@@ -21,8 +22,8 @@ if __name__ == '__main__':
     
     """
 
-    SAVE_PLOTS = False
-    SHOW_PLOTS = True
+    SAVE_PLOTS = True
+    SHOW_PLOTS = False
 
     year = "2014"   # yyyy
     month = "03"    # mm
@@ -153,12 +154,15 @@ if __name__ == '__main__':
             SD_bin_stds, x, xx = stats.binned_statistic(
                 restricted_SD_df['decimalTime'], restricted_SD_df['vel'], 'std', bins=n_bins,
                 range=(start_hour_here, end_hour_here))
+            SD_counts, xxx, xxxx = stats.binned_statistic(
+                restricted_SD_df['decimalTime'], restricted_SD_df['vel'], 'count', bins=n_bins,
+                range=(start_hour_here, end_hour_here))
             SD_bin_width = (SD_bin_edges[1] - SD_bin_edges[0])
             SD_bin_centers = SD_bin_edges[1:] - SD_bin_width / 2
         except:
             print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + SD_station
                   + " has no data here")
-            SD_bin_medians, SD_bin_centers, SD_bin_stds = [], [], []
+            SD_bin_medians, SD_bin_centers, SD_bin_stds, SD_counts = [], [], [], []
 
         try:
             RISR_bin_medians, RISR_bin_edges, RISR_binnumber = stats.binned_statistic(
@@ -167,28 +171,33 @@ if __name__ == '__main__':
             RISR_bin_stds, x, xx = stats.binned_statistic(
                 restricted_RISR_df['decimalTime'], restricted_RISR_df['losIonVel'], 'std', bins=n_bins,
                 range=(start_hour_here, end_hour_here))
+            RISR_counts, xxx, xxxx = stats.binned_statistic(
+                restricted_RISR_df['decimalTime'], restricted_RISR_df['losIonVel'], 'count', bins=n_bins,
+                range=(start_hour_here, end_hour_here))
             RISR_bin_width = (RISR_bin_edges[1] - RISR_bin_edges[0])
             RISR_bin_centers = RISR_bin_edges[1:] - RISR_bin_width / 2
         except:
             print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + RISR_station
                   + " has no data here")
-            RISR_bin_medians, RISR_bin_centers, RISR_bin_stds = [], [], []
+            RISR_bin_medians, RISR_bin_centers, RISR_bin_stds, RISR_counts = [], [], [], []
 
         # Set up the plot
         fig, ax = plt.subplots(figsize=(8, 9), dpi=300, nrows=3, ncols=1)
         plt.subplots_adjust(hspace=0.4)
-        fig.suptitle(SD_station + " and " + RISR_station + " LOS Velocity Evolution; "
-                     + str(start_hour_here) + "-" + str(end_hour_here) + " UT"
+        fig.suptitle(SD_station + " and " + RISR_station + " LOS Velocity Evolution; " + year + "." + month + "." + day
+                     + "; " + str(start_hour_here) + "-" + str(end_hour_here) + " UT"
                      + "\nNote: Positive Velocity Means Towards the Radars"
                      + "\nProduced by " + str(os.path.basename(__file__)),
                      fontsize=13)
 
         # Apply common subplot formatting
         for i in range(ax.size):
-            ax[i].set_ylim([-600, 600])
+            ax[i].yaxis.set_minor_locator(MultipleLocator(100))
+            ax[i].set_ylim([-1000, 1000])
             ax[i].set_xlim([start_hour_here, end_hour_here])
             ax[i].xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-            ax[i].grid(which='major', axis='y', linestyle='--', linewidth=0.5)
+            ax[i].grid(b=True, which='major', axis='y', linestyle='--', linewidth=0.5)
+            ax[i].grid(b=True, which='minor', axis='y', linestyle='--', linewidth=0.2)
             ax[i].plot(ax[i].get_ylim(), [0, 0], linestyle='-', linewidth=0.5, color='black')
             ax[i].set_xlabel('Time [UT]')
             ax[i].set_ylabel('LOS Velocity [m/s]')
