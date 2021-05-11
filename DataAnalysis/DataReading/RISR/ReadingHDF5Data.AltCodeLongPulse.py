@@ -8,7 +8,7 @@ if __name__ == '__main__':
     """
     # in_file = "ran2020728.4"
     # in_file = "ran20161012.4" # This one is an example of a RISR-N long pulse file
-    in_file = "ras2016923.6"
+    in_file = "ras2016923.6"  # This one is an example of a RISR-C long pulse file
 
     station = in_file[0:3]
     in_dir = station + "/" + in_file[:-2]
