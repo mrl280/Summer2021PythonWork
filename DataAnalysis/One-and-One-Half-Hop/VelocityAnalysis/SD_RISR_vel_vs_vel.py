@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     year = "2014"  # yyyy
     month = "03"  # mm
-    day = "03"  # dd
+    day = "04"  # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
@@ -192,12 +192,15 @@ if __name__ == '__main__':
                 SD_bin_stds, x, xx = stats.binned_statistic(
                     restricted_SD_df['decimalTime'], restricted_SD_df['vel'], 'std', bins=n_bins,
                     range=(start_hour_here, end_hour_here))
+                SD_counts, xxx, xxxx = stats.binned_statistic(
+                    restricted_SD_df['decimalTime'], restricted_SD_df['vel'], 'count', bins=n_bins,
+                    range=(start_hour_here, end_hour_here))
                 SD_bin_width = (SD_bin_edges[1] - SD_bin_edges[0])
                 SD_bin_centers = SD_bin_edges[1:] - SD_bin_width / 2
             except:
                 print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + SD_station
                       + " has no data here")
-                SD_bin_medians, SD_bin_centers, SD_bin_stds = [], [], []
+                SD_bin_medians, SD_bin_centers, SD_bin_stds, SD_counts = [], [], [], []
 
             try:
                 RISR_bin_medians, RISR_bin_edges, RISR_binnumber = stats.binned_statistic(
@@ -206,16 +209,33 @@ if __name__ == '__main__':
                 RISR_bin_stds, x, xx = stats.binned_statistic(
                     restricted_RISR_df['decimalTime'], restricted_RISR_df['losIonVel'], 'std', bins=n_bins,
                     range=(start_hour_here, end_hour_here))
+                RISR_counts, xxx, xxxx = stats.binned_statistic(
+                    restricted_RISR_df['decimalTime'], restricted_RISR_df['losIonVel'], 'count', bins=n_bins,
+                    range=(start_hour_here, end_hour_here))
                 RISR_bin_width = (RISR_bin_edges[1] - RISR_bin_edges[0])
                 RISR_bin_centers = RISR_bin_edges[1:] - RISR_bin_width / 2
             except:
                 print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + RISR_station
                       + " has no data here")
-                RISR_bin_medians, RISR_bin_centers, RISR_bin_stds = [], [], []
+                RISR_bin_medians, RISR_bin_centers, RISR_bin_stds, RISR_counts = [], [], [], []
+
+            # Put the statistics into a df
+            stats_df = pd.DataFrame({'SDbinCenters': SD_bin_centers,
+                                     'SDmedians': SD_bin_medians,
+                                     'SDstdDev': SD_bin_stds,
+                                     'SDcount': SD_counts,
+                                     'RISRbinCenters': RISR_bin_centers,
+                                     'RISRmedians': RISR_bin_medians,
+                                     'RISRstdDev': RISR_bin_stds,
+                                     'RISRcount': RISR_counts
+                                     })
+
+            # Remove all points where there are less than three raw data points
+            stats_df = stats_df.loc[(stats_df['SDcount'] >= 3) & (stats_df['RISRcount'] >= 3)]
 
             # Plot SD vs RISR Medians
             ax[row][col].title.set_text(str(start_hour_here) + "-" + str(end_hour_here) + " UT")
-            ax[row][col].scatter(SD_bin_medians, RISR_bin_medians, marker='^', s=25, facecolor='none',
+            ax[row][col].scatter(stats_df['SDmedians'], stats_df['RISRmedians'], marker='^', s=25, facecolor='none',
                           edgecolors='g', linewidths=1, label='Binned Medians')
 
         if SHOW_PLOTS:
@@ -225,15 +245,16 @@ if __name__ == '__main__':
             fig.savefig(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_vel_" + year + month + day
                          + "_" + str(page) + "_temp.pdf", format='pdf', dpi=300)
 
-    # Merge all the temp pdf files
-    merger = PdfFileMerger()
-    for pdf in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
-        merger.append(pdf)
-    with open(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_vel_" + year + month + day + ".pdf",
-              "wb") as fout:
-        merger.write(fout)
-    merger.close()
+    if SAVE_PLOTS:
+        # Merge all the temp pdf files
+        merger = PdfFileMerger()
+        for pdf in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
+            merger.append(pdf)
+        with open(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_vel_" + year + month + day + ".pdf",
+                  "wb") as fout:
+            merger.write(fout)
+        merger.close()
 
-    for file in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
-        os.remove(file)
+        for file in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
+            os.remove(file)
 

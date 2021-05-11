@@ -25,9 +25,9 @@ if __name__ == '__main__':
     SAVE_PLOTS = True
     SHOW_PLOTS = False
 
-    year = "2014"   # yyyy
-    month = "03"    # mm
-    day = "04"      # dd
+    year = "2014"  # yyyy
+    month = "03"  # mm
+    day = "03"  # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
@@ -181,6 +181,23 @@ if __name__ == '__main__':
                   + " has no data here")
             RISR_bin_medians, RISR_bin_centers, RISR_bin_stds, RISR_counts = [], [], [], []
 
+        # Put the statistics into a df
+        SD_stats_df = pd.DataFrame({'binCenters': SD_bin_centers,
+                                    'medians': SD_bin_medians,
+                                    'stdDev': SD_bin_stds,
+                                    'count': SD_counts
+                                    })
+        RISR_stats_df = pd.DataFrame({'binCenters': RISR_bin_centers,
+                                      'medians': RISR_bin_medians,
+                                      'stdDev': RISR_bin_stds,
+                                      'count': RISR_counts
+                                      })
+        # Remove all points where there are less than three raw data points
+        SD_stats_df = SD_stats_df.loc[(SD_stats_df['count'] >= 3)]
+        RISR_stats_df = RISR_stats_df.loc[RISR_stats_df['count'] >= 3]
+        SD_stats_df.reset_index(drop=True, inplace=True)
+        RISR_stats_df.reset_index(drop=True, inplace=True)
+
         # Set up the plot
         fig, ax = plt.subplots(figsize=(8, 9), dpi=300, nrows=3, ncols=1)
         plt.subplots_adjust(hspace=0.4)
@@ -204,9 +221,9 @@ if __name__ == '__main__':
 
         # Plot SuperDARN data on the first set of axis
         ax[0].title.set_text(SD_station + "; " + SD_beam_string + "; " + SD_gate_string)
-        ax[0].scatter(SD_bin_centers, SD_bin_medians, marker='o', s=40, facecolor='none',
+        ax[0].scatter(SD_stats_df['binCenters'], SD_stats_df['medians'], marker='o', s=40, facecolor='none',
                       edgecolors='r', linewidths=2, label='Binned Medians')
-        ax[0].errorbar(SD_bin_centers, SD_bin_medians, yerr=SD_bin_stds,
+        ax[0].errorbar(SD_stats_df['binCenters'], SD_stats_df['medians'], yerr=SD_stats_df['stdDev'],
                        fmt='none', color='red', linewidth=1)
         ax[0].scatter(restricted_SD_df['decimalTime'], restricted_SD_df['vel'], s=4, facecolor='none',
                       edgecolors='k', linewidths=0.75, label='Raw Scatter')
@@ -215,9 +232,9 @@ if __name__ == '__main__':
 
         # Plot RISR data on the second plot
         ax[1].title.set_text(RISR_station + "; " + RISR_beam_string)
-        ax[1].scatter(RISR_bin_centers, RISR_bin_medians, marker='D', s=40, facecolor='none',
+        ax[1].scatter(RISR_stats_df['binCenters'], RISR_stats_df['medians'], marker='D', s=40, facecolor='none',
                       edgecolors='b', linewidths=2, label='Binned Medians')
-        ax[1].errorbar(RISR_bin_centers, RISR_bin_medians, yerr=RISR_bin_stds,
+        ax[1].errorbar(RISR_stats_df['binCenters'], RISR_stats_df['medians'], yerr=RISR_stats_df['stdDev'],
                        fmt='none', color='blue', linewidth=1)
         ax[1].scatter(restricted_RISR_df['decimalTime'], restricted_RISR_df['losIonVel'], s=4, facecolor='none',
                       edgecolors='k', linewidths=0.75, label='Raw Scatter')
@@ -227,16 +244,16 @@ if __name__ == '__main__':
         # Plot both sets of medians on the third subplot
         ax[2].title.set_text(SD_station + " " + RISR_station + " Velocity Comparison")
         try:
-            ax[2].scatter(SD_bin_centers + 0.005, SD_bin_medians, marker='o', s=40, facecolor='none',
+            ax[2].scatter(SD_stats_df['binCenters'] + 0.005, SD_stats_df['medians'], marker='o', s=40, facecolor='none',
                           edgecolors='r', linewidths=2, label=SD_station + ' Binned Medians')
-            ax[2].errorbar(SD_bin_centers + 0.005, SD_bin_medians, yerr=SD_bin_stds,
+            ax[2].errorbar(SD_stats_df['binCenters'] + 0.005, SD_stats_df['medians'], yerr=SD_stats_df['stdDev'],
                            fmt='none', color='red', linewidth=1)
         except:
             pass
         try:
-            ax[2].scatter(RISR_bin_centers - 0.005, RISR_bin_medians, marker='D', s=40, facecolor='none',
+            ax[2].scatter(RISR_stats_df['binCenters'] - 0.005, RISR_stats_df['medians'], marker='D', s=40, facecolor='none',
                           edgecolors='b', linewidths=2, label=RISR_station + ' Binned Medians')
-            ax[2].errorbar(RISR_bin_centers - 0.005, RISR_bin_medians, yerr=RISR_bin_stds,
+            ax[2].errorbar(RISR_stats_df['binCenters'] - 0.005, RISR_stats_df['medians'], yerr=RISR_stats_df['stdDev'],
                            fmt='none', color='blue', linewidth=1)
         except:
             pass
@@ -256,16 +273,18 @@ if __name__ == '__main__':
 
         if SAVE_PLOTS:
             fig.savefig(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_time_" + year + month + day
-                         + "_" + chr(ord('a') + chunk_num) + " " + str(start_hour_here) + "-" + str(end_hour_here) + "UT"
-                         + "_temp.pdf", format='pdf', dpi=300)
+                        + "_" + chr(ord('a') + chunk_num) + " " + str(start_hour_here) + "-" + str(end_hour_here) + "UT"
+                        + "_temp.pdf", format='pdf', dpi=300)
 
-    # Merge all the temp pdf files
-    merger = PdfFileMerger()
-    for pdf in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
-        merger.append(pdf)
-    with open(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_time_" + year + month + day + ".pdf", "wb") as fout:
-        merger.write(fout)
-    merger.close()
+    if SAVE_PLOTS:
+        # Merge all the temp pdf files
+        merger = PdfFileMerger()
+        for pdf in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
+            merger.append(pdf)
+        with open(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_time_" + year + month + day + ".pdf",
+                  "wb") as fout:
+            merger.write(fout)
+        merger.close()
 
-    for file in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
-        os.remove(file)
+        for file in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
+            os.remove(file)
