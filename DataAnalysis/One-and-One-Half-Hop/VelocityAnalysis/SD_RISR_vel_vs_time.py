@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     year = "2014"  # yyyy
     month = "03"  # mm
-    day = "03"  # dd
+    day = "04"  # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
@@ -39,6 +39,14 @@ if __name__ == '__main__':
     RISR_exp_start_month = "3"
     RISR_exp_start_day = "2"
     RISR_wd_beam_range = [2, 2]
+
+    SD_numonic = SD_station.upper()
+    if RISR_station == "ran":
+        RISR_numonic = "RISR-N"
+    elif RISR_station == "ras":
+        RISR_numonic = "RISR-C"
+    else:
+        raise Exception("Error, " + RISR_station + " not recognized.")
 
     # Compute start and end epochs
     pattern = '%Y.%m.%d %H:%M:%S'  # This is the human readable time pattern we use
@@ -160,7 +168,7 @@ if __name__ == '__main__':
             SD_bin_width = (SD_bin_edges[1] - SD_bin_edges[0])
             SD_bin_centers = SD_bin_edges[1:] - SD_bin_width / 2
         except:
-            print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + SD_station
+            print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + SD_numonic
                   + " has no data here")
             SD_bin_medians, SD_bin_centers, SD_bin_stds, SD_counts = [], [], [], []
 
@@ -177,7 +185,7 @@ if __name__ == '__main__':
             RISR_bin_width = (RISR_bin_edges[1] - RISR_bin_edges[0])
             RISR_bin_centers = RISR_bin_edges[1:] - RISR_bin_width / 2
         except:
-            print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + RISR_station
+            print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + RISR_numonic
                   + " has no data here")
             RISR_bin_medians, RISR_bin_centers, RISR_bin_stds, RISR_counts = [], [], [], []
 
@@ -201,7 +209,7 @@ if __name__ == '__main__':
         # Set up the plot
         fig, ax = plt.subplots(figsize=(8, 9), dpi=300, nrows=3, ncols=1)
         plt.subplots_adjust(hspace=0.4)
-        fig.suptitle(SD_station + " and " + RISR_station + " LOS Velocity Evolution; " + year + "." + month + "." + day
+        fig.suptitle(SD_numonic + " and " + RISR_numonic + " LOS Velocity Evolution; " + year + "." + month + "." + day
                      + "; " + str(start_hour_here) + "-" + str(end_hour_here) + " UT"
                      + "\nNote: Positive Velocity Means Towards the Radars"
                      + "\nProduced by " + str(os.path.basename(__file__)),
@@ -220,7 +228,7 @@ if __name__ == '__main__':
             ax[i].set_ylabel('LOS Velocity [m/s]')
 
         # Plot SuperDARN data on the first set of axis
-        ax[0].title.set_text(SD_station + "; " + SD_beam_string + "; " + SD_gate_string)
+        ax[0].title.set_text(SD_numonic + "; " + SD_beam_string + "; " + SD_gate_string)
         ax[0].scatter(SD_stats_df['binCenters'], SD_stats_df['medians'], marker='o', s=40, facecolor='none',
                       edgecolors='r', linewidths=2, label='Binned Medians')
         ax[0].errorbar(SD_stats_df['binCenters'], SD_stats_df['medians'], yerr=SD_stats_df['stdDev'],
@@ -231,7 +239,7 @@ if __name__ == '__main__':
                        fmt='none', color='black', linewidth=0.75)
 
         # Plot RISR data on the second plot
-        ax[1].title.set_text(RISR_station + "; " + RISR_beam_string)
+        ax[1].title.set_text(RISR_numonic + "; " + RISR_beam_string)
         ax[1].scatter(RISR_stats_df['binCenters'], RISR_stats_df['medians'], marker='D', s=40, facecolor='none',
                       edgecolors='b', linewidths=2, label='Binned Medians')
         ax[1].errorbar(RISR_stats_df['binCenters'], RISR_stats_df['medians'], yerr=RISR_stats_df['stdDev'],
@@ -242,17 +250,17 @@ if __name__ == '__main__':
                        yerr=restricted_RISR_df['losIonVelErr'], fmt='none', color='black', linewidth=0.75)
 
         # Plot both sets of medians on the third subplot
-        ax[2].title.set_text(SD_station + " " + RISR_station + " Velocity Comparison")
+        ax[2].title.set_text(SD_numonic + " " + RISR_numonic + " Velocity Comparison")
         try:
             ax[2].scatter(SD_stats_df['binCenters'] + 0.005, SD_stats_df['medians'], marker='o', s=40, facecolor='none',
-                          edgecolors='r', linewidths=2, label=SD_station + ' Binned Medians')
+                          edgecolors='r', linewidths=2, label=SD_numonic + ' Binned Medians')
             ax[2].errorbar(SD_stats_df['binCenters'] + 0.005, SD_stats_df['medians'], yerr=SD_stats_df['stdDev'],
                            fmt='none', color='red', linewidth=1)
         except:
             pass
         try:
             ax[2].scatter(RISR_stats_df['binCenters'] - 0.005, RISR_stats_df['medians'], marker='D', s=40, facecolor='none',
-                          edgecolors='b', linewidths=2, label=RISR_station + ' Binned Medians')
+                          edgecolors='b', linewidths=2, label=RISR_numonic + ' Binned Medians')
             ax[2].errorbar(RISR_stats_df['binCenters'] - 0.005, RISR_stats_df['medians'], yerr=RISR_stats_df['stdDev'],
                            fmt='none', color='blue', linewidth=1)
         except:
@@ -272,7 +280,7 @@ if __name__ == '__main__':
             plt.show()
 
         if SAVE_PLOTS:
-            fig.savefig(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_time_" + year + month + day
+            fig.savefig(out_dir + "/" + SD_numonic + "_" + RISR_numonic + "_vel_vs_time_" + year + month + day
                         + "_" + chr(ord('a') + chunk_num) + " " + str(start_hour_here) + "-" + str(end_hour_here) + "UT"
                         + "_temp.pdf", format='pdf', dpi=300)
 
@@ -281,7 +289,7 @@ if __name__ == '__main__':
         merger = PdfFileMerger()
         for pdf in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
             merger.append(pdf)
-        with open(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_time_" + year + month + day + ".pdf",
+        with open(out_dir + "/" + SD_numonic + "_" + RISR_numonic + "_vel_vs_time_" + year + month + day + ".pdf",
                   "wb") as fout:
             merger.write(fout)
         merger.close()

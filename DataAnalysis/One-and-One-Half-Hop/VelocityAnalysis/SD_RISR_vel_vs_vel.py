@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     year = "2014"  # yyyy
     month = "03"  # mm
-    day = "04"  # dd
+    day = "03"  # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
@@ -39,6 +39,14 @@ if __name__ == '__main__':
     RISR_exp_start_month = "3"
     RISR_exp_start_day = "2"
     RISR_wd_beam_range = [2, 2]
+
+    SD_numonic = SD_station.upper()
+    if RISR_station == "ran":
+        RISR_numonic = "RISR-N"
+    elif RISR_station == "ras":
+        RISR_numonic = "RISR-C"
+    else:
+        raise Exception("Error, " + RISR_station + " not recognized.")
 
     # Compute start and end epochs
     pattern = '%Y.%m.%d %H:%M:%S'  # This is the human readable time pattern we use
@@ -136,7 +144,7 @@ if __name__ == '__main__':
         n_cols = 2
         fig, ax = plt.subplots(figsize=(8, 9), dpi=300, nrows=n_rows, ncols=n_cols)
         plt.subplots_adjust(hspace=0.4, wspace=0.4)
-        fig.suptitle(SD_station + " and " + RISR_station + " LOS Velocity Comparison; " + year + "." + month + "." + day
+        fig.suptitle(SD_numonic + " and " + RISR_numonic + " LOS Velocity Comparison; " + year + "." + month + "." + day
                      + "\nNote: Positive Velocity Means Towards the Radars"
                      + "\nProduced by " + str(os.path.basename(__file__)),
                      fontsize=13)
@@ -155,8 +163,8 @@ if __name__ == '__main__':
                 ax[row][col].plot([ax[row][col].get_ylim()[0], ax[row][col].get_ylim()[1]],
                                   [ax[row][col].get_xlim()[0], ax[row][col].get_xlim()[1]],
                                   linestyle='-', linewidth=1, color='red')
-                ax[row][col].set_xlabel(SD_station + ' LOS Velocity [m/s]')
-                ax[row][col].set_ylabel(RISR_station + ' LOS Velocity [m/s]')
+                ax[row][col].set_xlabel(SD_numonic + ' LOS Velocity [m/s]')
+                ax[row][col].set_ylabel(RISR_numonic + ' LOS Velocity [m/s]')
 
         row = -1
         col = 1
@@ -198,7 +206,7 @@ if __name__ == '__main__':
                 SD_bin_width = (SD_bin_edges[1] - SD_bin_edges[0])
                 SD_bin_centers = SD_bin_edges[1:] - SD_bin_width / 2
             except:
-                print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + SD_station
+                print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + SD_numonic
                       + " has no data here")
                 SD_bin_medians, SD_bin_centers, SD_bin_stds, SD_counts = [], [], [], []
 
@@ -215,7 +223,7 @@ if __name__ == '__main__':
                 RISR_bin_width = (RISR_bin_edges[1] - RISR_bin_edges[0])
                 RISR_bin_centers = RISR_bin_edges[1:] - RISR_bin_width / 2
             except:
-                print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + RISR_station
+                print("Warning for " + str(start_hour_here) + "-" + str(end_hour_here) + " UT: " + RISR_numonic
                       + " has no data here")
                 RISR_bin_medians, RISR_bin_centers, RISR_bin_stds, RISR_counts = [], [], [], []
 
@@ -242,7 +250,7 @@ if __name__ == '__main__':
             plt.show()
 
         if SAVE_PLOTS:
-            fig.savefig(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_vel_" + year + month + day
+            fig.savefig(out_dir + "/" + SD_numonic + "_" + RISR_numonic + "_vel_vs_vel_" + year + month + day
                          + "_" + str(page) + "_temp.pdf", format='pdf', dpi=300)
 
     if SAVE_PLOTS:
@@ -250,7 +258,7 @@ if __name__ == '__main__':
         merger = PdfFileMerger()
         for pdf in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
             merger.append(pdf)
-        with open(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_vel_" + year + month + day + ".pdf",
+        with open(out_dir + "/" + SD_numonic + "_" + RISR_numonic + "_vel_vs_vel_" + year + month + day + ".pdf",
                   "wb") as fout:
             merger.write(fout)
         merger.close()
