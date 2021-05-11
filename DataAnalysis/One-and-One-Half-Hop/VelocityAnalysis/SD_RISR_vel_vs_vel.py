@@ -16,10 +16,9 @@ from DataAnalysis.DataReading.SD.basic_SD_df_filter import basic_SD_df_filter
 
 if __name__ == '__main__':
     """
-    Plot SuperDARN and RISR velocity vs time
-
-    RISR Velocities are flipped and divided by the sin of the elevation angle
-
+    Plot SuperDARN and RISR velocity vs velocity
+    Produces plots for a day
+    One scatter plot for each 2 hour time period
     """
 
     SAVE_PLOTS = True
