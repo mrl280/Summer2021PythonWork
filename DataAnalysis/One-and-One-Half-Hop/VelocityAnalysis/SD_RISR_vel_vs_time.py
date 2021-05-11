@@ -17,9 +17,12 @@ if __name__ == '__main__':
     """
     Plot SuperDARN and RISR velocity vs time
     
-    RISR Velocities are flipped and divided by sin(49.9 deg)
+    RISR Velocities are flipped and divided by the sin of the elevation angle
     
     """
+
+    # TODO: Turn the part that makes the first series of plots into a function
+    #  Add a function that makes the vel vs vel scatter plots
 
     SAVE_PLOTS = False
     SHOW_PLOTS = True

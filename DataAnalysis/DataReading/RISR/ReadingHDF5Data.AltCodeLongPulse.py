@@ -8,7 +8,7 @@ if __name__ == '__main__':
     """
     # in_file = "ran2020728.4"
     # in_file = "ran20161012.4" # This one is an example of a RISR-N long pulse file
-    in_file = "ras2016923.4"
+    in_file = "ras2016923.6"
 
     station = in_file[0:3]
     in_dir = station + "/" + in_file[:-2]
@@ -60,7 +60,10 @@ if __name__ == '__main__':
     print(data_range)
     data_time = file['/Data/Array Layout/Array with beamid=56954 /timestamps']
     print(str(data_time))
-    print(data_time[0])
+    print("First time: " + str(data_time[0]))
+    print("Second time: " + str(data_time[1]))
+    print("Data time resolution: " + str(int((data_time[1] - data_time[0]) / 60)))
+    print("End time: " + str(data_time[len(data_time) - 1]))
 
     print("\n")
     # Here are all the 1D parameters

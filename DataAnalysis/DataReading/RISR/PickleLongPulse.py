@@ -58,6 +58,15 @@ if __name__ == '__main__':
         else:
             # The file is a long pulse file, we are good to go ahead
             print("\n" + in_file + " is a " + file_type + " file, reading in data...")
+            try:
+                data_time = file['/Data/Array Layout/Array with beamid=56954 /timestamps']
+            except:
+                raise Exception("Error: file does not contain Array with beamid=56954, additional info needed to "
+                                "compute time resolution")
+            resolution = int((data_time[1] - data_time[0]) / 60)
+            print("Data time resolution: " + str(resolution) + " minute data")
+            # Strip the "x.h5" and replace with data resolution and "LongPulse.pkl"
+            out_file = in_file[:len(in_file) - 4] + str(resolution) + "min.LongPulse.pkl"
 
             # Pre-allocate list for 1D parameters (only vary with time)
             epoch = []
@@ -145,7 +154,6 @@ if __name__ == '__main__':
                  })
 
             # Save to file
-            out_file = in_file[:len(in_file) - 4] + "LongPulse.pkl"  # Strip the "x.h5" and replace with "LongPulse.pkl"
             print("Pickling as " + out_file + "...")
             df.to_pickle(out_file)
 

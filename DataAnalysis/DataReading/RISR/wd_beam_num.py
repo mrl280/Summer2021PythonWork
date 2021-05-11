@@ -7,12 +7,13 @@ import h5py
 def wd_beam_num(beam_id):
     """
     Note: Applicable only when RISR is operating in World Day mode
-    :param beam_id: The RISR-N beam id
-    :return: The RISR-N beam number (1 - 11) from the world-day mode.  May return Nan if the beam id is not recognized.
+    These beam numbers ar the same for both RISR-N and RISR-C
+    :param beam_id: The RISR beam id
+    :return: The RISR beam number (1 - 11) from the world-day mode.  May return Nan if the beam id is not recognized.
     """
     if beam_id == 55748:
         return 1
-    elif beam_id == 57656:   # This WD RISR beam overlaps with rkn beam 5 (gates 30-40)
+    elif beam_id == 57656:   # This WD RISR-N beam overlaps with rkn beam 5 (gates 30-40)
         return 2
     elif beam_id == 56954:
         return 3
@@ -28,7 +29,7 @@ def wd_beam_num(beam_id):
         return 8
     elif beam_id == 64280:
         return 9
-    elif beam_id == 63587:   # This WD RISR beam overlaps with inv beam 12 (gates 31-38)
+    elif beam_id == 63587:   # This WD RISR-N beam overlaps with inv beam 12 (gates 31-38)
         return 10
     elif beam_id == 65486:
         return 11
