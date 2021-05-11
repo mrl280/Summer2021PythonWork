@@ -194,5 +194,5 @@ def PickleFITACF(station, date):
 
 if __name__ == '__main__':
     station = "rkn"
-    date = "20140303"
+    date = "20140304"
     PickleFITACF(station, date)

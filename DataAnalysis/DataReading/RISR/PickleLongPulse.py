@@ -1,3 +1,5 @@
+import math
+
 import pandas as pd
 import glob
 import h5py
@@ -30,8 +32,8 @@ if __name__ == '__main__':
             Altitude 'alt'
     """
 
-    station = "ran"
-    date = "201432"
+    station = "ras"
+    date = "2016923"
 
     # Loop through all the files for this station/date and pickle all Long Pulse files
     in_dir = "data/" + station + "/" + station + date
@@ -44,7 +46,12 @@ if __name__ == '__main__':
 
         # Look at the file type, we are only interested in Long Pulse Files here
         exp_notes = file['/Metadata/Experiment Notes']
-        file_type = str(exp_notes[25][0])
+        if station == "ran":
+            file_type = str(exp_notes[25][0])
+        elif station == "ras":
+            file_type = str(exp_notes[39][0])
+        else:
+            raise Exception("Station " + station + " not recognized")
         file_type = file_type[10:len(file_type) - 1].rstrip()  # Strip out everything but the file type name
         if file_type != "Long Pulse":
             print("\n" + in_file + " is a " + file_type + " file, skipping it...")
@@ -106,7 +113,11 @@ if __name__ == '__main__':
                         cgm_lon.append(file['/Data/Array Layout/' + beam + '/2D Parameters/cgm_long'][range_idx][time_idx])
                         comp.append(file['/Data/Array Layout/' + beam + '/2D Parameters/po+'][range_idx][time_idx])
                         comp_err.append(file['/Data/Array Layout/' + beam + '/2D Parameters/dpo+'][range_idx][time_idx])
-                        alt.append(file['/Data/Array Layout/' + beam + '/2D Parameters/gdalt'][range_idx][time_idx])
+                        try:
+                            alt.append(file['/Data/Array Layout/' + beam + '/2D Parameters/gdalt'][range_idx][time_idx])
+                        except:
+                            # This parameter might not exist
+                            alt.append(math.nan)
 
             # Put the data into a dataframe
             print("Building data frame...")

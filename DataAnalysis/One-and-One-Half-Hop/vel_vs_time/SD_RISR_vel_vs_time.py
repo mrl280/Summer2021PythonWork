@@ -1,7 +1,6 @@
 import calendar
 import glob
-import math
-import threading
+import numpy as np
 import time
 import os
 import pathlib
@@ -22,12 +21,12 @@ if __name__ == '__main__':
     
     """
 
-    SAVE_PLOTS = True
-    SHOW_PLOTS = False
+    SAVE_PLOTS = False
+    SHOW_PLOTS = True
 
     year = "2014"   # yyyy
     month = "03"    # mm
-    day = "03"      # dd
+    day = "04"      # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
@@ -70,17 +69,20 @@ if __name__ == '__main__':
     RISR_df = RISR_df.loc[(RISR_df['epoch'] >= start_epoch) & (RISR_df['epoch'] <= end_epoch)  # filer times
                           & (RISR_df['wdBmnum'] >= RISR_wd_beam_range[0])
                           & (RISR_df['wdBmnum'] <= RISR_wd_beam_range[1])]  # filter beams
+
+    # We have to remove all nan values from RISR because several of the upcoming functions can't handle them
+    RISR_df = RISR_df.loc[RISR_df['losIonVel'].notna()]
     RISR_df.reset_index(drop=True, inplace=True)
 
     # RISR-N and RKN velocities are going opposite directions, flip RISR so toward is +ve
     RISR_df['losIonVel'] = RISR_df['losIonVel'].apply(lambda x: x * -1)
 
-    # The Beams are not quite aligned
-    # TODO: Confirm the angle between beams - might change based on magnetic field direction
-    if SD_station == "rkn":
-        RISR_df['losIonVel'] = RISR_df['losIonVel'].apply(lambda x: x / math.sin(math.radians(49.9)))
-    else:
-        print("Waring: No adjustments have been made to compensate for the angle between beams.")
+    # SuperDARN measures horizontal plasma flow, but RISR only sees a component
+    # Therefore we need to divide RISR velocities by the sin of the elevation angle
+    # Note: elevation angle is in degrees
+    # TODO: This assumes the magnetic field lines are perpendicular, which might not be the case
+    #   Koustov to confirm exactly what angle needs to be used
+    RISR_df['losIonVel'] = np.divide(RISR_df['losIonVel'], np.sin((RISR_df['elv']) * np.pi / 180))
 
     # Recover decimal times from epoch times
     SD_decimal_time = []
@@ -121,6 +123,8 @@ if __name__ == '__main__':
     # Loop thorough and plot 2 hour chunks of data
     length_of_chunks_h = 2
     num_of_chunks = int(24 / length_of_chunks_h)
+    if SHOW_PLOTS:
+        num_of_chunks = 1
     for chunk_num in range(num_of_chunks):
 
         # Computer start and end epochs and build restricted data frames
@@ -137,9 +141,6 @@ if __name__ == '__main__':
         # Build a restricted data frame based just on the times here
         restricted_SD_df = SD_df.loc[(SD_df['epoch'] >= start_epoch_here) & (SD_df['epoch'] <= end_epoch_here)]
         restricted_RISR_df = RISR_df.loc[(RISR_df['epoch'] >= start_epoch_here) & (RISR_df['epoch'] <= end_epoch_here)]
-
-        # We have to remove all nan values because median and std can't handle them
-        restricted_RISR_df = restricted_RISR_df[restricted_RISR_df['losIonVel'].notna()]
 
         # Compute binned medians and standard deviations
         n_bins = int(length_of_chunks_h / (1 / 12))  # 5 minute (1/12 hour) bins
