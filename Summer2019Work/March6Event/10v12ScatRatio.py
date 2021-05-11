@@ -84,7 +84,7 @@ def Scat10v12Ratio():
     axs[1, 0].set_xlabel('10/12 Velocity Ratio', size=LABEL_SIZE)
     axs[1, 0].set_ylabel('Occurrence', size=LABEL_SIZE)
 
-    # fig.suptitle(str(int(START_UT)) + ':' + str(int((START_UT * 60) % 60)).zfill(2) + '-'
+    # fig2.suptitle(str(int(START_UT)) + ':' + str(int((START_UT * 60) % 60)).zfill(2) + '-'
     #              + str(int(END_UT)) + ':' + str(int((END_UT * 60) % 60)).zfill(2) + 'UT'
     #              + ", Data from: " + FILE, fontsize=10)
     fig.subplots_adjust(wspace=0.15, hspace=0.15)

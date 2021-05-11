@@ -21,9 +21,6 @@ if __name__ == '__main__':
     
     """
 
-    # TODO: Turn the part that makes the first series of plots into a function
-    #  Add a function that makes the vel vs vel scatter plots
-
     SAVE_PLOTS = False
     SHOW_PLOTS = True
 
@@ -58,7 +55,7 @@ if __name__ == '__main__':
     # Read in RISR data
     RISR_in_dir = loc_root + "/DataReading/RISR/data/" + RISR_station + "/" + RISR_station + year + RISR_exp_start_month + RISR_exp_start_day
     RISR_in_file = RISR_in_dir + "/" + RISR_station + year + RISR_exp_start_month + RISR_exp_start_day \
-                   + ".LongPulse.pkl"
+                   + ".5min.LongPulse.pkl"
     RISR_df = pd.read_pickle(RISR_in_file)
 
     # Filter SuperDARN data
@@ -125,9 +122,11 @@ if __name__ == '__main__':
 
     # Loop thorough and plot 2 hour chunks of data
     length_of_chunks_h = 2
-    num_of_chunks = int(24 / length_of_chunks_h)
     if SHOW_PLOTS:
+        # If we are looking at the plots we only need the first one
         num_of_chunks = 1
+    else:
+        num_of_chunks = int(24 / length_of_chunks_h)
     for chunk_num in range(num_of_chunks):
 
         # Computer start and end epochs and build restricted data frames
@@ -248,10 +247,10 @@ if __name__ == '__main__':
 
         if SAVE_PLOTS:
             fig.savefig(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_time_" + year + month + day
-                        + "_" + chr(ord('a') + chunk_num) + " " + str(start_hour_here) + "-" + str(end_hour_here) + "UT"
-                        + "_temp.pdf", format='pdf', dpi=300)
+                         + "_" + chr(ord('a') + chunk_num) + " " + str(start_hour_here) + "-" + str(end_hour_here) + "UT"
+                         + "_temp.pdf", format='pdf', dpi=300)
 
-    # Merge all the pdf files
+    # Merge all the temp pdf files
     merger = PdfFileMerger()
     for pdf in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
         merger.append(pdf)
