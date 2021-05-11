@@ -1,11 +1,14 @@
 import calendar
+import glob
 import math
+import threading
 import time
 import os
 import pathlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from scipy import stats
+from PyPDF2 import PdfFileMerger
 
 import pandas as pd
 
@@ -19,8 +22,8 @@ if __name__ == '__main__':
     
     """
 
-    SAVE_PLOTS = False
-    SHOW_PLOTS = True
+    SAVE_PLOTS = True
+    SHOW_PLOTS = False
 
     year = "2014"   # yyyy
     month = "03"    # mm
@@ -118,7 +121,7 @@ if __name__ == '__main__':
     # Loop thorough and plot 2 hour chunks of data
     length_of_chunks_h = 2
     num_of_chunks = int(24 / length_of_chunks_h)
-    for chunk_num in range(1):
+    for chunk_num in range(num_of_chunks):
 
         # Computer start and end epochs and build restricted data frames
         start_hour_here = 0 + 2 * chunk_num
@@ -240,7 +243,17 @@ if __name__ == '__main__':
             plt.show()
 
         if SAVE_PLOTS:
-            cur_path = os.path.dirname(__file__)  # where we are
-            fig.savefig(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_time_"
-                        + year + month + day + " " + str(start_hour_here) + "-" + str(end_hour_here) + "UT"
-                        + ".pdf", format='pdf', dpi=300)
+            fig.savefig(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_time_" + year + month + day
+                        + "_" + chr(ord('a') + chunk_num) + " " + str(start_hour_here) + "-" + str(end_hour_here) + "UT"
+                        + "_temp.pdf", format='pdf', dpi=300)
+
+    # Merge all the pdf files
+    merger = PdfFileMerger()
+    for pdf in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
+        merger.append(pdf)
+    with open(out_dir + "/" + SD_station + "_" + RISR_station + "_vel_vs_time_" + year + month + day + ".pdf", "wb") as fout:
+        merger.write(fout)
+    merger.close()
+
+    for file in glob.iglob("out/" + year + month + day + "/*_temp.pdf"):
+        os.remove(file)
