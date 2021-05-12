@@ -27,6 +27,7 @@ if __name__ == '__main__':
     month = "09"  # mm
     day = "25"  # dd
     gates = [40, 74]
+    elv_max = 25  # deg
 
     station = "rkn"
     start_date_time = year + "-" + month + "-" + day + " " + "00:00:00"
@@ -54,6 +55,9 @@ if __name__ == '__main__':
 
     # There should not be any nan velocities, but drop to be safe
     df = df.loc[df['vel'].notna()]
+
+    # Lets make sure we are looking at E region echoes by filtering out high elevation angle data
+    df = df.loc[df['elv'] <= elv_max]
     df.reset_index(drop=True, inplace=True)
 
     # All data for this experiment is in one beam
@@ -66,6 +70,7 @@ if __name__ == '__main__':
 
     # Initialize arrays to hold matched data
     matched_times = []
+    starting_gates = []
     vel10, count10 = [], []
     vel12, count12 = [], []
     vel13, count13 = [], []
@@ -91,6 +96,7 @@ if __name__ == '__main__':
 
             # Use the mid-time as the time marker
             matched_times.append(start_time + 0.5 * time_interval_s / 3600)
+            starting_gates.append(start_gate)
 
             df_10 = time_restricted_df[(time_restricted_df['transFreq'] >= (10 - 0.4) * 1000)
                                        & (time_restricted_df['transFreq'] <= (10 + 0.4) * 1000)]
@@ -130,6 +136,7 @@ if __name__ == '__main__':
 
     # Put the data into a dataframe
     matched_data = pd.DataFrame({'decimalTimes': matched_times,
+                                 'startingGates': starting_gates,
                                  'vel10': vel10,
                                  'count10': count10,
                                  'vel12': vel12,
@@ -149,7 +156,7 @@ if __name__ == '__main__':
     out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station
     out_file = out_dir + "/" + station + year + month + day + ".MatchedData.pkl"
     print("Pickling as " + out_file + "...")
-    df.to_pickle(out_file)
+    matched_data.to_pickle(out_file)
 
 
     # matched_data = matched_data.loc[(matched_data['count10'] >= 3) & (matched_data['count12'] >= 3)
