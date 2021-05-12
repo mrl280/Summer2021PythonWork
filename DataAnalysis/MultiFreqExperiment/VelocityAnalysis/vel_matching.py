@@ -1,17 +1,9 @@
 import calendar
-import glob
 import math
-
 import numpy as np
 import time
-import os
 import pathlib
 import statistics
-import matplotlib.pyplot as plt
-from matplotlib.ticker import FormatStrFormatter
-from scipy import stats
-from PyPDF2 import PdfFileMerger
-from matplotlib.ticker import MultipleLocator
 
 import pandas as pd
 
@@ -22,11 +14,13 @@ if __name__ == '__main__':
     Match up SuperDARN velocity points from multi-freq mode
 
     """
+    # 2016 09 25 at RKN: gg [40, 75]
+    # 4 pts, elv max 25 deg
 
     year = "2016"  # yyyy
     month = "09"  # mm
-    day = "25"  # dd
-    gates = [40, 74]
+    day = "26"  # dd
+    gates = [30, 74]
     elv_max = 25  # deg
 
     station = "rkn"

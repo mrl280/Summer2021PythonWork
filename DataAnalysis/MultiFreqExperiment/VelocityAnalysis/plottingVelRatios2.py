@@ -11,20 +11,17 @@ if __name__ == '__main__':
     """
     Plot velocity at one frequency against velocity at another frequency
     Plot velocity ratios against time (ratio evolution)
-    Breaks gates into two ranges
     """
-    # 2016 09 25 at RKN: gg [40, 75]
-    # 4 pts, elv max 25 deg
 
     SAVE_PLOTS = True
     SHOW_PLOTS = False
 
     year = "2016"  # yyyy
     month = "09"  # mm
-    day = "25"  # dd
+    day = "26"  # dd
 
     station = "rkn"
-    count_min = 4
+    count_min = 3
 
     numonic = station.upper()
 
@@ -98,58 +95,40 @@ if __name__ == '__main__':
         df_10_12 = time_restricted_df[(time_restricted_df['count10'] >= count_min)
                                       & (time_restricted_df['count12'] >= count_min)
                                       & time_restricted_df['10over12'].notna()]
-        df_10_12_high_gates = df_10_12[(df_10_12['startingGates'] >= 63)]
-        df_10_12_low_gates = df_10_12[(df_10_12['startingGates'] <= 62)]
 
-        ax[0][0].scatter(df_10_12_high_gates['vel12'], df_10_12_high_gates['vel10'],
-                         s=4, color='k', marker='.', label='gg 63-74')
-        ax[0][0].scatter(df_10_12_low_gates['vel12'], df_10_12_low_gates['vel10'],
-                         s=4, color='b', marker='.', label='gg 40-62')
+        ax[0][0].scatter(df_10_12['vel12'], df_10_12['vel10'],
+                         s=4, color='k', marker='.', label='gg 30-74')
         ax[0][0].text(-900, 710, 'n=' + str(df_10_12.shape[0]), fontsize=12)
         ax[0][0].legend(loc='lower right')
 
-        ax[0][1].scatter(df_10_12_high_gates['decimalTimes'], df_10_12_high_gates['10over12'],
+        ax[0][1].scatter(df_10_12['decimalTimes'], df_10_12['10over12'],
                          s=4, color='k', marker='.')
-        ax[0][1].scatter(df_10_12_low_gates['decimalTimes'], df_10_12_low_gates['10over12'],
-                         s=4, color='b', marker='.')
 
         # Plot 13 to 12 Comparison data on the second set of plots
         df_13_12 = time_restricted_df[(time_restricted_df['count13'] >= count_min)
                                       & (time_restricted_df['count12'] >= count_min)
                                       & time_restricted_df['13over12'].notna()]
-        df_13_12_high_gates = df_13_12[(df_13_12['startingGates'] >= 63)]
-        df_13_12_low_gates = df_13_12[(df_13_12['startingGates'] <= 62)]
 
-        ax[1][0].scatter(df_13_12_high_gates['vel12'], df_13_12_high_gates['vel10'],
-                        s=4, color='k', marker='.', label='gg 63-74')
-        ax[1][0].scatter(df_13_12_low_gates['vel12'], df_13_12_low_gates['vel10'],
-                         s=4, color='b', marker='.', label='gg 40-62')
+        ax[1][0].scatter(df_13_12['vel12'], df_13_12['vel10'],
+                        s=4, color='k', marker='.', label='gg 30-74')
         ax[1][0].text(-900, 710, 'n=' + str(df_13_12.shape[0]), fontsize=12)
         ax[1][0].legend(loc='lower right')
 
-        ax[1][1].scatter(df_13_12_high_gates['decimalTimes'], df_13_12_high_gates['10over12'],
+        ax[1][1].scatter(df_13_12['decimalTimes'], df_13_12['10over12'],
                          s=4, color='k', marker='.')
-        ax[1][1].scatter(df_13_12_low_gates['decimalTimes'], df_13_12_low_gates['10over12'],
-                         s=4, color='b', marker='.')
 
         # Plot 14 to 12 Comparison data on the third set of plots
         df_14_12 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
                                       & (time_restricted_df['count12'] >= count_min)
                                       & time_restricted_df['14over12'].notna()]
-        df_14_12_high_gates = df_14_12[(df_14_12['startingGates'] >= 63)]
-        df_14_12_low_gates = df_14_12[(df_14_12['startingGates'] <= 62)]
 
-        ax[2][0].scatter(df_14_12_high_gates['vel12'], df_14_12_high_gates['vel10'],
-                         s=4, color='k', marker='.', label='gg 63-74')
-        ax[2][0].scatter(df_14_12_low_gates['vel12'], df_14_12_low_gates['vel10'],
-                         s=4, color='b', marker='.', label='gg 40-62')
+        ax[2][0].scatter(df_14_12['vel12'], df_14_12['vel10'],
+                         s=4, color='k', marker='.', label='gg 30-74')
         ax[2][0].text(-900, 710, 'n=' + str(df_14_12.shape[0]), fontsize=12)
         ax[2][0].legend(loc='lower right')
 
-        ax[2][1].scatter(df_14_12_high_gates['decimalTimes'], df_14_12_high_gates['10over12'],
+        ax[2][1].scatter(df_14_12['decimalTimes'], df_14_12['10over12'],
                          s=4, color='k', marker='.')
-        ax[2][1].scatter(df_14_12_low_gates['decimalTimes'], df_14_12_low_gates['10over12'],
-                         s=4, color='b', marker='.')
 
         if SHOW_PLOTS:
             plt.show()
