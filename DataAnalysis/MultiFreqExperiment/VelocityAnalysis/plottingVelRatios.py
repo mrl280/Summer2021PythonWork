@@ -120,16 +120,16 @@ if __name__ == '__main__':
         df_13_12_high_gates = df_13_12[(df_13_12['startingGates'] >= 63)]
         df_13_12_low_gates = df_13_12[(df_13_12['startingGates'] <= 62)]
 
-        ax[1][0].scatter(df_13_12_high_gates['vel12'], df_13_12_high_gates['vel10'],
+        ax[1][0].scatter(df_13_12_high_gates['vel12'], df_13_12_high_gates['vel13'],
                         s=4, color='k', marker='.', label='gg 63-74')
-        ax[1][0].scatter(df_13_12_low_gates['vel12'], df_13_12_low_gates['vel10'],
+        ax[1][0].scatter(df_13_12_low_gates['vel12'], df_13_12_low_gates['vel13'],
                          s=4, color='b', marker='.', label='gg 40-62')
         ax[1][0].text(-900, 710, 'n=' + str(df_13_12.shape[0]), fontsize=12)
         ax[1][0].legend(loc='lower right')
 
-        ax[1][1].scatter(df_13_12_high_gates['decimalTimes'], df_13_12_high_gates['10over12'],
+        ax[1][1].scatter(df_13_12_high_gates['decimalTimes'], df_13_12_high_gates['13over12'],
                          s=4, color='k', marker='.')
-        ax[1][1].scatter(df_13_12_low_gates['decimalTimes'], df_13_12_low_gates['10over12'],
+        ax[1][1].scatter(df_13_12_low_gates['decimalTimes'], df_13_12_low_gates['13over12'],
                          s=4, color='b', marker='.')
 
         # Plot 14 to 12 Comparison data on the third set of plots
@@ -139,16 +139,16 @@ if __name__ == '__main__':
         df_14_12_high_gates = df_14_12[(df_14_12['startingGates'] >= 63)]
         df_14_12_low_gates = df_14_12[(df_14_12['startingGates'] <= 62)]
 
-        ax[2][0].scatter(df_14_12_high_gates['vel12'], df_14_12_high_gates['vel10'],
+        ax[2][0].scatter(df_14_12_high_gates['vel12'], df_14_12_high_gates['vel14'],
                          s=4, color='k', marker='.', label='gg 63-74')
-        ax[2][0].scatter(df_14_12_low_gates['vel12'], df_14_12_low_gates['vel10'],
+        ax[2][0].scatter(df_14_12_low_gates['vel12'], df_14_12_low_gates['vel14'],
                          s=4, color='b', marker='.', label='gg 40-62')
         ax[2][0].text(-900, 710, 'n=' + str(df_14_12.shape[0]), fontsize=12)
         ax[2][0].legend(loc='lower right')
 
-        ax[2][1].scatter(df_14_12_high_gates['decimalTimes'], df_14_12_high_gates['10over12'],
+        ax[2][1].scatter(df_14_12_high_gates['decimalTimes'], df_14_12_high_gates['14over12'],
                          s=4, color='k', marker='.')
-        ax[2][1].scatter(df_14_12_low_gates['decimalTimes'], df_14_12_low_gates['10over12'],
+        ax[2][1].scatter(df_14_12_low_gates['decimalTimes'], df_14_12_low_gates['14over12'],
                          s=4, color='b', marker='.')
 
         if SHOW_PLOTS:

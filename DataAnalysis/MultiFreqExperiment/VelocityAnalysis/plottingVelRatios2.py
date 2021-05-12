@@ -109,12 +109,12 @@ if __name__ == '__main__':
                                       & (time_restricted_df['count12'] >= count_min)
                                       & time_restricted_df['13over12'].notna()]
 
-        ax[1][0].scatter(df_13_12['vel12'], df_13_12['vel10'],
+        ax[1][0].scatter(df_13_12['vel12'], df_13_12['vel13'],
                         s=4, color='k', marker='.', label='gg 30-74')
         ax[1][0].text(-900, 710, 'n=' + str(df_13_12.shape[0]), fontsize=12)
         ax[1][0].legend(loc='lower right')
 
-        ax[1][1].scatter(df_13_12['decimalTimes'], df_13_12['10over12'],
+        ax[1][1].scatter(df_13_12['decimalTimes'], df_13_12['13over12'],
                          s=4, color='k', marker='.')
 
         # Plot 14 to 12 Comparison data on the third set of plots
@@ -122,12 +122,12 @@ if __name__ == '__main__':
                                       & (time_restricted_df['count12'] >= count_min)
                                       & time_restricted_df['14over12'].notna()]
 
-        ax[2][0].scatter(df_14_12['vel12'], df_14_12['vel10'],
+        ax[2][0].scatter(df_14_12['vel12'], df_14_12['vel14'],
                          s=4, color='k', marker='.', label='gg 30-74')
         ax[2][0].text(-900, 710, 'n=' + str(df_14_12.shape[0]), fontsize=12)
         ax[2][0].legend(loc='lower right')
 
-        ax[2][1].scatter(df_14_12['decimalTimes'], df_14_12['10over12'],
+        ax[2][1].scatter(df_14_12['decimalTimes'], df_14_12['14over12'],
                          s=4, color='k', marker='.')
 
         if SHOW_PLOTS:
