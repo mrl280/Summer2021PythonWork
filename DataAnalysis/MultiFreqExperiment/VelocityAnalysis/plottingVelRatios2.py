@@ -11,7 +11,15 @@ if __name__ == '__main__':
     """
     Plot velocity at one frequency against velocity at another frequency
     Plot velocity ratios against time (ratio evolution)
+    Puts everything in a single gate range
     """
+
+    # EVENTS ANALYZED:
+    # 2019 09 26 at RKN: gg [10, 74]
+    # 4 pts, elv max 27 deg
+
+    # 2016 09 26 at CLY: gg [10, 74]  # Not much here
+    # 4 pts, elv max 25 deg
 
     SAVE_PLOTS = True
     SHOW_PLOTS = False
@@ -21,7 +29,7 @@ if __name__ == '__main__':
     day = "26"  # dd
 
     station = "rkn"
-    count_min = 3
+    count_min = 4
 
     numonic = station.upper()
 
@@ -97,7 +105,7 @@ if __name__ == '__main__':
                                       & time_restricted_df['10over12'].notna()]
 
         ax[0][0].scatter(df_10_12['vel12'], df_10_12['vel10'],
-                         s=4, color='k', marker='.', label='gg 30-74')
+                         s=4, color='k', marker='.', label='gg 10-74')
         ax[0][0].text(-900, 710, 'n=' + str(df_10_12.shape[0]), fontsize=12)
         ax[0][0].legend(loc='lower right')
 
@@ -110,7 +118,7 @@ if __name__ == '__main__':
                                       & time_restricted_df['13over12'].notna()]
 
         ax[1][0].scatter(df_13_12['vel12'], df_13_12['vel13'],
-                        s=4, color='k', marker='.', label='gg 30-74')
+                        s=4, color='k', marker='.', label='gg 10-74')
         ax[1][0].text(-900, 710, 'n=' + str(df_13_12.shape[0]), fontsize=12)
         ax[1][0].legend(loc='lower right')
 
@@ -123,7 +131,7 @@ if __name__ == '__main__':
                                       & time_restricted_df['14over12'].notna()]
 
         ax[2][0].scatter(df_14_12['vel12'], df_14_12['vel14'],
-                         s=4, color='k', marker='.', label='gg 30-74')
+                         s=4, color='k', marker='.', label='gg 10-74')
         ax[2][0].text(-900, 710, 'n=' + str(df_14_12.shape[0]), fontsize=12)
         ax[2][0].legend(loc='lower right')
 

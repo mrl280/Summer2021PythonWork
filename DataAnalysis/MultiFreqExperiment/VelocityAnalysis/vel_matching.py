@@ -14,16 +14,28 @@ if __name__ == '__main__':
     Match up SuperDARN velocity points from multi-freq mode
 
     """
-    # 2016 09 25 at RKN: gg [40, 75]
+    # 2016 09 25 at RKN: gg [40, 74]
     # 4 pts, elv max 25 deg
+
+    # 2019 09 26 at RKN: gg [10, 74]
+    # 4 pts, elv max 27 deg
+
+    # 2016 09 25 at CLY: gg [30, 74]
+    # 4 pts, elv max 25 deg
+
+    # 2016 09 26 at CLY: gg [10, 74]  # Not much here
+    # 4 pts, elv max 25 deg
+
+    # 2016 09 25 at INV: gg [10 74]
+    # 4 pts, elv max 25
 
     year = "2016"  # yyyy
     month = "09"  # mm
-    day = "26"  # dd
-    gates = [30, 74]
+    day = "25"  # dd
+    gates = [10, 74]
     elv_max = 25  # deg
 
-    station = "rkn"
+    station = "inv"
     start_date_time = year + "-" + month + "-" + day + " " + "00:00:00"
     end_date_time = year + "-" + month + "-" + day + " " + "08:00:00"
 
