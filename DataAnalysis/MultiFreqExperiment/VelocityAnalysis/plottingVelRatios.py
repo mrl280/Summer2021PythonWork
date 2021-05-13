@@ -29,16 +29,16 @@ if __name__ == '__main__':
     # 2016 09 25 at INV: gg [10 74]
     # 4 pts, elv max 25
 
-    SAVE_PLOTS = False
-    SHOW_PLOTS = True
+    SAVE_PLOTS = True
+    SHOW_PLOTS = False
 
     year = "2016"  # yyyy
     month = "09"  # mm
-    day = "26"  # dd
+    day = "25"  # dd
 
-    station = "cly"
-    count_min = 4
-    region = "F"
+    station = "rkn"
+    count_min = 2
+    region = "E"
 
     numonic = station.upper()
     if region.upper() == "E":
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     df = pd.read_pickle(in_file)
 
     # Filter the data based on the expected gate range of the region of interest
-    df = df.loc[(df['gates'] >= gates[0]) & (df['gates'] <= gates[1])]
+    df = df.loc[(df['gate'] >= gates[0]) & (df['gate'] <= gates[1])]
     df.reset_index(drop=True, inplace=True)
 
     out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/out/"
@@ -73,8 +73,8 @@ if __name__ == '__main__':
         end_time = 0.5 + time_chunk * 0.5
 
         print("Plotting from: " + str(start_time) + " till " + str(end_time) + " UT")
-        time_restricted_df = df[(df['decimalTimes'] >= start_time)
-                                & (df['decimalTimes'] < end_time)]
+        time_restricted_df = df[(df['decimalTime'] >= start_time)
+                                & (df['decimalTime'] < end_time)]
 
         # Build frequency dependant data frames
         df_10_12 = time_restricted_df[(time_restricted_df['count10'] >= count_min)
@@ -86,9 +86,9 @@ if __name__ == '__main__':
         df_14_12 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
                                       & (time_restricted_df['count12'] >= count_min)
                                       & time_restricted_df['14over12'].notna()]
-        df_12_10 = time_restricted_df[(time_restricted_df['count12'] >= count_min)
-                                      & (time_restricted_df['count10'] >= count_min)
-                                      & time_restricted_df['12over10'].notna()]
+        df_14_13 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
+                                      & (time_restricted_df['count13'] >= count_min)
+                                      & time_restricted_df['14over13'].notna()]
         df_13_10 = time_restricted_df[(time_restricted_df['count13'] >= count_min)
                                       & (time_restricted_df['count10'] >= count_min)
                                       & time_restricted_df['13over10'].notna()]
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         # We will have 2 plots, one for vel v vel ratios and one for ratios v time
         # First lets just deal with the first plot
 
-        # Set up the plot
+        # Set up the first plot
         n_rows = 3
         n_cols = 2
         fig1, ax1 = plt.subplots(figsize=(8, 9), dpi=300, nrows=n_rows, ncols=n_cols)
@@ -149,8 +149,8 @@ if __name__ == '__main__':
         ax1[2][0].text(-900, 710, 'n=' + str(df_14_12.shape[0]), fontsize=12)
 
         # Plot 12 to 10 Comparison data in ROW: 0, COL: 1
-        ax1[0][1].scatter(df_12_10['vel10'], df_12_10['vel12'], s=4, color='b', marker='.', label=gate_label)
-        ax1[0][1].text(-900, 710, 'n=' + str(df_12_10.shape[0]), fontsize=12)
+        ax1[0][1].scatter(df_14_13['vel13'], df_14_13['vel14'], s=4, color='b', marker='.', label=gate_label)
+        ax1[0][1].text(-900, 710, 'n=' + str(df_14_13.shape[0]), fontsize=12)
 
         # Plot 13 to 10 Comparison data in ROW: 1, COL: 1
         ax1[1][1].scatter(df_13_10['vel10'], df_13_10['vel13'], s=4, color='b', marker='.', label=gate_label)
@@ -160,8 +160,7 @@ if __name__ == '__main__':
         ax1[2][1].scatter(df_14_10['vel10'], df_14_10['vel14'], s=4, color='b', marker='.', label=gate_label)
         ax1[2][1].text(-900, 710, 'n=' + str(df_14_10.shape[0]), fontsize=12)
 
-
-
+        # add in legends
 
         # Set up the second plot
         fig2, ax2 = plt.subplots(figsize=(8, 9), dpi=300, nrows=n_rows, ncols=n_cols)
@@ -192,80 +191,51 @@ if __name__ == '__main__':
         ax2[1][1].set_ylabel("Velocity Ratio: 13/10")
         ax2[2][1].set_ylabel("Velocity Ratio: 14/10")
 
-        # Plot 10 to 12 Comparison data on the first set of plots
-        df_10_12 = time_restricted_df[(time_restricted_df['count10'] >= count_min)
-                                      & (time_restricted_df['count12'] >= count_min)
-                                      & time_restricted_df['10over12'].notna()]
-        df_10_12_low_gates = df_10_12[(df_10_12['startingGates'] <= 54)]
-        df_10_12_high_gates = df_10_12[(df_10_12['startingGates'] >= 55)]
+        # Plot 10 to 12 Comparison data in ROW: 0, COL: 0
+        ax2[0][0].scatter(df_10_12['decimalTime'], df_10_12['10over12'], s=4, color='b', marker='.', label=gate_label)
 
-        ax[0][0].scatter(df_10_12_low_gates['vel12'], df_10_12_low_gates['vel10'],
-                         s=4, color='b', marker='.', label='gg 30-54')
-        ax[0][0].scatter(df_10_12_high_gates['vel12'], df_10_12_high_gates['vel10'],
-                         s=4, color='k', marker='.', label='gg 55-74')
-        ax[0][0].text(-900, 710, 'n=' + str(df_10_12.shape[0]), fontsize=12)
-        ax[0][0].legend(loc='lower right')
+        # Plot 13 to 12 Comparison data in ROW: 1, COL: 0
+        ax2[1][0].scatter(df_13_12['decimalTime'], df_13_12['13over12'], s=4, color='b', marker='.', label=gate_label)
 
-        ax[0][1].scatter(df_10_12_high_gates['decimalTimes'], df_10_12_high_gates['10over12'],
-                         s=4, color='k', marker='.')
-        ax[0][1].scatter(df_10_12_low_gates['decimalTimes'], df_10_12_low_gates['10over12'],
-                         s=4, color='b', marker='.')
+        # Plot 14 to 12 Comparison data in ROW: 2, COL: 0
+        ax2[2][0].scatter(df_14_12['decimalTime'], df_14_12['14over12'], s=4, color='b', marker='.', label=gate_label)
 
-        # Plot 13 to 12 Comparison data on the second set of plots
-        df_13_12 = time_restricted_df[(time_restricted_df['count13'] >= count_min)
-                                      & (time_restricted_df['count12'] >= count_min)
-                                      & time_restricted_df['13over12'].notna()]
-        df_13_12_low_gates = df_13_12[(df_13_12['startingGates'] <= 54)]
-        df_13_12_high_gates = df_13_12[(df_13_12['startingGates'] >= 55)]
+        # Plot 12 to 10 Comparison data in ROW: 0, COL: 1
+        ax2[0][1].scatter(df_14_13['decimalTime'], df_14_13['14over13'], s=4, color='b', marker='.', label=gate_label)
 
-        ax[1][0].scatter(df_13_12_low_gates['vel12'], df_13_12_low_gates['vel13'],
-                         s=4, color='b', marker='.', label='gg 30-54')
-        ax[1][0].scatter(df_13_12_high_gates['vel12'], df_13_12_high_gates['vel13'],
-                         s=4, color='k', marker='.', label='gg 55-74')
-        ax[1][0].text(-900, 710, 'n=' + str(df_13_12.shape[0]), fontsize=12)
-        ax[1][0].legend(loc='lower right')
+        # Plot 13 to 10 Comparison data in ROW: 1, COL: 1
+        ax2[1][1].scatter(df_13_10['decimalTime'], df_13_10['13over10'], s=4, color='b', marker='.', label=gate_label)
 
-        ax[1][1].scatter(df_13_12_low_gates['decimalTimes'], df_13_12_low_gates['13over12'],
-                         s=4, color='b', marker='.')
-        ax[1][1].scatter(df_13_12_high_gates['decimalTimes'], df_13_12_high_gates['13over12'],
-                         s=4, color='k', marker='.')
+        # Plot 14 to 10 Comparison data in ROW: 2, COL: 1
+        ax2[2][1].scatter(df_14_10['decimalTime'], df_14_10['14over10'], s=4, color='b', marker='.', label=gate_label)
 
-        # Plot 14 to 12 Comparison data on the third set of plots
-        df_14_12 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
-                                      & (time_restricted_df['count12'] >= count_min)
-                                      & time_restricted_df['14over12'].notna()]
-        df_14_12_low_gates = df_14_12[(df_14_12['startingGates'] <= 54)]
-        df_14_12_high_gates = df_14_12[(df_14_12['startingGates'] >= 55)]
-
-        ax[2][0].scatter(df_14_12_low_gates['vel12'], df_14_12_low_gates['vel14'],
-                         s=4, color='b', marker='.', label='gg 30-54')
-        ax[2][0].scatter(df_14_12_high_gates['vel12'], df_14_12_high_gates['vel14'],
-                         s=4, color='k', marker='.', label='gg 55-74')
-        ax[2][0].text(-900, 710, 'n=' + str(df_14_12.shape[0]), fontsize=12)
-        ax[2][0].legend(loc='lower right')
-
-        ax[2][1].scatter(df_14_12_low_gates['decimalTimes'], df_14_12_low_gates['14over12'],
-                         s=4, color='b', marker='.')
-        ax[2][1].scatter(df_14_12_high_gates['decimalTimes'], df_14_12_high_gates['14over12'],
-                         s=4, color='k', marker='.')
+        # Add legends to the plots
+        ax1[0][0].legend(loc=(0, 1.05))
+        ax2[0][0].legend(loc=(0, 1.05))
 
         if SHOW_PLOTS:
             plt.show()
 
         if SAVE_PLOTS:
-            fig.savefig(out_dir + "/" + numonic + "_vel_comp_" + year + month + day
-                        + "_" + chr(ord('a') + time_chunk) + " " + str(start_time) + "-" + str(end_time) + "UT"
-                        + "_temp.pdf", format='pdf', dpi=300)
+            # Save the files as a temp file
+            fig1.savefig(out_dir + "/" + numonic + "_vel_comp_" + year + month + day
+                         + "_" + chr(ord('a') + time_chunk) + " " + str(start_time) + "-" + str(end_time) + "UT"
+                         + "_temp1.pdf", format='pdf', dpi=300)
+            fig2.savefig(out_dir + "/" + numonic + "_vel_comp_" + year + month + day
+                         + "_" + chr(ord('a') + time_chunk) + " " + str(start_time) + "-" + str(end_time) + "UT"
+                         + "_temp2.pdf", format='pdf', dpi=300)
 
     if SAVE_PLOTS:
         # Merge all the temp pdf files
         merger = PdfFileMerger()
-        for pdf in glob.iglob("out/*_temp.pdf"):
+        for pdf in glob.iglob("out/*_temp1.pdf"):
             merger.append(pdf)
-        with open(out_dir + "/" + numonic + "_vel_comp_" + year + month + day + ".pdf",
+        for pdf in glob.iglob("out/*_temp2.pdf"):
+            merger.append(pdf)
+        with open(out_dir + "/" + numonic + "_vel_comp_" + year + month + day + "_" + region + ".pdf",
                   "wb") as fout:
             merger.write(fout)
         merger.close()
 
-        for file in glob.iglob("out/*_temp.pdf"):
+        for file in glob.iglob("out/*_temp*.pdf"):
             os.remove(file)

@@ -158,9 +158,11 @@ if __name__ == '__main__':
     matched_data['13over12'] = matched_data['vel13'] / matched_data['vel12']
     matched_data['14over12'] = matched_data['vel14'] / matched_data['vel12']
 
-    matched_data['12over10'] = matched_data['vel12'] / matched_data['vel10']
+    matched_data['14over13'] = matched_data['vel14'] / matched_data['vel13']
+
     matched_data['13over10'] = matched_data['vel13'] / matched_data['vel10']
     matched_data['14over10'] = matched_data['vel14'] / matched_data['vel10']
+
     # print(matched_data[matched_data['10over12'].notna()][['vel10', 'count10', 'vel12', 'count12', '10over12']])
 
     # Save the data for later
