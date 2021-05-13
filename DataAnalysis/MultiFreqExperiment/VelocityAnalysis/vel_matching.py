@@ -142,8 +142,8 @@ if __name__ == '__main__':
                 count14.append(math.nan)
 
     # Put the data into a dataframe
-    matched_data = pd.DataFrame({'decimalTimes': matched_times,
-                                 'gates': matched_gates,
+    matched_data = pd.DataFrame({'decimalTime': matched_times,
+                                 'gate': matched_gates,
                                  'vel10': vel10,
                                  'count10': count10,
                                  'vel12': vel12,
