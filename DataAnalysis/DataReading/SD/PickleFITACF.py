@@ -2,8 +2,10 @@ import calendar
 import pydarn
 import bz2
 import pandas as pd
+import numpy as np
 import time
 import glob
+import os
 
 
 def PickleFITACF(station, date):
@@ -15,9 +17,11 @@ def PickleFITACF(station, date):
     
     Parameters of Interest:
         Scalar Parameters
+            - Station id (three letter station identifier e.g. "rkn")
             - Epoch time (seconds since 1970.01.01)
                     This is a combination of year 'time.yr', month 'time.mo', day 'time.dy', 
                     hour 'time.hr', minute 'time.mt', second 'time.sc', and microsecond 'time.us'
+            - Date time (human readable date time)
             - Year
             - Month
             - Day
@@ -48,63 +52,48 @@ def PickleFITACF(station, date):
 
     pattern = '%Y.%m.%d %H:%M:%S'  # This is the pattern we will use to convert time info to epoch
 
-    # Pre-allocate lists for the scalar parameters
-    # Station id will be the same for the whole event, so we will build it at the end
+    # Create empty arrays for scalar parameters
     epoch = []
-    year = []
-    month = []
-    day = []
-    hour = []
-    minute = []
-    second = []
-    bmnum = []
-    bmazm = []
+    year, month, day = [], [], []
+    hour, minute, second = [], [], []
+    date_time = []
+    bmnum, bmazm = [], []
     intt = []
     tfreq = []
-    frang = []
-    rsep = []
-    combf = []
-    fitACF_rev_major = []
-    fitACF_rev_minor = []
+    frang, rsep = [], []
+    combf, fitACF_rev = [], []
 
-    # Pre-allocate lists for the vector parameters
+    # Create empty arrays for vector parameters
     slist = []
-    qflg = []
-    gflg = []
-    v = []
-    v_e = []
-    p_l = []
-    p_l_e = []
-    w_l = []
-    w_l_e = []
-    sd_l = []
-    sd_phi = []
-    elv = []
-    elv_low = []
-    elv_high = []
+    qflg, gflg = [], []
+    v, v_e = [], []
+    p_l, p_l_e = [], []
+    w_l, w_l_e = [], []
+    sd_l, sd_phi = [], []
+    elv, elv_low, elv_high = [], [], []
 
+    print("Starting looping")
     # Loop through all the files for this station/date
     in_dir = "data/" + station + "/" + station + date
     for in_file in glob.iglob(in_dir + "/*.fitacf.bz2"):
 
         # Unpack and open the file
-        print("Reading " + in_file + "...")
+        print("     Reading " + in_file + "...")
         with bz2.open(in_file) as fp:
             fitacf_stream = fp.read()
         sdarn_read = pydarn.SuperDARNRead(fitacf_stream, True)
         fitacf_data = sdarn_read.read_fitacf()
-
         # print("List of available parameters: " + str(fitacf_data[0].keys()))
+        print("     Read Complete")
 
         # Loop through every record in this file and add to the parallel arrays
-        print("Adding to Parallel Arrays...")
         for record in range(len(fitacf_data)):
 
             # Convert date and time to epoch
-            date_time = str(fitacf_data[record]['time.yr']) + "." + str(fitacf_data[record]['time.mo']) + "." \
+            date_time_here = str(fitacf_data[record]['time.yr']) + "." + str(fitacf_data[record]['time.mo']) + "." \
                         + str(fitacf_data[record]['time.dy']) + " " + str(fitacf_data[record]['time.hr']) + ":" \
                         + str(fitacf_data[record]['time.mt']) + ":" + str(fitacf_data[record]['time.sc'])
-            epoch_here = calendar.timegm(time.strptime(date_time, pattern))  # Doesn't keep microseconds
+            epoch_here = calendar.timegm(time.strptime(date_time_here, pattern))  # Doesn't keep microseconds
 
             try:
                 num_gates_reporting = len(fitacf_data[record]['slist'])
@@ -112,9 +101,9 @@ def PickleFITACF(station, date):
                 # Sometimes there won't be any gates reporting, this is legacy behaviour and results in partial records
                 num_gates_reporting = 0
 
-            # Loop through all the gates reporting
+            # Loop through all the reporting gates and build up the data
             for gate_idx in range(num_gates_reporting):
-                # Build up the vectored data
+                # Build up vectored data
                 slist.append(fitacf_data[record]['slist'][gate_idx])
                 qflg.append(fitacf_data[record]['qflg'][gate_idx])
                 gflg.append(fitacf_data[record]['gflg'][gate_idx])
@@ -130,9 +119,9 @@ def PickleFITACF(station, date):
                 elv_low.append(fitacf_data[record]['elv_low'][gate_idx])
                 elv_high.append(fitacf_data[record]['elv_high'][gate_idx])
 
-                # Build up the scalar data, these values are the same for every gate
-                # These could be pulled out of this loop but it is simpler to leave them here
+                # Build up scalar data, it is faster to have this in this inner loop
                 epoch.append(epoch_here)
+                date_time.append(date_time_here)
                 year.append(fitacf_data[record]['time.yr'])
                 month.append(fitacf_data[record]['time.mo'])
                 day.append(fitacf_data[record]['time.dy'])
@@ -145,15 +134,15 @@ def PickleFITACF(station, date):
                 tfreq.append(fitacf_data[record]['tfreq'])
                 frang.append(fitacf_data[record]['frang'])
                 rsep.append(fitacf_data[record]['rsep'])
-                fitACF_rev_major.append(fitacf_data[record]['fitacf.revision.major'])
-                fitACF_rev_minor.append(fitacf_data[record]['fitacf.revision.minor'])
+                fitACF_rev.append(str(fitacf_data[record]['fitacf.revision.major']) + "." + str(fitacf_data[record]['fitacf.revision.minor']))
                 combf.append(fitacf_data[record]['combf'])
 
     # Put the data into a dataframe
     print("Building the data frame...")
-    stid = [station] * len(epoch)
-    df = pd.DataFrame({'stationId': stid,
+    df = pd.DataFrame({'stationId': [station] * len(epoch),
+                       'dateTime': date_time,
                        'epoch': epoch,
+                       'decimalTime': np.asarray(hour) + np.asarray(minute) / 60.0 + np.asarray(second) / 3600.0,
                        'year': year,
                        'month': month,
                        'day': day,
@@ -167,10 +156,8 @@ def PickleFITACF(station, date):
                        'transFreq': tfreq,
                        'firstRang': frang,
                        'rangeSep': rsep,
-                       'fitACFMajorRev': fitACF_rev_major,
-                       'fitACFMinorRev': fitACF_rev_minor,
+                       'fitACFRev': fitACF_rev,
                        'CtrlPrgrm': combf,
-
                        'qflg': qflg,
                        'gflg': gflg,
                        'vel': v,
@@ -193,6 +180,19 @@ def PickleFITACF(station, date):
 
 
 if __name__ == '__main__':
-    station = "cly"
-    date = "20160926"
-    PickleFITACF(station, date)
+    """
+    Handler to call PickleFITACF on SuperDARN data files
+    """
+    PICKLE_ALL = False  # To prevent accidentally pickling all data
+
+    if PICKLE_ALL:
+        print("Pickling all downloaded SuperDARN data...")
+        for station in os.listdir("data/"):
+            for in_dir in os.listdir("data/" + station):
+                print("\nStarting " + in_dir)
+                PickleFITACF(station, in_dir[3:])
+    else:
+        station = "rkn"
+        date = "20160925"
+        print("Pickling " + station + date + "...")
+        PickleFITACF(station, date)
