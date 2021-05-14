@@ -31,9 +31,9 @@ if __name__ == '__main__':
 
     year = "2016"  # yyyy
     month = "09"  # mm
-    day = "26"  # dd
+    day = "25"  # dd
 
-    station = "rkn"
+    station = "cly"
     start_hour = 0  # Start and end times must be integer values for the loop
     end_hour = 4
     start_date_time = year + "-" + month + "-" + day + " " + str(start_hour) + ":00:00"
@@ -83,6 +83,9 @@ if __name__ == '__main__':
     vel13, count13 = [], []
     vel14, count14 = [], []
 
+    time_interval_s = 60  # seconds
+    time_step_h = time_interval_s / 3600
+
     # Look through the gates (we need to maintain 15 km resolution)
     for start_gate in range(gates[0], gates[1] + 1, 1):
         end_gate = start_gate
@@ -93,8 +96,6 @@ if __name__ == '__main__':
         print("Number of points at this gate: " + str(len(gate_restricted_df['epoch'])))
 
         # Loop through decimal time in jumps
-        time_interval_s = 30  # seconds
-        time_step_h = time_interval_s / 3600
         for start_time in np.arange(start_hour, end_hour, time_step_h):
 
             end_time = start_time + time_step_h
@@ -167,7 +168,7 @@ if __name__ == '__main__':
 
     # Save the data for later
     out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station
-    out_file = out_dir + "/" + station + year + month + day + ".MatchedData.1gg30s.pkl"
+    out_file = out_dir + "/" + station + year + month + day + ".MatchedData.1gg" + str(time_interval_s) + "s.pkl"
     print("Pickling as " + out_file + "...")
     matched_data.to_pickle(out_file)
 

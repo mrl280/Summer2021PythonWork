@@ -36,9 +36,10 @@ if __name__ == '__main__':
     month = "09"  # mm
     day = "25"  # dd
 
-    station = "rkn"
-    count_min = 2
+    station = "cly"
+    count_min = 4
     region = "E"
+    second_data = 60
 
     numonic = station.upper()
     if region.upper() == "E":
@@ -53,7 +54,7 @@ if __name__ == '__main__':
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
     in_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station
-    in_file = in_dir + "/" + station + year + month + day + ".MatchedData.1gg30s.pkl"
+    in_file = in_dir + "/" + station + year + month + day + ".MatchedData.1gg" + str(second_data) + "s.pkl"
     df = pd.read_pickle(in_file)
 
     # Filter the data based on the expected gate range of the region of interest
@@ -128,11 +129,13 @@ if __name__ == '__main__':
                                    [ax1[row][col].get_xlim()[0], ax1[row][col].get_xlim()[1]],
                                    linestyle='-', linewidth=1, color='red')
 
+        ax1[0][1].set_xlabel("13 MHz Velocities [m/s]")
+
         ax1[0][0].set_ylabel("10 MHz Velocities [m/s]")
         ax1[1][0].set_ylabel("13 MHz Velocities [m/s]")
         ax1[2][0].set_ylabel("14 MHz Velocities [m/s]")
 
-        ax1[0][1].set_ylabel("12 MHz Velocities [m/s]")
+        ax1[0][1].set_ylabel("14 MHz Velocities [m/s]")
         ax1[1][1].set_ylabel("13 MHz Velocities [m/s]")
         ax1[2][1].set_ylabel("14 MHz Velocities [m/s]")
 
@@ -187,7 +190,7 @@ if __name__ == '__main__':
         ax2[1][0].set_ylabel("Velocity Ratio: 13/12")
         ax2[2][0].set_ylabel("Velocity Ratio: 14/12")
 
-        ax2[0][1].set_ylabel("Velocity Ratio: 12/10")
+        ax2[0][1].set_ylabel("Velocity Ratio: 14/13")
         ax2[1][1].set_ylabel("Velocity Ratio: 13/10")
         ax2[2][1].set_ylabel("Velocity Ratio: 14/10")
 
