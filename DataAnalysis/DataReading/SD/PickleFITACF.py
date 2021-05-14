@@ -71,7 +71,6 @@ def PickleFITACF(station, date):
     sd_l, sd_phi = [], []
     elv, elv_low, elv_high = [], [], []
 
-    print("Starting looping")
     # Loop through all the files for this station/date
     in_dir = "data/" + station + "/" + station + date
     for in_file in glob.iglob(in_dir + "/*.fitacf.bz2"):
@@ -83,7 +82,6 @@ def PickleFITACF(station, date):
         sdarn_read = pydarn.SuperDARNRead(fitacf_stream, True)
         fitacf_data = sdarn_read.read_fitacf()
         # print("List of available parameters: " + str(fitacf_data[0].keys()))
-        print("     Read Complete")
 
         # Loop through every record in this file and add to the parallel arrays
         for record in range(len(fitacf_data)):
@@ -137,7 +135,7 @@ def PickleFITACF(station, date):
                 combf.append(fitacf_data[record]['combf'])
 
     # Put the data into a dataframe
-    print("Building the data frame...")
+    print("     Building the data frame...")
     df = pd.DataFrame({'stationId': [station] * len(epoch),
                        'dateTime': date_time,
                        'epoch': epoch,
@@ -174,7 +172,7 @@ def PickleFITACF(station, date):
 
     # Save to file
     out_file = in_dir + "/" + station + date + ".pkl"
-    print("Pickling as " + out_file + "...")
+    print("     Pickling as " + out_file + "...")
     df.to_pickle(out_file)
 
 
@@ -182,7 +180,7 @@ if __name__ == '__main__':
     """
     Handler to call PickleFITACF on SuperDARN data files
     """
-    PICKLE_ALL = False  # To prevent accidentally pickling all data
+    PICKLE_ALL = True  # To prevent accidentally pickling all data
 
     if PICKLE_ALL:
         print("Pickling all downloaded SuperDARN data...")

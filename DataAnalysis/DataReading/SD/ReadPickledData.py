@@ -9,7 +9,7 @@ if __name__ == '__main__':
     """
 
     station = "rkn"
-    date = "20190318"
+    date = "20160925"
 
     in_dir = "data/" + station + "/" + station + date
     in_file = in_dir + "/" + station + date + ".pkl"
