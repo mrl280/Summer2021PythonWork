@@ -36,8 +36,7 @@ def PickleFITACF(station, date):
             - Distance to the first range gate 'frang'
             - Range separation 'rsep' 
             - Control program name or command line, or comment buffer 'combf' 
-            - Major version number of the FITACF algorithm 'fitacf.revision.major'
-            - Minor version number of the FITACF algorithm 'fitacf.revision.minor'
+            - Version number of the FITACF algorithm 'fitacf.revision.major'.'fitacf.revision.minor'
         
         Vector Parameters
             - Range Gate 'slist'
