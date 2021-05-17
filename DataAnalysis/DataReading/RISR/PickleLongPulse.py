@@ -1,13 +1,13 @@
 import math
 import os
 import time
-
-import pandas as pd
-import numpy as np
 import glob
 import h5py
 
-from DataAnalysis.DataReading.RISR.wd_beam_num import wd_beam_num
+import pandas as pd
+import numpy as np
+
+from wd_beam_num import wd_beam_num
 
 
 def PickleLongPulse(station, date):
