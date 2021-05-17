@@ -16,14 +16,24 @@ def PickleLongPulse(station, date):
     Works for both RISR-N and RISR-C, although some RISR-C files seem not to have altitude data
     
     Parameters of Interest:
-        Epoch time
-        Range
+        - Epoch time (seconds since 1970.01.01)
+        - Date time (human readable date time)
+        - Year
+        - Month
+        - Day
+        - Hour
+        - Minute
+        - Second (included microseconds)
+        - Range
     
         1D Parameters (parameters that vary only with time)
             Beam id 'bmid' (this is usually a 5 digit number that uniquely identifies a RISR beam)
             World-Day Beam Number 'bmnum' (1 through 11)
+            Beam azimuth 'bmazm'
             Elevation Angle 'elv' (0=horizontal,90=vert)
             Transmission Frequency 'tfreq'
+            Geodetic Latitude and Longitude 'gdlat', 'glon'
+            Code baud count per pulse 'cbadl'
 
         2D Parameters (parameters that vary with range and time)
             Log10 of Density 'log10_Ne' with error 'Errolog10_Ne_err'
