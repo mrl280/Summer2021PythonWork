@@ -15,8 +15,8 @@ if __name__ == '__main__':
     Plot velocity ratios against time (ratio evolution)
     """
 
-    SAVE_PLOTS = True
-    SHOW_PLOTS = False
+    SAVE_PLOTS = False
+    SHOW_PLOTS = True
 
     year = "2016"  # yyyy
     month = "09"  # mm
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
     in_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station
-    in_file = in_dir + "/" + station + year + month + day + ".MatchedData.pkl"
+    in_file = in_dir + "/" + station + year + month + day + ".MatchedData.1gg60s.pkl"
     df = pd.read_pickle(in_file)
 
     out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/out/"
