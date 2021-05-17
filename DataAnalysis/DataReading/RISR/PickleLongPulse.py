@@ -67,10 +67,10 @@ def PickleLongPulse(station, date):
             raise Exception("Station " + station + " not recognized")
         file_type = file_type[10:len(file_type) - 1].rstrip()  # Strip out everything but the file type name
         if file_type != "Long Pulse":
-            print("\n" + in_file + " is a " + file_type + " file, skipping it...")
+            print("     " + in_file + " is a " + file_type + " file, skipping it...")
         else:
             # The file is a long pulse file, we are good to go ahead
-            print("\n" + in_file + " is a " + file_type + " file, reading in data...")
+            print("     " + in_file + " is a " + file_type + " file, reading in data...")
 
             keys = [key for key in file['/Data/Array Layout/'].keys()]  # These will be the list of beams
             try:
@@ -78,7 +78,7 @@ def PickleLongPulse(station, date):
             except:
                 raise Exception("Error: no keys found, unable to obtain data resolution")
             resolution = int((data_time[1] - data_time[0]) / 60)
-            print("Data time resolution: " + str(resolution) + " minute data")
+            print("         Data time resolution: " + str(resolution) + " minute data")
             # Strip the "x.h5" and replace with data resolution and "LongPulse.pkl"
             out_file = in_file[:len(in_file) - 4] + str(resolution) + "min.LongPulse.pkl"
 
@@ -105,7 +105,8 @@ def PickleLongPulse(station, date):
 
             # Loop through all the beams
             for beam in file['/Data/Array Layout/'].keys():
-                print("Looping through beam " + str(file['/Data/Array Layout/' + beam + '/1D Parameters/beamid'][0]))
+                print("         Looping through beam "
+                      + str(file['/Data/Array Layout/' + beam + '/1D Parameters/beamid'][0]))
 
                 # Loop through all the times and ranges here
                 for epoch_here_idx, epoch_here in enumerate(file['/Data/Array Layout/' + beam + '/timestamps']):
