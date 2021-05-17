@@ -1,4 +1,5 @@
 import math
+import os
 
 import pandas as pd
 import glob
@@ -6,7 +7,7 @@ import h5py
 
 from DataAnalysis.DataReading.RISR.wd_beam_num import wd_beam_num
 
-if __name__ == '__main__':
+def PickleLongPulse(station, data):
     """
     Take a RISR long pulse file and pickle it
     Works for both RISR-N and RISR-C, although some RISR-C files seem not to have altitude data
@@ -32,9 +33,6 @@ if __name__ == '__main__':
             Altitude 'alt'
     """
 
-    station = "ras"
-    date = "2016923"
-
     # Loop through all the files for this station/date and pickle all Long Pulse files
     in_dir = "data/" + station + "/" + station + date
     for in_file in glob.iglob(in_dir + "/*.h5"):
@@ -58,11 +56,12 @@ if __name__ == '__main__':
         else:
             # The file is a long pulse file, we are good to go ahead
             print("\n" + in_file + " is a " + file_type + " file, reading in data...")
+
+            keys = [key for key in file['/Data/Array Layout/'].keys()]  # These will be the list of beams
             try:
-                data_time = file['/Data/Array Layout/Array with beamid=56954 /timestamps']
+                data_time = file['/Data/Array Layout/' + keys[0] + '/timestamps']
             except:
-                raise Exception("Error: file does not contain Array with beamid=56954, additional info needed to "
-                                "compute time resolution")
+                raise Exception("Error: no keys found, unable to obtain data resolution")
             resolution = int((data_time[1] - data_time[0]) / 60)
             print("Data time resolution: " + str(resolution) + " minute data")
             # Strip the "x.h5" and replace with data resolution and "LongPulse.pkl"
@@ -158,3 +157,22 @@ if __name__ == '__main__':
             df.to_pickle(out_file)
 
         file.close()
+
+
+if __name__ == '__main__':
+    """
+    Handler to call PickleFITACF on RISR Long Pulse data files
+    """
+    PICKLE_ALL = False  # To prevent accidentally pickling all data
+
+    if PICKLE_ALL:
+        print("Pickling all downloaded RISR data...")
+        for station in os.listdir("data/"):
+            for in_dir in os.listdir("data/" + station):
+                print("\nStarting " + in_dir)
+                PickleLongPulse(station, in_dir[3:])
+    else:
+        station = "ran"
+        date = "20161012"
+        print("Pickling " + station + date + "...")
+        PickleLongPulse(station, date)

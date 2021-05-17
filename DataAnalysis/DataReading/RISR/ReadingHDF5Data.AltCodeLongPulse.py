@@ -7,8 +7,8 @@ if __name__ == '__main__':
     Doesn't produce anything, just for looking at the file structure
     """
     # in_file = "ran2020728.4"
-    # in_file = "ran20161012.4" # This one is an example of a RISR-N long pulse file
-    in_file = "ras2016923.6"  # This one is an example of a RISR-C long pulse file
+    in_file = "ran20161012.4" # This one is an example of a RISR-N long pulse file
+    # in_file = "ras2016923.6"  # This one is an example of a RISR-C long pulse file
 
     station = in_file[0:3]
     in_dir = station + "/" + in_file[:-2]
@@ -27,7 +27,8 @@ if __name__ == '__main__':
     print("File type: " + file_type)
 
     # Look at the data layout description
-    data_layout_desc = file['/Data/Array Layout/Array with beamid=56954 /Layout Description']
+    keys = [key for key in file['/Data/Array Layout/'].keys()]
+    data_layout_desc = file['/Data/Array Layout/' + keys[0] + '/Layout Description']
     print(data_layout_desc[()])
 
     # The file has both data and metadata
