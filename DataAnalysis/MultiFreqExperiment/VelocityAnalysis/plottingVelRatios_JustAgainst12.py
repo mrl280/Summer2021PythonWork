@@ -9,7 +9,7 @@ import pandas as pd
 
 if __name__ == '__main__':
     """
-    This is an older verison of the program that just has 10/12, 13/12, and 14/12
+    This is an older version of the vel plotting program that just has 10/12, 13/12, and 14/12
     
     Plot velocity at one frequency against velocity at another frequency
     Plot velocity ratios against time (ratio evolution)
