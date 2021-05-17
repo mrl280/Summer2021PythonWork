@@ -24,3 +24,4 @@ if __name__ == '__main__':
     print("Data start time: " + time.strftime(pattern, time.gmtime(df['epoch'].iloc[0])))
     print("Data end time: " + time.strftime(pattern, time.gmtime(df['epoch'].iloc[df.shape[0] - 1])))
 
+    print(type(df['year'][0]))
