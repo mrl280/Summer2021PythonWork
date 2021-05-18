@@ -1,10 +1,9 @@
 import time
-
 import pandas as pd
 
 if __name__ == '__main__':
     """
-    Read in pickled SuperDARN data
+    Read in pickled HDF5 RISR Data
     """
 
     station = "ras"

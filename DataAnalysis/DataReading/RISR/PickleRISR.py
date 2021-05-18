@@ -116,8 +116,13 @@ def PickleRISR(station, date):
              'pulseLength': df['PL']
              })
 
+        # Compute Data Resolution in minutes
+        temp_df = adjusted_df.drop_duplicates(subset=['dateTime'])
+        resolution = int((temp_df['minute'].iloc[1] + temp_df['second'].iloc[1] / 60.0)
+                         - (temp_df['minute'].iloc[0] + temp_df['second'].iloc[0] / 60.0))
+
         # Save to file
-        out_file = in_file[:len(in_file) - 8] + ".pkl"
+        out_file = in_file[:len(in_file) - 8] + "." + str(resolution) + "min.pkl"
         print("     Pickling as " + out_file + "...")
         adjusted_df.to_pickle(out_file)
 
@@ -133,7 +138,7 @@ if __name__ == '__main__':
     PICKLE_ALL = False  # To prevent accidentally pickling all data
 
     if PICKLE_ALL:
-        print("Pickling all downloaded RISR_HDF5 data...")
+        print("Pickling all downloaded RISR data...")
         for station in os.listdir("data/"):
             for in_dir in os.listdir("data/" + station):
                 print("\nStarting " + in_dir)
