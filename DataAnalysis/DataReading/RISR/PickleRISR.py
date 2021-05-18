@@ -135,7 +135,7 @@ if __name__ == '__main__':
     """
     Handler to call PickleRISR on RISR txt data files
     """
-    PICKLE_ALL = False  # To prevent accidentally pickling all data
+    PICKLE_ALL = True  # To prevent accidentally pickling all data
 
     if PICKLE_ALL:
         print("Pickling all downloaded RISR data...")
@@ -145,6 +145,6 @@ if __name__ == '__main__':
                 PickleRISR(station, in_dir[3:])
     else:
         station = "ran"
-        date = "20140302"
+        date = "20091107"
         print("Pickling " + station + date + "...")
         PickleRISR(station, date)

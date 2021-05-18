@@ -19,12 +19,12 @@ if __name__ == '__main__':
     Plot SuperDARN and RISR velocity vs time
     """
 
-    SAVE_PLOTS = False
-    SHOW_PLOTS = True
+    SAVE_PLOTS = True
+    SHOW_PLOTS = False
 
     year = "2014"  # yyyy
     month = "03"  # mm
-    day = "02"  # dd
+    day = "03"  # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
@@ -79,12 +79,11 @@ if __name__ == '__main__':
     # RISR and RKN velocities are going opposite directions, flip RISR so toward is +ve
     RISR_df['losIonVel'] = RISR_df['losIonVel'].apply(lambda x: x * -1)
 
-    # SuperDARN measures horizontal plasma flow, but RISR_HDF5 only sees a component
-    # Therefore we need to divide RISR_HDF5 velocities by the sin of the elevation angle
-    # Note: elevation angle is in degrees
-    # TODO: This assumes the magnetic field lines are perpendicular, which might not be the case
-    #   Koustov to confirm exactly what angle needs to be used
-    RISR_df['losIonVel'] = np.divide(RISR_df['losIonVel'], np.sin((RISR_df['elv']) * np.pi / 180))
+    # SuperDARN measures the velocity perpendicular to the magnetic field
+    # Therefore we need to find the RISR component in this direction
+    RISR_df['delta'] = RISR_df['aspect'] - RISR_df['elv'] - 90
+    # TODO: This might need to change based on spherical geometry of the Earth, idk
+    RISR_df['losIonVel'] = np.divide(RISR_df['losIonVel'], np.cos((RISR_df['elv'] + RISR_df['delta']) * np.pi / 180))
 
     # Build title strings
     if SD_beam_range[0] == SD_beam_range[1]:

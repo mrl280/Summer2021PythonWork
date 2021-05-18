@@ -1,3 +1,4 @@
+import statistics as stat
 import time
 import pandas as pd
 
@@ -10,7 +11,7 @@ if __name__ == '__main__':
     date = "20140302"
 
     in_dir = "data/" + station + "/" + station + date + "/"
-    in_file = in_dir + station + date + ".pkl"
+    in_file = in_dir + station + date + ".5min.pkl"
     df = pd.read_pickle(in_file)
     print(df.head())
 
@@ -24,6 +25,11 @@ if __name__ == '__main__':
     print(df['dateTime'].iloc[df.shape[0] - 1])
     print("\n")
 
-    df = df.drop_duplicates(subset=['dateTime'])
+    df = df.loc[df['wdBmnum'] == 2]
+    print(df['elv'].unique())
+    print(min(df['aspect'].unique()))
+    print(max(df['aspect'].unique()))
+    print(stat.mean(df['aspect'].unique()))
 
-    print(df['minute'].iloc[1] - df['minute'].iloc[0])
+    # df = df.drop_duplicates(subset=['dateTime'])
+    # print(df['minute'].iloc[1] - df['minute'].iloc[0])
