@@ -15,7 +15,7 @@ if __name__ == '__main__':
     in_file = in_dir + "/" + station + date + ".pkl"
     df = pd.read_pickle(in_file)
 
-    pd.set_option('display.max_columns', None)
+    # pd.set_option('display.max_columns', None)
     print(df.head())
     # print(df.keys())
 

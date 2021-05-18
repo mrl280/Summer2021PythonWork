@@ -55,7 +55,7 @@ if __name__ == '__main__':
     SD_in_file = SD_in_dir + "/" + SD_station + year + month + day + ".pkl"
     SD_df = pd.read_pickle(SD_in_file)
 
-    # Read in RISR_HDF5 data
+    # Read in RISR data
     RISR_in_dir = loc_root + "/DataReading/RISR/data/" + RISR_station + "/" + RISR_station + year + month + day
     RISR_in_file = RISR_in_dir + "/" + RISR_station + year + month + day + "." + str(resolution) + "min.pkl"
     RISR_df = pd.read_pickle(RISR_in_file)
@@ -67,7 +67,7 @@ if __name__ == '__main__':
                       & (SD_df['bmnum'] >= SD_beam_range[0]) & (SD_df['bmnum'] <= SD_beam_range[1])]  # filter beams
     SD_df.reset_index(drop=True, inplace=True)
 
-    # Filter RISR_HDF5 data
+    # Filter RISR data
     RISR_df = RISR_df.loc[(RISR_df['epoch'] >= start_epoch) & (RISR_df['epoch'] <= end_epoch)  # filer times
                           & (RISR_df['wdBmnum'] >= RISR_wd_beam_range[0])
                           & (RISR_df['wdBmnum'] <= RISR_wd_beam_range[1])]  # filter beams
@@ -214,7 +214,7 @@ if __name__ == '__main__':
         ax[0].errorbar(restricted_SD_df['decimalTime'], restricted_SD_df['vel'], yerr=restricted_SD_df['velErr'],
                        fmt='none', color='black', linewidth=0.75)
 
-        # Plot RISR_HDF5 data on the second plot
+        # Plot RISR data on the second plot
         ax[1].title.set_text(RISR_numonic + "; " + RISR_beam_string)
         ax[1].scatter(RISR_stats_df['binCenters'], RISR_stats_df['medians'], marker='D', s=40, facecolor='none',
                       edgecolors='b', linewidths=2, label='Binned Medians')
