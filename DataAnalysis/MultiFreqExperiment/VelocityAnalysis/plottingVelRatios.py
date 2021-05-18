@@ -8,9 +8,11 @@ import pandas as pd
 
 if __name__ == '__main__':
     """
-    Plot velocity at one frequency against velocity at another frequency
-    Plot velocity ratios against time (ratio evolution)
-    Breaks data into two gate ranges and plots both on the same graph
+    Produces two types of plots:
+        Velocity vs Velocity scatter
+        Velocity ratio vs time
+    
+    Data is plotted for a specific gate region (E: [10:30], of F: [50:70])
     """
 
     # EVENTS ANALYZED:
