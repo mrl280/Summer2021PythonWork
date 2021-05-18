@@ -21,8 +21,8 @@ if __name__ == '__main__':
     One scatter plot for each 2 hour time period
     """
 
-    SAVE_PLOTS = True
-    SHOW_PLOTS = False
+    SAVE_PLOTS = False
+    SHOW_PLOTS = True
 
     year = "2014"  # yyyy
     month = "03"  # mm
@@ -84,6 +84,11 @@ if __name__ == '__main__':
 
     # RISR-N and RKN velocities are going opposite directions, flip RISR so toward is +ve
     RISR_df['losIonVel'] = RISR_df['losIonVel'].apply(lambda x: x * -1)
+
+    # Original method: divide by sin of the elevation angle
+    # RISR_df['losIonVel'] = np.divide(RISR_df['losIonVel'], np.sin((RISR_df['elv']) * np.pi / 180))
+    print(RISR_df.keys())
+
 
     # SuperDARN measures horizontal plasma flow, but RISR only sees a component
     # Therefore we need to divide RISR velocities by the sin of the elevation angle
