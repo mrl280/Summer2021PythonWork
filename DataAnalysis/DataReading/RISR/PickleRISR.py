@@ -34,13 +34,14 @@ def PickleRISR(station, date):
             Beam id 'bmid' (this is usually a 5 digit number that uniquely identifies a RISR_HDF5 beam)
             World-Day Beam Number 'bmnum' (1 through 11)
             Beam azimuth 'bmazm'
-            Elevation Angle 'elv' (0=horizontal,90=vert)
+            Aspect angle 'aspect'  The angle between the magnetic field line and the radar beam.
             Transmission Frequency 'tfreq'
             Geodetic Latitude and Longitude 'gdlat', 'glon'
             Code baud count per pulse 'cbadl'
+            Pulse length in seconds 'pl'
 
         2D Parameters (parameters that vary with range and time)
-            Log10 of Density 'log10_Ne' with error 'Errolog10_Ne_err'
+           Density 'Ne' with error 'Ne_err'
             Ion Temperature 'ion_temp' with error 'ion_temp_err'
             Electron Temperature 'e_temp' with error 'e_temp_err'
             Line of Sight Ion Velocity 'los_ion_vel' with error 'los_ion_vel_err'
@@ -132,7 +133,7 @@ def PickleRISR(station, date):
 
 if __name__ == '__main__':
     """
-    Handler to call PickleFITACF on RISR_HDF5 Long Pulse txt files
+    Handler to call PickleRISR on RISR txt data files
     """
     PICKLE_ALL = False  # To prevent accidentally pickling all data
 
