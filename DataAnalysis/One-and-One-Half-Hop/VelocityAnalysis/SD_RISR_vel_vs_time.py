@@ -16,35 +16,29 @@ from DataAnalysis.DataReading.SD.basic_SD_df_filter import basic_SD_df_filter
 
 if __name__ == '__main__':
     """
-    Plot SuperDARN and RISR_HDF5 velocity vs time
-    
-    RISR_HDF5 Velocities are flipped and divided by the sin of the elevation angle
-    
+    Plot SuperDARN and RISR velocity vs time
     """
 
-    SAVE_PLOTS = True
-    SHOW_PLOTS = False
+    SAVE_PLOTS = False
+    SHOW_PLOTS = True
 
     year = "2014"  # yyyy
     month = "03"  # mm
-    day = "04"  # dd
+    day = "02"  # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
     SD_gate_range = [30, 40]
 
     RISR_station = "ran"
-    # RISR_HDF5 experiments can run for several days, the whole experiment is in one file labeled with the experiment start
-    # date.  This experiment start date is not necessarily the date we are plotting.
-    RISR_exp_start_month = "3"
-    RISR_exp_start_day = "2"
     RISR_wd_beam_range = [2, 2]
+    resolution = 5  # minutes
 
     SD_numonic = SD_station.upper()
     if RISR_station == "ran":
-        RISR_numonic = "RISR_HDF5-N"
+        RISR_numonic = "RISR-N"
     elif RISR_station == "ras":
-        RISR_numonic = "RISR_HDF5-C"
+        RISR_numonic = "RISR-C"
     else:
         raise Exception("Error, " + RISR_station + " not recognized.")
 
@@ -62,9 +56,8 @@ if __name__ == '__main__':
     SD_df = pd.read_pickle(SD_in_file)
 
     # Read in RISR_HDF5 data
-    RISR_in_dir = loc_root + "/DataReading/RISR_HDF5/data/" + RISR_station + "/" + RISR_station + year + RISR_exp_start_month + RISR_exp_start_day
-    RISR_in_file = RISR_in_dir + "/" + RISR_station + year + RISR_exp_start_month + RISR_exp_start_day \
-                   + ".5min.LongPulse.pkl"
+    RISR_in_dir = loc_root + "/DataReading/RISR/data/" + RISR_station + "/" + RISR_station + year + month + day
+    RISR_in_file = RISR_in_dir + "/" + RISR_station + year + month + day + "." + str(resolution) + "min.pkl"
     RISR_df = pd.read_pickle(RISR_in_file)
 
     # Filter SuperDARN data
@@ -79,11 +72,11 @@ if __name__ == '__main__':
                           & (RISR_df['wdBmnum'] >= RISR_wd_beam_range[0])
                           & (RISR_df['wdBmnum'] <= RISR_wd_beam_range[1])]  # filter beams
 
-    # We have to remove all nan values from RISR_HDF5 because several of the upcoming functions can't handle them
+    # We have to remove all nan values from RISR because several of the upcoming functions can't handle them
     RISR_df = RISR_df.loc[RISR_df['losIonVel'].notna()]
     RISR_df.reset_index(drop=True, inplace=True)
 
-    # RISR_HDF5-N and RKN velocities are going opposite directions, flip RISR_HDF5 so toward is +ve
+    # RISR and RKN velocities are going opposite directions, flip RISR so toward is +ve
     RISR_df['losIonVel'] = RISR_df['losIonVel'].apply(lambda x: x * -1)
 
     # SuperDARN measures horizontal plasma flow, but RISR_HDF5 only sees a component
@@ -92,22 +85,6 @@ if __name__ == '__main__':
     # TODO: This assumes the magnetic field lines are perpendicular, which might not be the case
     #   Koustov to confirm exactly what angle needs to be used
     RISR_df['losIonVel'] = np.divide(RISR_df['losIonVel'], np.sin((RISR_df['elv']) * np.pi / 180))
-
-    # Recover decimal times from epoch times
-    SD_decimal_time = []
-    RISR_decimal_time = []
-    for t in range(len(SD_df['epoch'])):
-        hour = str.split(time.strftime(pattern, time.gmtime(SD_df['epoch'][t])))[1][0:2]
-        min = str.split(time.strftime(pattern, time.gmtime(SD_df['epoch'][t])))[1][3:5]
-        sec = str.split(time.strftime(pattern, time.gmtime(SD_df['epoch'][t])))[1][6:8]
-        SD_decimal_time.append(float(hour) + float(min) / 60.0 + float(sec) / 3600.0)
-    for t in range(len(RISR_df['epoch'])):
-        hour = str.split(time.strftime(pattern, time.gmtime(RISR_df['epoch'][t])))[1][0:2]
-        min = str.split(time.strftime(pattern, time.gmtime(RISR_df['epoch'][t])))[1][3:5]
-        sec = str.split(time.strftime(pattern, time.gmtime(RISR_df['epoch'][t])))[1][6:8]
-        RISR_decimal_time.append(float(hour) + float(min) / 60.0 + float(sec) / 3600.0)
-    SD_df['decimalTime'] = SD_decimal_time
-    RISR_df['decimalTime'] = RISR_decimal_time
 
     # Build title strings
     if SD_beam_range[0] == SD_beam_range[1]:
