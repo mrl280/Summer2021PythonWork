@@ -153,7 +153,7 @@ if __name__ == '__main__':
         ax1[2][0].scatter(df_14_12['vel12'], df_14_12['vel14'], s=4, color='b', marker='.', label=gate_label)
         ax1[2][0].text(-900, 710, 'n=' + str(df_14_12.shape[0]), fontsize=12)
 
-        # Plot 12 to 10 Comparison data in ROW: 0, COL: 1
+        # Plot 14 to 13 Comparison data in ROW: 0, COL: 1
         ax1[0][1].scatter(df_14_13['vel13'], df_14_13['vel14'], s=4, color='b', marker='.', label=gate_label)
         ax1[0][1].text(-900, 710, 'n=' + str(df_14_13.shape[0]), fontsize=12)
 

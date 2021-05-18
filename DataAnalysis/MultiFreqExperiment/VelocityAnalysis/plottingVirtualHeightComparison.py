@@ -25,8 +25,8 @@ if __name__ == '__main__':
     second_resolution = 60
 
     if region.upper() == "E":
-        gates = [10, 30]
-        gate_label = "gg: 10-30"
+        gates = [20, 30]
+        gate_label = "gg: 20-30"
     elif region.upper() == "F":
         gates = [50, 74]
         gate_label = "gg: 50-74"
@@ -132,7 +132,7 @@ if __name__ == '__main__':
         ax1[2][0].scatter(df_14_12['height12'], df_14_12['height14'], s=4, color='b', marker='.', label=gate_label)
         ax1[2][0].text(52, 172, 'n=' + str(df_14_12.shape[0]), fontsize=12)
 
-        # Plot 12 to 10 Comparison data in ROW: 0, COL: 1
+        # Plot 14 to 13 Comparison data in ROW: 0, COL: 1
         ax1[0][1].scatter(df_14_13['height13'], df_14_13['height14'], s=4, color='b', marker='.', label=gate_label)
         ax1[0][1].text(52, 172, 'n=' + str(df_14_13.shape[0]), fontsize=12)
 
