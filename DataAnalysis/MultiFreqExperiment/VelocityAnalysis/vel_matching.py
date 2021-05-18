@@ -35,7 +35,7 @@ if __name__ == '__main__':
     month = "09"  # mm
     day = "26"  # dd
 
-    station = "rkn"
+    station = "cly"
     start_hour = 0  # Start and end times must be integer values for the loop
     end_hour = 4
     time_interval_s = 60  # seconds

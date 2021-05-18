@@ -29,17 +29,17 @@ if __name__ == '__main__':
     # 2016 09 25 at INV: gg [10 74]
     # 4 pts, elv max 25
 
-    SAVE_PLOTS = True
-    SHOW_PLOTS = False
+    SAVE_PLOTS = False
+    SHOW_PLOTS = True
 
     year = "2016"  # yyyy
     month = "09"  # mm
-    day = "25"  # dd
+    day = "26"  # dd
 
-    station = "cly"
+    station = "rkn"
     count_min = 4
     region = "E"
-    second_data = 60
+    second_resolution = 60
 
     numonic = station.upper()
     if region.upper() == "E":
@@ -53,8 +53,8 @@ if __name__ == '__main__':
 
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
-    in_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station
-    in_file = in_dir + "/" + station + year + month + day + ".MatchedData.1gg" + str(second_data) + "s.pkl"
+    in_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station + "/" + station + year + month + day
+    in_file = in_dir + "/" + station + year + month + day + ".MatchedData.1gg" + str(second_resolution) + "s.pkl"
     df = pd.read_pickle(in_file)
 
     # Filter the data based on the expected gate range of the region of interest
