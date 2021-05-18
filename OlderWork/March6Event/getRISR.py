@@ -1,7 +1,7 @@
 # Michael Luciuk
 # Aug 12, 2019
 
-# Program to read in RISR data from text file
+# Program to read in RISR_HDF5 data from text file
 
 import os
 import sys
@@ -10,17 +10,17 @@ import sys
 def getRISR():
     """
     Purpose:
-        Read in RISR data from text file
+        Read in RISR_HDF5 data from text file
     Pre-conditions:
         none
     Post-conditions:
         Data file must exist
     Return:
-        :return: RISR data as a multidimensional list
+        :return: RISR_HDF5 data as a multidimensional list
     """
     cur_path = os.path.dirname(__file__)    # where we are
 
-    # Read in RISR data
+    # Read in RISR_HDF5 data
     file = open(cur_path + "/Data/risrc_vel_20160306.txt", "r")
     lines = file.readlines()
     start_UT = []  # start time
@@ -47,7 +47,7 @@ def getRISR():
 
     if start_UT[0] != "START_UT" or end_UT[0] != "END_UT" or vel[0] != "VEL" or dvel[0] != "D_VEL" or \
             lat[0] != "LATITUDE":
-        print("RISR data not read in correctly")
+        print("RISR_HDF5 data not read in correctly")
         sys.exit()
     else:
         return [start_UT, end_UT, lat, vel, dvel]

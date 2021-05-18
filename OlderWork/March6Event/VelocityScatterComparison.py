@@ -1,7 +1,7 @@
 # Michael Luciuk
 # Aug 15, 2019
 
-# Program to plot a scatter plot comparing RKN 10 and RKN 12 MHz velocities to RISR velocities (ExB)
+# Program to plot a scatter plot comparing RKN 10 and RKN 12 MHz velocities to RISR_HDF5 velocities (ExB)
 
 from getGateToGlat import glatToGate
 from getRISR import getRISR
@@ -16,7 +16,7 @@ import os
 def VelocityScatterComparison():
     """
     Purpose:
-        Program to plot a scatter plot comparing RKN 10 MHz and RKN 12 MHz velocities to RISR velocities
+        Program to plot a scatter plot comparing RKN 10 MHz and RKN 12 MHz velocities to RISR_HDF5 velocities
     Pre-conditions:
         Data files and the programs to read in these files must exist
     Post-conditions:
@@ -63,20 +63,20 @@ def VelocityScatterComparison():
         if _RKN_n12[i] < MIN_NUM_RAW:
             _RKN_vel12[i] = math.nan
 
-    RISR_data = getRISR()  # get RISR data
+    RISR_data = getRISR()  # get RISR_HDF5 data
 
     RISR_start_UT = np.asarray(RISR_data[0]) if RISR_data[0].pop(0) == "START_UT" else \
-        print("Error: RISR start time data")
+        print("Error: RISR_HDF5 start time data")
     RISR_end_UT = np.asarray(RISR_data[1]) if RISR_data[1].pop(0) == "END_UT" else \
-        print("Error: RISR end time data")
+        print("Error: RISR_HDF5 end time data")
     RISR_geolat = np.asarray(RISR_data[2]) if RISR_data[2].pop(0) == "LATITUDE" else \
-        print("Error: RISR geolat data")
+        print("Error: RISR_HDF5 geolat data")
     RISR_vel = np.asarray(RISR_data[3]) if RISR_data[3].pop(0) == "VEL" else \
-        print("Error: RISR velocity data")
+        print("Error: RISR_HDF5 velocity data")
     # RISR_dvel = np.asarray(RISR_data[4]) if RISR_data[4].pop(0) == "D_VEL" else \
-    #     print("Error: RISR velocity data")
+    #     print("Error: RISR_HDF5 velocity data")
 
-    # Restrict RISR data to a specific time period (START_UT-END_UT)
+    # Restrict RISR_HDF5 data to a specific time period (START_UT-END_UT)
     valid_times_RISR = (RISR_start_UT >= START_UT) & (RISR_end_UT <= END_UT) & (RISR_start_UT < RISR_end_UT)
     _RISR_start_UT = RISR_start_UT[valid_times_RISR]
     _RISR_geolat = RISR_geolat[valid_times_RISR]
@@ -84,31 +84,31 @@ def VelocityScatterComparison():
 
     _RISR_gate = glatToGate(_RISR_geolat)  # convert geolat to gate
 
-    # Remove all RKN data that is not within the RISR gate range
+    # Remove all RKN data that is not within the RISR_HDF5 gate range
     valid_gates_RKN = (_RKN_gate >= math.floor(min(_RISR_gate))) & (_RKN_gate <= math.ceil(max(_RISR_gate)))
     __RKN_start_UT = _RKN_start_UT[valid_gates_RKN]
     __RKN_gate = _RKN_gate[valid_gates_RKN]
     __RKN_vel10 = _RKN_vel10[valid_gates_RKN]
     __RKN_vel12 = _RKN_vel12[valid_gates_RKN]
 
-    # Round all RISR gate data to whole numbers so they can be easily picked out and
+    # Round all RISR_HDF5 gate data to whole numbers so they can be easily picked out and
     # compared with the corresponding RKN gate
     _RISR_gate_rounded = np.around(_RISR_gate)  # includes gates 9 through 22 (14 gates)
 
     new_RISR_vel = np.zeros(len(__RKN_gate))    # pre-allocate
-    # Loop through the RKN data and make points by averaging the corresponding RISR data
+    # Loop through the RKN data and make points by averaging the corresponding RISR_HDF5 data
     for i in range(len(__RKN_gate)):
         RISR_idexs_that_match = (_RISR_gate_rounded == __RKN_gate[i]) & (_RISR_start_UT == __RKN_start_UT[i])
         new_RISR_vel[i] = mean(_RISR_vel[RISR_idexs_that_match])    # between 1 and 3 points will be averaged
 
-    # Plot RKN velocities as a function of RISR velocities (RISR velocities should be representative of ExB)
+    # Plot RKN velocities as a function of RISR_HDF5 velocities (RISR_HDF5 velocities should be representative of ExB)
     # Set up plot
     myPlot = plt.figure(figsize=FIG_SIZE)
     plt.rc('font', size=TEXT_SIZE)
     plt.plot([PLT_RANGE[0], PLT_RANGE[1]], [PLT_RANGE[0], PLT_RANGE[1]], 'k-', linewidth='0.6')  # bisector
     plt.plot([PLT_RANGE[0], PLT_RANGE[1]], [0, 0], 'k-', linewidth='0.6')
     plt.plot([0, 0], [PLT_RANGE[2], PLT_RANGE[3]], 'k-', linewidth='0.6')
-    plt.xlabel('Velocity (RISR) [m/s]')
+    plt.xlabel('Velocity (RISR_HDF5) [m/s]')
     plt.ylabel('Velocity (RKN) [m/s]')
     plt.title('6 March 2016, ' + str(int(START_UT)) + ':' + str(int((START_UT*60) % 60)).zfill(2) + '-'
               + str(int(END_UT)) + ':' + str(int((END_UT*60) % 60)).zfill(2) + ' UT')
@@ -118,7 +118,7 @@ def VelocityScatterComparison():
     ax.tick_params(axis='x', rotation=30)
     ax.set_xticks([400, 200, 0, -200, -400, -600, -800, -1000, -1200, -1400])
 
-    # Multiply RISR velocities by 1.2, idk why?
+    # Multiply RISR_HDF5 velocities by 1.2, idk why?
     new_RISR_vel = 1.2 * new_RISR_vel
 
     # plot the data

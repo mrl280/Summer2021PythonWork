@@ -24,7 +24,7 @@ def VelocityScatterComparison():
     Post-conditions:
         Figure is created with 2 subplots:
         - Velocity Range Profile (RKN 10 and 12 MHz data as a function of range gate)
-        - Velocity Scatter Comparision (RKN 10 and 12 MHz velocity as a function of RISR velocity (ExB))
+        - Velocity Scatter Comparision (RKN 10 and 12 MHz velocity as a function of RISR_HDF5 velocity (ExB))
 
         Optionally creates an eps file of the figure
     Return:
@@ -112,18 +112,18 @@ def VelocityScatterComparison():
             VelRngAx.plot([_RKN_gate[i] + RKN_PT_OFFSET, _RKN_gate[i] + RKN_PT_OFFSET],
                           [_RKN_vel12[i] + _RKN_std_vel12[i], _RKN_vel12[i] - _RKN_std_vel12[i]], 'b-', linewidth=1.25)
 
-    # get RISR data
+    # get RISR_HDF5 data
     RISR_data = getRISR()
     RISR_start_UT = np.asarray(RISR_data[0]) if RISR_data[0].pop(0) == "START_UT" else \
-        print("Error: RISR start time data")
+        print("Error: RISR_HDF5 start time data")
     RISR_end_UT = np.asarray(RISR_data[1]) if RISR_data[1].pop(0) == "END_UT" else \
-        print("Error: RISR end time data")
+        print("Error: RISR_HDF5 end time data")
     RISR_geolat = np.asarray(RISR_data[2]) if RISR_data[2].pop(0) == "LATITUDE" else \
-        print("Error: RISR geolat data")
+        print("Error: RISR_HDF5 geolat data")
     RISR_vel = np.asarray(RISR_data[3]) if RISR_data[3].pop(0) == "VEL" else \
-        print("Error: RISR velocity data")
+        print("Error: RISR_HDF5 velocity data")
     RISR_dvel = np.asarray(RISR_data[4]) if RISR_data[4].pop(0) == "D_VEL" else \
-        print("Error: RISR velocity data")
+        print("Error: RISR_HDF5 velocity data")
 
     # Restrict to a specific time period (START_UT-END_UT)
     valid_times_RISR = (RISR_start_UT >= START_UT) & (RISR_end_UT <= END_UT) & (RISR_start_UT < RISR_end_UT)
@@ -151,7 +151,7 @@ def VelocityScatterComparison():
     __RISR_dvel = _RISR_dvel[not_nan]
 
     # plot the data
-    VelRngAx.plot(__RISR_gate, __RISR_vel, 'ks', label='RISR', markersize=6)
+    VelRngAx.plot(__RISR_gate, __RISR_vel, 'ks', label='RISR_HDF5', markersize=6)
     VelRngAx.plot(__RISR_gate, __RISR_vel, 'k-', linewidth=1.25)
     for i in range(len(__RISR_gate)):  # Plot error
         VelRngAx.plot([_RISR_gate[i], _RISR_gate[i]],
@@ -160,28 +160,28 @@ def VelocityScatterComparison():
     # add legend
     VelRngAx.legend(loc='lower left', fontsize=17)
 
-    # Remove all RKN data that is not within the RISR gate range
+    # Remove all RKN data that is not within the RISR_HDF5 gate range
     valid_gates_RKN = (_RKN_gate >= math.floor(min(_RISR_gate))) & (_RKN_gate <= math.ceil(max(_RISR_gate)))
     __RKN_start_UT = _RKN_start_UT[valid_gates_RKN]
     __RKN_gate = _RKN_gate[valid_gates_RKN]
     __RKN_vel10 = _RKN_vel10[valid_gates_RKN]
     __RKN_vel12 = _RKN_vel12[valid_gates_RKN]
 
-    # Round all RISR gate data to whole numbers so they can be easily picked out and
+    # Round all RISR_HDF5 gate data to whole numbers so they can be easily picked out and
     # compared with the corresponding RKN gate
     _RISR_gate_rounded = np.around(_RISR_gate)
 
     new_RISR_vel = np.zeros(len(__RKN_gate))  # pre-allocate
-    # Loop through the RKN data and make points by averaging the corresponding RISR data
+    # Loop through the RKN data and make points by averaging the corresponding RISR_HDF5 data
     for i in range(len(__RKN_gate)):
         RISR_idexs_that_match = (_RISR_gate_rounded == __RKN_gate[i]) & (_RISR_start_UT == __RKN_start_UT[i])
         new_RISR_vel[i] = mean(_RISR_vel[RISR_idexs_that_match])  # between 1 and 3 points will be averaged
 
-    # Set up RKN velocity as a function of RISR velocity plot (on bottom)
+    # Set up RKN velocity as a function of RISR_HDF5 velocity plot (on bottom)
     VelScatAx.set_xlim(left=VEL_SCAT_PLT_RANGE[0], right=VEL_SCAT_PLT_RANGE[1])
     VelScatAx.set_ylim(bottom=VEL_SCAT_PLT_RANGE[2], top=VEL_SCAT_PLT_RANGE[3])
     VelScatAx.grid(axis='both', which='major', linestyle='--')
-    VelScatAx.set_xlabel('Velocity (RISR) [m/s]', size=LABEL_SIZE)
+    VelScatAx.set_xlabel('Velocity (RISR_HDF5) [m/s]', size=LABEL_SIZE)
     VelScatAx.set_ylabel('Velocity (RKN) [m/s]', size=LABEL_SIZE)
     VelScatAx.set_xticks([400, 200, 0, -200, -400, -600, -800, -1000, -1200])
     VelScatAx.set_yticks([400, 200, 0, -200, -400, -600, -800, -1000, -1200])

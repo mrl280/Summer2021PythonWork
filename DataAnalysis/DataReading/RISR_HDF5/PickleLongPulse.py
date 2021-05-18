@@ -12,8 +12,8 @@ from wd_beam_num import wd_beam_num
 
 def PickleLongPulse(station, date):
     """
-    Take a RISR long pulse file and pickle it
-    Works for both RISR-N and RISR-C, although some RISR-C files seem not to have altitude data
+    Take a RISR_HDF5 long pulse file and pickle it
+    Works for both RISR_HDF5-N and RISR_HDF5-C, although some RISR_HDF5-C files seem not to have altitude data
     
     Parameters of Interest:
         - Epoch time (seconds since 1970.01.01)
@@ -27,7 +27,7 @@ def PickleLongPulse(station, date):
         - Range
     
         1D Parameters (parameters that vary only with time)
-            Beam id 'bmid' (this is usually a 5 digit number that uniquely identifies a RISR beam)
+            Beam id 'bmid' (this is usually a 5 digit number that uniquely identifies a RISR_HDF5 beam)
             World-Day Beam Number 'bmnum' (1 through 11)
             Beam azimuth 'bmazm'
             Elevation Angle 'elv' (0=horizontal,90=vert)
@@ -204,12 +204,12 @@ def PickleLongPulse(station, date):
 
 if __name__ == '__main__':
     """
-    Handler to call PickleFITACF on RISR Long Pulse data files
+    Handler to call PickleFITACF on RISR_HDF5 Long Pulse data files
     """
     PICKLE_ALL = False  # To prevent accidentally pickling all data
 
     if PICKLE_ALL:
-        print("Pickling all downloaded RISR data...")
+        print("Pickling all downloaded RISR_HDF5 data...")
         for station in os.listdir("data/"):
             for in_dir in os.listdir("data/" + station):
                 print("\nStarting " + in_dir)

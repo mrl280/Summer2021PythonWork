@@ -16,9 +16,9 @@ from DataAnalysis.DataReading.SD.basic_SD_df_filter import basic_SD_df_filter
 
 if __name__ == '__main__':
     """
-    Plot SuperDARN and RISR velocity vs time
+    Plot SuperDARN and RISR_HDF5 velocity vs time
     
-    RISR Velocities are flipped and divided by the sin of the elevation angle
+    RISR_HDF5 Velocities are flipped and divided by the sin of the elevation angle
     
     """
 
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     SD_gate_range = [30, 40]
 
     RISR_station = "ran"
-    # RISR experiments can run for several days, the whole experiment is in one file labeled with the experiment start
+    # RISR_HDF5 experiments can run for several days, the whole experiment is in one file labeled with the experiment start
     # date.  This experiment start date is not necessarily the date we are plotting.
     RISR_exp_start_month = "3"
     RISR_exp_start_day = "2"
@@ -42,9 +42,9 @@ if __name__ == '__main__':
 
     SD_numonic = SD_station.upper()
     if RISR_station == "ran":
-        RISR_numonic = "RISR-N"
+        RISR_numonic = "RISR_HDF5-N"
     elif RISR_station == "ras":
-        RISR_numonic = "RISR-C"
+        RISR_numonic = "RISR_HDF5-C"
     else:
         raise Exception("Error, " + RISR_station + " not recognized.")
 
@@ -61,8 +61,8 @@ if __name__ == '__main__':
     SD_in_file = SD_in_dir + "/" + SD_station + year + month + day + ".pkl"
     SD_df = pd.read_pickle(SD_in_file)
 
-    # Read in RISR data
-    RISR_in_dir = loc_root + "/DataReading/RISR/data/" + RISR_station + "/" + RISR_station + year + RISR_exp_start_month + RISR_exp_start_day
+    # Read in RISR_HDF5 data
+    RISR_in_dir = loc_root + "/DataReading/RISR_HDF5/data/" + RISR_station + "/" + RISR_station + year + RISR_exp_start_month + RISR_exp_start_day
     RISR_in_file = RISR_in_dir + "/" + RISR_station + year + RISR_exp_start_month + RISR_exp_start_day \
                    + ".5min.LongPulse.pkl"
     RISR_df = pd.read_pickle(RISR_in_file)
@@ -74,20 +74,20 @@ if __name__ == '__main__':
                       & (SD_df['bmnum'] >= SD_beam_range[0]) & (SD_df['bmnum'] <= SD_beam_range[1])]  # filter beams
     SD_df.reset_index(drop=True, inplace=True)
 
-    # Filter RISR data
+    # Filter RISR_HDF5 data
     RISR_df = RISR_df.loc[(RISR_df['epoch'] >= start_epoch) & (RISR_df['epoch'] <= end_epoch)  # filer times
                           & (RISR_df['wdBmnum'] >= RISR_wd_beam_range[0])
                           & (RISR_df['wdBmnum'] <= RISR_wd_beam_range[1])]  # filter beams
 
-    # We have to remove all nan values from RISR because several of the upcoming functions can't handle them
+    # We have to remove all nan values from RISR_HDF5 because several of the upcoming functions can't handle them
     RISR_df = RISR_df.loc[RISR_df['losIonVel'].notna()]
     RISR_df.reset_index(drop=True, inplace=True)
 
-    # RISR-N and RKN velocities are going opposite directions, flip RISR so toward is +ve
+    # RISR_HDF5-N and RKN velocities are going opposite directions, flip RISR_HDF5 so toward is +ve
     RISR_df['losIonVel'] = RISR_df['losIonVel'].apply(lambda x: x * -1)
 
-    # SuperDARN measures horizontal plasma flow, but RISR only sees a component
-    # Therefore we need to divide RISR velocities by the sin of the elevation angle
+    # SuperDARN measures horizontal plasma flow, but RISR_HDF5 only sees a component
+    # Therefore we need to divide RISR_HDF5 velocities by the sin of the elevation angle
     # Note: elevation angle is in degrees
     # TODO: This assumes the magnetic field lines are perpendicular, which might not be the case
     #   Koustov to confirm exactly what angle needs to be used
@@ -238,7 +238,7 @@ if __name__ == '__main__':
         ax[0].errorbar(restricted_SD_df['decimalTime'], restricted_SD_df['vel'], yerr=restricted_SD_df['velErr'],
                        fmt='none', color='black', linewidth=0.75)
 
-        # Plot RISR data on the second plot
+        # Plot RISR_HDF5 data on the second plot
         ax[1].title.set_text(RISR_numonic + "; " + RISR_beam_string)
         ax[1].scatter(RISR_stats_df['binCenters'], RISR_stats_df['medians'], marker='D', s=40, facecolor='none',
                       edgecolors='b', linewidths=2, label='Binned Medians')

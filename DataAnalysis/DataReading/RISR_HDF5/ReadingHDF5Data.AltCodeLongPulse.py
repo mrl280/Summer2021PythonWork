@@ -7,8 +7,8 @@ if __name__ == '__main__':
     Doesn't produce anything, just for looking at the file structure
     """
     # in_file = "ran2020728.4"
-    in_file = "ran20161012.4" # This one is an example of a RISR-N long pulse file
-    # in_file = "ras2016923.6"  # This one is an example of a RISR-C long pulse file
+    in_file = "ran20161012.4" # This one is an example of a RISR_HDF5-N long pulse file
+    # in_file = "ras2016923.6"  # This one is an example of a RISR_HDF5-C long pulse file
 
     station = in_file[0:3]
     in_dir = station + "/" + in_file[:-2]

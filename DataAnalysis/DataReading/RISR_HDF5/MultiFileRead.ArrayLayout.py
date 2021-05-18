@@ -5,7 +5,7 @@ import time
 
 if __name__ == '__main__':
     """
-    Try and read in multiple RISR h5 files and look at the timestamps
+    Try and read in multiple RISR_HDF5 h5 files and look at the timestamps
     Doesn't produce anything, just for looking at the file structure
     """
     # in_dir = "ran2020728"

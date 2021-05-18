@@ -15,7 +15,7 @@ def radar_code(id):
     elif id == 5:
         return 'sas'
 
-    # RISR Incoherent Scatter Radars
+    # RISR_HDF5 Incoherent Scatter Radars
     elif id == 91:
         return 'ran'
     elif id == 92:

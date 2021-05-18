@@ -6,7 +6,7 @@ import numpy as np
 import glob
 import h5py
 
-from DataAnalysis.DataReading.RISR.wd_beam_num import wd_beam_num
+from DataAnalysis.DataReading.RISR_HDF5.wd_beam_num import wd_beam_num
 
 if __name__ == '__main__':
     station = "ran"

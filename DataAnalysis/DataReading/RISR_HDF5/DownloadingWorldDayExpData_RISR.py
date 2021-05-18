@@ -19,9 +19,9 @@ if __name__ == '__main__':
     Arr_offset_to_download = 19  # Browse first to find this
 
     if RISRN and RISRC:
-        raise Exception("You cannot choose both RISR-N and C because their data lives in different places")
+        raise Exception("You cannot choose both RISR_HDF5-N and C because their data lives in different places")
     if not RISRN and not RISRC:
-        raise Exception("You have to to pick one of RISR-N or C")
+        raise Exception("You have to to pick one of RISR_HDF5-N or C")
 
     # NOTE: Different instruments are at different URLs
     if RISRN:
@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
         # Ensure out directory
         loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
-        out_dir = loc_root + "/DataReading/RISR/data/" + radar_nmonic + "/" + radar_nmonic \
+        out_dir = loc_root + "/DataReading/RISR_HDF5/data/" + radar_nmonic + "/" + radar_nmonic \
                   + str(expToDownload.startyear) + str(expToDownload.startmonth) + str(expToDownload.startday)
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)

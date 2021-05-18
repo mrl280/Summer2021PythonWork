@@ -1,7 +1,7 @@
 # Michael Luciuk
 # Aug 15, 2019
 
-# Program to plot RKN and RISR velocities as a function of gate range
+# Program to plot RKN and RISR_HDF5 velocities as a function of gate range
 
 from matplotlib import patches
 from matplotlib.ticker import MultipleLocator
@@ -17,7 +17,7 @@ import os
 
 def VelocityRangeProfiler():
     """
-    Purpose: Plot RKN and RISR velocities as a function of range gate.  Plots +/- given error in RISR velocities and
+    Purpose: Plot RKN and RISR_HDF5 velocities as a function of range gate.  Plots +/- given error in RISR_HDF5 velocities and
         +/- 1 standard deviation in RKN velocities.
         Additionally, boxes are drawn around given groups of RKN velocities, we have the following groups,
             Group 1 (Coral): Low velocity echoes. Two types -> those of the same polarity and those of opposite
@@ -181,18 +181,18 @@ def VelocityRangeProfiler():
     plt.plot(_RKN_gate - RKN_PT_OFFSET, _RKN_vel10, 'rd', label='10.4 MHz', markersize=6.25)
     plt.plot(_RKN_gate + RKN_PT_OFFSET, _RKN_vel12, 'bd', label='12.3 MHz', markersize=6.25)
 
-    RISR_data = getRISR()  # get RISR data
+    RISR_data = getRISR()  # get RISR_HDF5 data
 
     RISR_start_UT = np.asarray(RISR_data[0]) if RISR_data[0].pop(0) == "START_UT" else \
-        print("Error: RISR start time data")
+        print("Error: RISR_HDF5 start time data")
     # RISR_end_UT = np.asarray(RISR_data[1]) if RISR_data[1].pop(0) == "END_UT" else \
-    #     print("Error: RISR end time data")
+    #     print("Error: RISR_HDF5 end time data")
     RISR_geolat = np.asarray(RISR_data[2]) if RISR_data[2].pop(0) == "LATITUDE" else \
-        print("Error: RISR geolat data")
+        print("Error: RISR_HDF5 geolat data")
     RISR_vel = np.asarray(RISR_data[3]) if RISR_data[3].pop(0) == "VEL" else \
-        print("Error: RISR velocity data")
+        print("Error: RISR_HDF5 velocity data")
     RISR_dvel = np.asarray(RISR_data[4]) if RISR_data[4].pop(0) == "D_VEL" else \
-        print("Error: RISR velocity data")
+        print("Error: RISR_HDF5 velocity data")
 
     # Restrict to a specific time period (19.10-19.19)
     valid_times_RISR = RISR_start_UT == 19.10  # Get the bool array of all elements with start time 19.10
@@ -215,7 +215,7 @@ def VelocityRangeProfiler():
     __RISR_dvel = _RISR_dvel[not_nan]
 
     # plot the data
-    plt.plot(__RISR_gate, __RISR_vel, 'ks', label='RISR', markersize=6)
+    plt.plot(__RISR_gate, __RISR_vel, 'ks', label='RISR_HDF5', markersize=6)
     plt.plot(__RISR_gate, __RISR_vel, 'k-', linewidth=1.25)
 
     # Plot error

@@ -68,18 +68,18 @@ def main():
             plt.plot([__RKN_gate[i] + 0.1, __RKN_gate[i] + 0.1],
                      [__RKN_vel12[i] + __RKN_std_vel12[i], __RKN_vel12[i] - __RKN_std_vel12[i]], 'b-', linewidth=0.5)
 
-    RISR_data = getRISR()  # get RISR data
+    RISR_data = getRISR()  # get RISR_HDF5 data
 
     RISR_start_UT = np.asarray(RISR_data[0]) if RISR_data[0].pop(0) == "START_UT" else \
-        print("Error: RISR start time data")
+        print("Error: RISR_HDF5 start time data")
     # RISR_end_UT = np.asarray(RISR_data[1]) if RISR_data[1].pop(0) == "END_UT" else \
-    #     print("Error: RISR end time data")
+    #     print("Error: RISR_HDF5 end time data")
     RISR_geolat = np.asarray(RISR_data[2]) if RISR_data[2].pop(0) == "LATITUDE" else \
-        print("Error: RISR geolat data")
+        print("Error: RISR_HDF5 geolat data")
     RISR_vel = np.asarray(RISR_data[3]) if RISR_data[3].pop(0) == "VEL" else \
-        print("Error: RISR velocity data")
+        print("Error: RISR_HDF5 velocity data")
     RISR_dvel = np.asarray(RISR_data[4]) if RISR_data[4].pop(0) == "D_VEL" else \
-        print("Error: RISR velocity data")
+        print("Error: RISR_HDF5 velocity data")
 
     # Restrict to a specific time period (19.10-19.19)
     valid_times_RISR = RISR_start_UT == 19.10  # Get the bool array of all elements with start time 19.10
@@ -102,7 +102,7 @@ def main():
     __RISR_dvel = _RISR_dvel[not_nan]
 
     # plot the data
-    plt.plot(__RISR_gate, __RISR_vel, 'k2', label='RISR', markersize=6)
+    plt.plot(__RISR_gate, __RISR_vel, 'k2', label='RISR_HDF5', markersize=6)
     plt.plot(__RISR_gate, __RISR_vel, 'k-', linewidth=0.7)
 
     # Plot error
