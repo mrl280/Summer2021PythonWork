@@ -33,7 +33,7 @@ if __name__ == '__main__':
     SD_gate_range = [30, 40]
 
     RISR_station = "ran"
-    RISR_wd_beam_range = [2, 2]
+    RISR_wd_beam_range = [5, 5]
     resolution = 5  # minutes
 
     SD_numonic = SD_station.upper()

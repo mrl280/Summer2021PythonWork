@@ -24,14 +24,14 @@ if __name__ == '__main__':
 
     year = "2014"  # yyyy
     month = "03"  # mm
-    day = "03"  # dd
+    day = "04"  # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
     SD_gate_range = [30, 40]
 
     RISR_station = "ran"
-    RISR_wd_beam_range = [2, 2]
+    RISR_wd_beam_range = [5, 5]
     resolution = 5  # minutes
 
     SD_numonic = SD_station.upper()

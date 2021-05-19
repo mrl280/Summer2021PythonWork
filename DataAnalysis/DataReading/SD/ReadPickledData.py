@@ -1,5 +1,6 @@
 import time
 
+import numpy as np
 import pandas as pd
 
 if __name__ == '__main__':
@@ -17,7 +18,8 @@ if __name__ == '__main__':
 
     # pd.set_option('display.max_columns', None)
     print(df.head())
-    # print(df.keys())
+    df['phase'] = np.degrees(np.asarray(df['phase']))
+    print(df[['phase', 'elv']])
 
     # Grab start and end times
     pattern = '%Y-%m-%d %H:%M:%S'

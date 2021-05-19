@@ -31,6 +31,8 @@ if __name__ == '__main__':
     # 2016 09 25 at INV: gg [10 74]
     # 4 pts, elv max 25
 
+    # 2017 10 23 between 4 and 8 UT
+
     year = "2016"  # yyyy
     month = "09"  # mm
     day = "26"  # dd

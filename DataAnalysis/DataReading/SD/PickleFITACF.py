@@ -174,7 +174,7 @@ if __name__ == '__main__':
     """
     Handler to call PickleFITACF on SuperDARN data files
     """
-    PICKLE_ALL = True  # To prevent accidentally pickling all data
+    PICKLE_ALL = False  # To prevent accidentally pickling all data
 
     if PICKLE_ALL:
         print("Pickling all downloaded SuperDARN data...")
@@ -184,6 +184,6 @@ if __name__ == '__main__':
                 PickleFITACF(station, in_dir[3:])
     else:
         station = "rkn"
-        date = "20160925"
+        date = "20171023"
         print("Pickling " + station + date + "...")
         PickleFITACF(station, date)
