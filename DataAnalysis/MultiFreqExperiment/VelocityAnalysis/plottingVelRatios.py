@@ -31,12 +31,12 @@ if __name__ == '__main__':
     # 2016 09 25 at INV: gg [10 74]
     # 4 pts, elv max 25
 
-    SAVE_PLOTS = False
-    SHOW_PLOTS = True
+    SAVE_PLOTS = True
+    SHOW_PLOTS = False
 
-    year = "2016"  # yyyy
-    month = "09"  # mm
-    day = "26"  # dd
+    year = "2017"  # yyyy
+    month = "10"  # mm
+    day = "23"  # dd
 
     station = "rkn"
     count_min = 4
@@ -45,8 +45,8 @@ if __name__ == '__main__':
 
     numonic = station.upper()
     if region.upper() == "E":
-        gates = [10, 30]
-        gate_label = "gg 10-30"
+        gates = [20, 25]
+        gate_label = "gg 20-25"
     elif region.upper() == "F":
         gates = [50, 74]
         gate_label = "gg 50-74"
@@ -66,14 +66,14 @@ if __name__ == '__main__':
     out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/out/"
 
     # For each time period, we need 2 pages
-    # From 0 to 4 UT, we need 8 time period
+    # For 4 hours, we need 8 time period
     if SHOW_PLOTS:
         time_chunks = 1
     else:
         time_chunks = 8
     for time_chunk in range(time_chunks):
-        start_time = 0 + time_chunk * 0.5
-        end_time = 0.5 + time_chunk * 0.5
+        start_time = 4 + time_chunk * 0.5
+        end_time = 4.5 + time_chunk * 0.5
 
         print("Plotting from: " + str(start_time) + " till " + str(end_time) + " UT")
         time_restricted_df = df[(df['decimalTime'] >= start_time)

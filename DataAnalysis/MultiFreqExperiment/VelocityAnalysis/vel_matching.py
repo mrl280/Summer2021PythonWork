@@ -17,29 +17,24 @@ if __name__ == '__main__':
 
     """
     # 2016 09 25 at RKN: gg [40, 74]
-    # 4 pts, elv max 25 deg
 
-    # 2019 09 26 at RKN: gg [10, 74]
-    # 4 pts, elv max 27 deg
+    # 2016 09 26 at RKN: gg [10, 74]
 
     # 2016 09 25 at CLY: gg [30, 74]
-    # 4 pts, elv max 25 deg
 
     # 2016 09 26 at CLY: gg [10, 74]  # Not much here
-    # 4 pts, elv max 25 deg
 
     # 2016 09 25 at INV: gg [10 74]
-    # 4 pts, elv max 25
 
     # 2017 10 23 between 4 and 8 UT
 
-    year = "2016"  # yyyy
-    month = "09"  # mm
-    day = "26"  # dd
+    year = "2017"  # yyyy
+    month = "10"  # mm
+    day = "23"  # dd
 
-    station = "cly"
-    start_hour = 0  # Start and end times must be integer values for the loop
-    end_hour = 4
+    station = "rkn"
+    start_hour = 4  # Start and end times must be integer values for the loop
+    end_hour = 8
     time_interval_s = 60  # seconds
 
     start_date_time = year + "-" + month + "-" + day + " " + str(start_hour) + ":00:00"
