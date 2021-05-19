@@ -89,7 +89,7 @@ if __name__ == '__main__':
         gate_restricted_df = df[(df['gate'] >= start_gate) & (df['gate'] <= end_gate)]
         print("         Number of points at this gate: " + str(len(gate_restricted_df['epoch'])))
 
-        range_here = 90 + 15 * start_gate  # Slant range [km]
+        range_here = 90 + 15 / 2 + 15 * start_gate  # Slant range [km]
 
         # Loop through decimal time in jumps
         for start_time in np.arange(start_hour, end_hour, time_step_h):
