@@ -69,6 +69,7 @@ def PickleFITACF(station, date):
     p_l, p_l_e = [], []
     w_l, w_l_e = [], []
     sd_l, sd_phi = [], []
+    phi0, phi0_e = [], []
     elv, elv_low, elv_high = [], [], []
 
     # Loop through all the files for this station/date
@@ -112,6 +113,8 @@ def PickleFITACF(station, date):
                 w_l_e.append(fitacf_data[record]['w_l_e'][gate_idx])
                 sd_l.append(fitacf_data[record]['sd_l'][gate_idx])
                 sd_phi.append(fitacf_data[record]['sd_phi'][gate_idx])
+                phi0.append(fitacf_data[record]['phi0'][gate_idx])
+                phi0_e.append(fitacf_data[record]['phi0_e'][gate_idx])
                 elv.append(fitacf_data[record]['elv'][gate_idx])
                 elv_low.append(fitacf_data[record]['elv_low'][gate_idx])
                 elv_high.append(fitacf_data[record]['elv_high'][gate_idx])
@@ -155,6 +158,7 @@ def PickleFITACF(station, date):
                        'vel': v,        'velErr': v_e,
                        'pwr': p_l,      'pwrErr': p_l_e,
                        'wdt': w_l,      'wdtErr': w_l_e,
+                       'phase': phi0,   'phaseErr': phi0_e,
                        'stdDevLambda': sd_l,
                        'stdDevPhase': sd_phi,
                        'elv': elv,      'elvLow': elv_low,  'elvHigh': elv_high
