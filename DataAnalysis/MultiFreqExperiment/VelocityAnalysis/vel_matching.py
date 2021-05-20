@@ -29,13 +29,13 @@ if __name__ == '__main__':
 
     # 2017 10 23 between 4 and 8 UT
 
-    year = "2017"  # yyyy
-    month = "10"  # mm
-    day = "23"  # dd
+    year = "2016"  # yyyy
+    month = "09"  # mm
+    day = "26"  # dd
 
     station = "rkn"
-    start_hour = 4  # Start and end times must be integer values for the loop
-    end_hour = 8
+    start_hour = 0  # Start and end times must be integer values for the loop
+    end_hour = 4
     time_interval_s = 60  # seconds
 
     t_diff = 0.003  # Elevation angle correction in microseconds

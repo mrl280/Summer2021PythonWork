@@ -34,14 +34,17 @@ if __name__ == '__main__':
     SAVE_PLOTS = True
     SHOW_PLOTS = False
 
-    year = "2017"  # yyyy
-    month = "10"  # mm
-    day = "23"  # dd
+    year = "2016"  # yyyy
+    month = "09"  # mm
+    day = "26"  # dd
 
     station = "rkn"
     count_min = 4
-    gates = [20, 25]
+    gates = [19, 21]
     second_resolution = 60
+
+    start_hour = 0
+    end_hour = 4
 
     numonic = station.upper()
     gate_label = "gg: " + str(gates[0]) + "-" + str(gates[1])
@@ -65,8 +68,8 @@ if __name__ == '__main__':
     else:
         time_chunks = 8
     for time_chunk in range(time_chunks):
-        start_time = 4 + time_chunk * 0.5
-        end_time = 4.5 + time_chunk * 0.5
+        start_time = start_hour + time_chunk * 0.5
+        end_time = (start_hour + 0.5) + time_chunk * 0.5
 
         print("Plotting from: " + str(start_time) + " till " + str(end_time) + " UT")
         time_restricted_df = df[(df['decimalTime'] >= start_time)
