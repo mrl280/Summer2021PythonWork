@@ -18,8 +18,8 @@ if __name__ == '__main__':
 
     # pd.set_option('display.max_columns', None)
     print(df.head())
-    df['phase'] = np.degrees(np.asarray(df['phase']))
-    print(df[['phase', 'elv']])
+    df['phaseInDg'] = np.degrees(np.asarray(df['phase']))
+    print(df[['phase', 'phaseInDg', 'elv']])
 
     # Grab start and end times
     pattern = '%Y-%m-%d %H:%M:%S'
