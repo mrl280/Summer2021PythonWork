@@ -10,17 +10,33 @@ def elevation_v2(df, t_diff):
     The method is based on 'Elevation angle determination for SuperDARN HF radar layouts' by S. G. Shepherd
 
     Note: This program is a tad slow, so it is best to filter your dataframe before calling it.
+    Note: In the fitACF file, a phase offset of 0 results in an elevation angle of 0.
+        However, that is not the case for this program.  Rather, you will get the appropriate non-zero elevation angle.
 
     :param df: SuperDARN data frame.  Must contain the following standard parameters: 'tfreq', 'phase'
     :param t_diff: The extra time delay to add in, in microseconds.
     :return: The input dataframe, but with the added parameters:
     """
 
-    c = 2.998e+8  # Speed of light in vacuum [m/s]
+    #c = 2.998e+8  # Speed of light in vacuum [m/s]
 
     if df['stationId'].iloc[0] == "rkn":
         x = 0  # From hdw.  Interferometer offset in metres
         y = -100
+        z = 0
+        maxbeam = 16  # From hdw.  Maximum number of beams to be used at a particular radar site.
+        bmsep = 3.24  # From hdw.  Beam separation (Angular separation in degrees between adjacent beams). [deg]
+        t_diff_hdw = 0.0  # From hdw.  Propagation time difference between the main array and the interferometer array.
+    elif df['stationId'].iloc[0] == "cly":
+        x = 0  # From hdw.  Interferometer offset in metres
+        y = 100
+        z = 0
+        maxbeam = 16  # From hdw.  Maximum number of beams to be used at a particular radar site.
+        bmsep = 3.24  # From hdw.  Beam separation (Angular separation in degrees between adjacent beams). [deg]
+        t_diff_hdw = 0.0  # From hdw.  Propagation time difference between the main array and the interferometer array.
+    elif df['stationId'].iloc[0] == "inv":
+        x = 1.5  # From hdw.  Interferometer offset in metres
+        y = 100
         z = 0
         maxbeam = 16  # From hdw.  Maximum number of beams to be used at a particular radar site.
         bmsep = 3.24  # From hdw.  Beam separation (Angular separation in degrees between adjacent beams). [deg]
@@ -37,9 +53,6 @@ def elevation_v2(df, t_diff):
 
     # Find the total t_diff.  That from the hardware file plus the extra we are adding in
     t_diff += t_diff_hdw
-
-    # # Find distance from the main array to the interferometer array
-    # d = math.sqrt(x * x + y * y + z * z)
 
     # Find beam offset
     boff = maxbeam / 2.0 - 0.5  # middle of the beams?
@@ -98,8 +111,11 @@ if __name__ == '__main__':
     in_file = in_dir + "/" + station + date + ".pkl"
     df = pd.read_pickle(in_file)
 
-    elevation_v2(df, 0)
+    t_diff = 0.000  # Time delay in microseconds
+
+    elevation_v2(df, t_diff)
     print("After call:")
     print(df.keys())
-    print(df[['transFreq', 'phase', 'adjPhase', 'elv', 'adjElv']])
+    df['adjElv'] = df['adjElv'] + 0.071
+    print(df[['transFreq', 'vel', 'phase', 'adjPhase', 'elv', 'adjElv']])
     print(1e-3)
