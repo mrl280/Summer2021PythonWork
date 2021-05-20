@@ -10,6 +10,7 @@ import statistics
 import pandas as pd
 
 from DataAnalysis.DataReading.SD.basic_SD_df_filter import basic_SD_df_filter
+from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
 
 if __name__ == '__main__':
     """
@@ -36,6 +37,8 @@ if __name__ == '__main__':
     start_hour = 4  # Start and end times must be integer values for the loop
     end_hour = 8
     time_interval_s = 60  # seconds
+
+    t_diff = 0.003  # Elevation angle correction in microseconds
 
     start_date_time = year + "-" + month + "-" + day + " " + str(start_hour) + ":00:00"
     end_date_time = year + "-" + month + "-" + day + " " + str(end_hour) + ":00:00"
@@ -65,6 +68,8 @@ if __name__ == '__main__':
     # There should not be any nan velocities, but just to be safe
     df = df.loc[df['vel'].notna()]
     df.reset_index(drop=True, inplace=True)
+
+    elevation_v2(df, t_diff)  # Compute adjusted elevation angle
 
     print("Number of points in the data frame: " + str(len(df['epoch'])))
 
@@ -106,7 +111,7 @@ if __name__ == '__main__':
                 vel10.append(statistics.median(df_10['vel']))
                 count10.append(df_10.shape[0])
                 height10.append(statistics.median(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
-                                                          * np.sin(np.radians(np.asarray(df_10['elv']))))
+                                                          * np.sin(np.radians(np.asarray(df_10['adjElv']))))
                                                   - Re))
             except:
                 vel10.append(math.nan)
@@ -119,7 +124,7 @@ if __name__ == '__main__':
                 vel12.append(statistics.median(df_12['vel']))
                 count12.append(df_12.shape[0])
                 height12.append(statistics.median(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
-                                                          * np.sin(np.radians(np.asarray(df_12['elv']))))
+                                                          * np.sin(np.radians(np.asarray(df_12['adjElv']))))
                                                   - Re))
             except:
                 vel12.append(math.nan)
@@ -132,7 +137,7 @@ if __name__ == '__main__':
                 vel13.append(statistics.median(df_13['vel']))
                 count13.append(df_13.shape[0])
                 height13.append(statistics.median(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
-                                                          * np.sin(np.radians(np.asarray(df_13['elv']))))
+                                                          * np.sin(np.radians(np.asarray(df_13['adjElv']))))
                                                   - Re))
             except:
                 vel13.append(math.nan)
@@ -145,7 +150,7 @@ if __name__ == '__main__':
                 vel14.append(statistics.median(df_14['vel']))
                 count14.append(df_14.shape[0])
                 height14.append(statistics.median(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
-                                                          * np.sin(np.radians(np.asarray(df_14['elv']))))
+                                                          * np.sin(np.radians(np.asarray(df_14['adjElv']))))
                                                   - Re))
             except:
                 vel14.append(math.nan)

@@ -18,7 +18,7 @@ def elevation_v2(df, t_diff):
     :return: The input dataframe, but with the added parameters:
     """
 
-    #c = 2.998e+8  # Speed of light in vacuum [m/s]
+    c = 2.998e+8  # Speed of light in vacuum [m/s]
 
     if df['stationId'].iloc[0] == "rkn":
         x = 0  # From hdw.  Interferometer offset in metres
@@ -72,7 +72,7 @@ def elevation_v2(df, t_diff):
         if a0[i] < 0:
             a0[i] = 0
 
-    ca0 = np.cos(a0)
+    # ca0 = np.cos(a0)
     sa0 = np.sin(a0)
 
     # Find the maximum phase.  This is phi_ele + phi_geo(a0)
@@ -105,17 +105,16 @@ if __name__ == '__main__':
     """
 
     station = "rkn"
-    date = "20160925"
+    date = "20111011"
 
     in_dir = "data/" + station + "/" + station + date
     in_file = in_dir + "/" + station + date + ".pkl"
     df = pd.read_pickle(in_file)
 
-    t_diff = 0.000  # Time delay in microseconds
+    t_diff = 0.0003  # Time delay in microseconds
 
     elevation_v2(df, t_diff)
-    print("After call:")
+    print("df keys:")
     print(df.keys())
-    df['adjElv'] = df['adjElv'] + 0.071
     print(df[['transFreq', 'vel', 'phase', 'adjPhase', 'elv', 'adjElv']])
     print(1e-3)

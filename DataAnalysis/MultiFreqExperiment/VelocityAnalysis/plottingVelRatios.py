@@ -40,18 +40,11 @@ if __name__ == '__main__':
 
     station = "rkn"
     count_min = 4
-    region = "E"
+    gates = [20, 25]
     second_resolution = 60
 
     numonic = station.upper()
-    if region.upper() == "E":
-        gates = [20, 25]
-        gate_label = "gg 20-25"
-    elif region.upper() == "F":
-        gates = [50, 74]
-        gate_label = "gg 50-74"
-    else:
-        raise Exception("Error: " + region + " region not recognized.")
+    gate_label = "gg: " + str(gates[0]) + "-" + str(gates[1])
 
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
@@ -237,7 +230,8 @@ if __name__ == '__main__':
             merger.append(pdf)
         for pdf in glob.iglob("out/*_temp2.pdf"):
             merger.append(pdf)
-        with open(out_dir + "/" + numonic + "_vel_comp_" + year + month + day + "_" + region + ".pdf",
+        with open(out_dir + "/" + numonic + "_vel_comp_" + year + month + day
+                  + "_gg" + str(gates[0]) + "-" + str(gates[1]) + ".pdf",
                   "wb") as fout:
             merger.write(fout)
         merger.close()
