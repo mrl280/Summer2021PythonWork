@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     start_date_time = year + "-" + month + "-" + day + " " + str(start_hour) + ":00:00"
     end_date_time = year + "-" + month + "-" + day + " " + str(end_hour) + ":00:00"
-    gates = [10, 12]  # We will match up data over the whole gate range now and just restrict when plotting #TODO: Change back
+    gates = [10, 74]  # We will match up data over the whole gate range now and just restrict when plotting
     Re = 6370  # Radius of the Earth, [km]
 
     # Compute start and end epoch
