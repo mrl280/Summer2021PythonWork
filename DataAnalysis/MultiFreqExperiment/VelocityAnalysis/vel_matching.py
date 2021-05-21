@@ -67,8 +67,11 @@ if __name__ == '__main__':
 
     # There should not be any nan velocities, but just to be safe
     df = df.loc[df['vel'].notna()]
-    df.reset_index(drop=True, inplace=True)
 
+    # Drop points with |velocity| < 100 m/s
+    df = df.loc[(df['vel'] > 100) | (df['vel'] < -100)]
+
+    df.reset_index(drop=True, inplace=True)
     elevation_v2(df, t_diff)  # Compute adjusted elevation angle
 
     print("Number of points in the data frame: " + str(len(df['epoch'])))

@@ -115,8 +115,8 @@ if __name__ == '__main__':
             ax1[row][1].set_xlabel("10 MHz Velocities [m/s]")
 
             for col in range(n_cols):
-                ax1[row][col].set_ylim([-1000, 1000])
-                ax1[row][col].set_xlim([-1000, 1000])
+                ax1[row][col].set_ylim([-600, 600])
+                ax1[row][col].set_xlim([-600, 600])
                 ax1[row][col].yaxis.set_minor_locator(MultipleLocator(100))
                 ax1[row][col].xaxis.set_minor_locator(MultipleLocator(100))
                 ax1[row][col].grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5)
@@ -139,29 +139,27 @@ if __name__ == '__main__':
 
         # Plot 10 to 12 Comparison data in ROW: 0, COL: 0
         ax1[0][0].scatter(df_10_12['vel12'], df_10_12['vel10'], s=4, color='b', marker='.', label=gate_label)
-        ax1[0][0].text(-900, 710, 'n=' + str(df_10_12.shape[0]), fontsize=12)
+        ax1[0][0].text(-490, 425, 'n=' + str(df_10_12.shape[0]), fontsize=12)
 
         # Plot 13 to 12 Comparison data in ROW: 1, COL: 0
         ax1[1][0].scatter(df_13_12['vel12'], df_13_12['vel13'], s=4, color='b', marker='.', label=gate_label)
-        ax1[1][0].text(-900, 710, 'n=' + str(df_13_12.shape[0]), fontsize=12)
+        ax1[1][0].text(-490, 425, 'n=' + str(df_13_12.shape[0]), fontsize=12)
 
         # Plot 14 to 12 Comparison data in ROW: 2, COL: 0
         ax1[2][0].scatter(df_14_12['vel12'], df_14_12['vel14'], s=4, color='b', marker='.', label=gate_label)
-        ax1[2][0].text(-900, 710, 'n=' + str(df_14_12.shape[0]), fontsize=12)
+        ax1[2][0].text(-490, 425, 'n=' + str(df_14_12.shape[0]), fontsize=12)
 
         # Plot 14 to 13 Comparison data in ROW: 0, COL: 1
         ax1[0][1].scatter(df_14_13['vel13'], df_14_13['vel14'], s=4, color='b', marker='.', label=gate_label)
-        ax1[0][1].text(-900, 710, 'n=' + str(df_14_13.shape[0]), fontsize=12)
+        ax1[0][1].text(-490, 425, 'n=' + str(df_14_13.shape[0]), fontsize=12)
 
         # Plot 13 to 10 Comparison data in ROW: 1, COL: 1
         ax1[1][1].scatter(df_13_10['vel10'], df_13_10['vel13'], s=4, color='b', marker='.', label=gate_label)
-        ax1[1][1].text(-900, 710, 'n=' + str(df_13_10.shape[0]), fontsize=12)
+        ax1[1][1].text(-490, 425, 'n=' + str(df_13_10.shape[0]), fontsize=12)
 
         # Plot 14 to 10 Comparison data in ROW: 2, COL: 1
         ax1[2][1].scatter(df_14_10['vel10'], df_14_10['vel14'], s=4, color='b', marker='.', label=gate_label)
-        ax1[2][1].text(-900, 710, 'n=' + str(df_14_10.shape[0]), fontsize=12)
-
-        # add in legends
+        ax1[2][1].text(-490, 425, 'n=' + str(df_14_10.shape[0]), fontsize=12)
 
         # Set up the second plot
         fig2, ax2 = plt.subplots(figsize=(8, 9), dpi=300, nrows=n_rows, ncols=n_cols)
