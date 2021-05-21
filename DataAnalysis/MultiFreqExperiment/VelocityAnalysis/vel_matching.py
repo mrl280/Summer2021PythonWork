@@ -13,18 +13,6 @@ from DataAnalysis.DataReading.SD.basic_SD_df_filter import basic_SD_df_filter
 from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
 
 
-def diff_heights(ratio):
-    """
-
-    :param ratio:
-    :return:
-    """
-    if ratio > 1.1 or ratio < 0.9:
-        return 1
-    else:
-        return 0
-
-
 if __name__ == '__main__':
     """
     Match up SuperDARN velocity points from multi-freq mode
