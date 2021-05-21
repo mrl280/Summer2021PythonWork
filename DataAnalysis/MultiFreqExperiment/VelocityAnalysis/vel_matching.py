@@ -12,6 +12,19 @@ import pandas as pd
 from DataAnalysis.DataReading.SD.basic_SD_df_filter import basic_SD_df_filter
 from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
 
+
+def diff_heights(ratio):
+    """
+
+    :param ratio:
+    :return:
+    """
+    if ratio > 1.1 or ratio < 0.9:
+        return 1
+    else:
+        return 0
+
+
 if __name__ == '__main__':
     """
     Match up SuperDARN velocity points from multi-freq mode
@@ -38,11 +51,12 @@ if __name__ == '__main__':
     end_hour = 4
     time_interval_s = 60  # seconds
 
+    h_ratio_limits = [0.9, 1.1]  # If two points height ratio is outside of this range, they points are flagged
     t_diff = 0.003  # Elevation angle correction in microseconds
 
     start_date_time = year + "-" + month + "-" + day + " " + str(start_hour) + ":00:00"
     end_date_time = year + "-" + month + "-" + day + " " + str(end_hour) + ":00:00"
-    gates = [10, 74]  # We will match up data over the whole gate range now and just restrict when plotting
+    gates = [10, 12]  # We will match up data over the whole gate range now and just restrict when plotting #TODO: Change back
     Re = 6370  # Radius of the Earth, [km]
 
     # Compute start and end epoch
@@ -169,6 +183,7 @@ if __name__ == '__main__':
                                  'vel14': vel14, 'count14': count14, 'height14': height14
                                  })
 
+    # Compute velocity ratios
     matched_data['10over12'] = matched_data['vel10'] / matched_data['vel12']
     matched_data['13over12'] = matched_data['vel13'] / matched_data['vel12']
     matched_data['14over12'] = matched_data['vel14'] / matched_data['vel12']
@@ -177,6 +192,33 @@ if __name__ == '__main__':
 
     matched_data['13over10'] = matched_data['vel13'] / matched_data['vel10']
     matched_data['14over10'] = matched_data['vel14'] / matched_data['vel10']
+
+    # Compute height ratios
+    h_ratio_10over12 = matched_data['height10'] / matched_data['height12']
+    h_ratio_13over12 = matched_data['height13'] / matched_data['height12']
+    h_ratio_14over12 = matched_data['height14'] / matched_data['height12']
+
+    h_ratio_14over13 = matched_data['height14'] / matched_data['height13']
+
+    h_ratio_13over10 = matched_data['height13'] / matched_data['height10']
+    h_ratio_14over10 = matched_data['height14'] / matched_data['height10']
+
+    # Based on height ratios, flag points that where one frequency is seeing a significantly different height than
+    # the other frequency
+    matched_data['diffHeightFlag_10over12'] = np.logical_or(
+        h_ratio_10over12 < h_ratio_limits[0], h_ratio_10over12 > h_ratio_limits[1])
+    matched_data['diffHeightFlag_13over12'] = np.logical_or(
+        h_ratio_13over12 < h_ratio_limits[0], h_ratio_13over12 > h_ratio_limits[1])
+    matched_data['diffHeightFlag_14over12'] = np.logical_or(
+        h_ratio_14over12 < h_ratio_limits[0], h_ratio_14over12 > h_ratio_limits[1])
+
+    matched_data['diffHeightFlag_14over13'] = np.logical_or(
+        h_ratio_14over13 < h_ratio_limits[0], h_ratio_14over13 > h_ratio_limits[1])
+
+    matched_data['diffHeightFlag_13over10'] = np.logical_or(
+        h_ratio_13over10 < h_ratio_limits[0], h_ratio_13over10 > h_ratio_limits[1])
+    matched_data['diffHeightFlag_14over10'] = np.logical_or(
+        h_ratio_14over10 < h_ratio_limits[0], h_ratio_14over10 > h_ratio_limits[1])
 
     # Ensure out directory
     out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station + "/" + station + year + month + day
