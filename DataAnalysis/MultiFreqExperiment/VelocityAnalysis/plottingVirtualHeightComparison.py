@@ -45,7 +45,6 @@ if __name__ == '__main__':
     # Filter the data based on the expected gate range of the region of interest
     df = df.loc[(df['gate'] >= gates[0]) & (df['gate'] <= gates[1])]
     df.reset_index(drop=True, inplace=True)
-    print(df)
 
     out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/out/"
 
@@ -114,6 +113,12 @@ if __name__ == '__main__':
                 ax1[row][col].plot([ax1[row][col].get_ylim()[0], ax1[row][col].get_ylim()[1]],
                                    [ax1[row][col].get_xlim()[0], ax1[row][col].get_xlim()[1]],
                                    linestyle='-', linewidth=1, color='red')
+                ax1[row][col].plot([ax1[row][col].get_ylim()[0] / 0.92, ax1[row][col].get_ylim()[1] / 0.92],
+                                   [ax1[row][col].get_xlim()[0], ax1[row][col].get_xlim()[1]],
+                                   linestyle='--', linewidth=0.5, color='red')
+                ax1[row][col].plot([ax1[row][col].get_ylim()[0] / 1.08, ax1[row][col].get_ylim()[1] / 1.08],
+                                   [ax1[row][col].get_xlim()[0], ax1[row][col].get_xlim()[1]],
+                                   linestyle='--', linewidth=0.5, color='red')
 
         ax1[0][1].set_xlabel("13 MHz Virtual Heights [km]")
 
@@ -180,7 +185,7 @@ if __name__ == '__main__':
         ax1[2][1].text(52, 172, 'n=' + str(df_14_10.shape[0]), fontsize=12)
 
         # Add legends to the plots
-        ax1[0][0].legend(loc=(0, 1.03))
+        ax1[0][0].legend(loc=(0, 1.03), ncol=2)
 
         if SHOW_PLOTS:
             plt.show()

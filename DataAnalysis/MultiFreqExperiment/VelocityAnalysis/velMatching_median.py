@@ -33,7 +33,7 @@ if __name__ == '__main__':
     end_hour = 4
     time_interval_s = 60  # seconds
 
-    h_ratio_limits = [0.9, 1.1]  # Height ratio limits.  If a height ratio is outside of this range,
+    h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range,
     # then the points are flagged
     t_diff = 0.003  # Elevation angle correction in microseconds
 
