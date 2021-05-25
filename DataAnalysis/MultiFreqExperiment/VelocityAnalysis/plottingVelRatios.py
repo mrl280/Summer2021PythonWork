@@ -1,10 +1,13 @@
 import glob
 import os
 import pathlib
+
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
 from matplotlib.ticker import MultipleLocator
 from PyPDF2 import PdfFileMerger
-import pandas as pd
 
 if __name__ == '__main__':
     """
@@ -12,24 +15,8 @@ if __name__ == '__main__':
         Velocity vs Velocity scatter
         Velocity ratio vs time
     
-    Data is plotted for a specific gate region (E: [10:30], of F: [50:70])
+    Data is plotted for a specific gate region
     """
-
-    # EVENTS ANALYZED:
-    # 2019 09 26 at RKN: gg [10, 74]
-    # 4 pts, elv max 27 deg
-
-    # 2016 09 25 at RKN: gg [40, 74]
-    # 4 pts, elv max 25 deg
-
-    # 2016 09 26 at CLY: gg [10, 74]  # Not much here
-    # 4 pts, elv max 25 deg
-
-    # 2016 09 25 at CLY: gg [30, 74]
-    # 4 pts, elv max 25 deg
-
-    # 2016 09 25 at INV: gg [10 74]
-    # 4 pts, elv max 25
 
     SAVE_PLOTS = True
     SHOW_PLOTS = False
@@ -41,18 +28,20 @@ if __name__ == '__main__':
     station = "rkn"
     count_min = 4
     gates = [19, 21]
+    data_match_type = "Median"
     second_resolution = 60
 
     start_hour = 0
     end_hour = 4
 
-    numonic = station.upper()
+    mnemonic = station.upper()
     gate_label = "gg: " + str(gates[0]) + "-" + str(gates[1])
 
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
     in_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station + "/" + station + year + month + day
-    in_file = in_dir + "/" + station + year + month + day + ".MatchedData.1gg" + str(second_resolution) + "s.pkl"
+    in_file = in_dir + "/" + station + year + month + day + "." + \
+              data_match_type + "MatchedData.1gg" + str(second_resolution) + "s.pkl"
     df = pd.read_pickle(in_file)
 
     # Filter the data based on the expected gate range of the region of interest
@@ -61,12 +50,16 @@ if __name__ == '__main__':
 
     out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/out/"
 
+    normal_ratio_c = "k"
+    flagged_ratio_c = "b"
+
     # For each time period, we need 2 pages
     # For 4 hours, we need 8 time period
     if SHOW_PLOTS:
         time_chunks = 1
     else:
         time_chunks = 8
+
     for time_chunk in range(time_chunks):
         start_time = start_hour + time_chunk * 0.5
         end_time = (start_hour + 0.5) + time_chunk * 0.5
@@ -104,8 +97,9 @@ if __name__ == '__main__':
         fig1, ax1 = plt.subplots(figsize=(8, 9), dpi=300, nrows=n_rows, ncols=n_cols)
         plt.subplots_adjust(hspace=0.4, wspace=0.4)
         fig1.suptitle("Velocity Frequency Dependence: Vel vs Vel Scatter"
-                      + "\n" + numonic + " " + year + "." + month + "." + day
-                      + " " + str(start_time) + "-" + str(end_time) + " UT"
+                      + "\n" + mnemonic + " " + year + "." + month + "." + day
+                      + "; " + gate_label
+                      + "; " + str(start_time) + "-" + str(end_time) + " UT"
                       + "\nProduced by " + str(os.path.basename(__file__)),
                       fontsize=13)
 
@@ -138,34 +132,64 @@ if __name__ == '__main__':
         ax1[2][1].set_ylabel("14 MHz Velocities [m/s]")
 
         # Plot 10 to 12 Comparison data in ROW: 0, COL: 0
-        ax1[0][0].scatter(df_10_12['vel12'], df_10_12['vel10'], s=4, color='b', marker='.', label=gate_label)
+        ax1[0][0].scatter(df_10_12.loc[df_10_12['diffHeightFlag_10over12'], 'vel12'],
+                          df_10_12.loc[df_10_12['diffHeightFlag_10over12'], 'vel10'],
+                          s=4, color=flagged_ratio_c, marker='.', zorder=3, label="Frequencies Measuring Different Heights")
+        ax1[0][0].scatter(df_10_12.loc[np.logical_not(df_10_12['diffHeightFlag_10over12']), 'vel12'],
+                          df_10_12.loc[np.logical_not(df_10_12['diffHeightFlag_10over12']), 'vel10'],
+                          s=4, color=normal_ratio_c, marker='.', zorder=3, label="Frequencies Measuring Similar Heights")
         ax1[0][0].text(-490, 425, 'n=' + str(df_10_12.shape[0]), fontsize=12)
 
         # Plot 13 to 12 Comparison data in ROW: 1, COL: 0
-        ax1[1][0].scatter(df_13_12['vel12'], df_13_12['vel13'], s=4, color='b', marker='.', label=gate_label)
+        ax1[1][0].scatter(df_13_12.loc[df_13_12['diffHeightFlag_13over12'], 'vel12'],
+                          df_13_12.loc[df_13_12['diffHeightFlag_13over12'], 'vel13'],
+                          s=4, color=flagged_ratio_c, marker='.', zorder=3)
+        ax1[1][0].scatter(df_13_12.loc[np.logical_not(df_13_12['diffHeightFlag_13over12']), 'vel12'],
+                          df_13_12.loc[np.logical_not(df_13_12['diffHeightFlag_13over12']), 'vel13'],
+                          s=4, color=normal_ratio_c, marker='.', zorder=3)
         ax1[1][0].text(-490, 425, 'n=' + str(df_13_12.shape[0]), fontsize=12)
 
         # Plot 14 to 12 Comparison data in ROW: 2, COL: 0
-        ax1[2][0].scatter(df_14_12['vel12'], df_14_12['vel14'], s=4, color='b', marker='.', label=gate_label)
+        ax1[2][0].scatter(df_14_12.loc[df_14_12['diffHeightFlag_14over12'], 'vel12'],
+                          df_14_12.loc[df_14_12['diffHeightFlag_14over12'], 'vel14'],
+                          s=4, color=flagged_ratio_c, marker='.', zorder=3)
+        ax1[2][0].scatter(df_14_12.loc[np.logical_not(df_14_12['diffHeightFlag_14over12']), 'vel12'],
+                          df_14_12.loc[np.logical_not(df_14_12['diffHeightFlag_14over12']), 'vel14'],
+                          s=4, color=normal_ratio_c, marker='.', zorder=3)
         ax1[2][0].text(-490, 425, 'n=' + str(df_14_12.shape[0]), fontsize=12)
 
         # Plot 14 to 13 Comparison data in ROW: 0, COL: 1
-        ax1[0][1].scatter(df_14_13['vel13'], df_14_13['vel14'], s=4, color='b', marker='.', label=gate_label)
+        ax1[0][1].scatter(df_14_13.loc[df_14_13['diffHeightFlag_14over13'], 'vel13'],
+                          df_14_13.loc[df_14_13['diffHeightFlag_14over13'], 'vel14'],
+                          s=4, color=flagged_ratio_c, marker='.', zorder=3)
+        ax1[0][1].scatter(df_14_13.loc[np.logical_not(df_14_13['diffHeightFlag_14over13']), 'vel13'],
+                          df_14_13.loc[np.logical_not(df_14_13['diffHeightFlag_14over13']), 'vel14'],
+                          s=4, color=normal_ratio_c, marker='.', zorder=3)
         ax1[0][1].text(-490, 425, 'n=' + str(df_14_13.shape[0]), fontsize=12)
 
         # Plot 13 to 10 Comparison data in ROW: 1, COL: 1
-        ax1[1][1].scatter(df_13_10['vel10'], df_13_10['vel13'], s=4, color='b', marker='.', label=gate_label)
+        ax1[1][1].scatter(df_13_10.loc[df_13_10['diffHeightFlag_13over10'], 'vel10'],
+                          df_13_10.loc[df_13_10['diffHeightFlag_13over10'], 'vel13'],
+                          s=4, color=flagged_ratio_c, marker='.', zorder=3)
+        ax1[1][1].scatter(df_13_10.loc[np.logical_not(df_13_10['diffHeightFlag_13over10']), 'vel10'],
+                          df_13_10.loc[np.logical_not(df_13_10['diffHeightFlag_13over10']), 'vel13'],
+                          s=4, color=normal_ratio_c, marker='.', zorder=3)
         ax1[1][1].text(-490, 425, 'n=' + str(df_13_10.shape[0]), fontsize=12)
 
         # Plot 14 to 10 Comparison data in ROW: 2, COL: 1
-        ax1[2][1].scatter(df_14_10['vel10'], df_14_10['vel14'], s=4, color='b', marker='.', label=gate_label)
+        ax1[2][1].scatter(df_14_10.loc[df_14_10['diffHeightFlag_14over10'], 'vel10'],
+                          df_14_10.loc[df_14_10['diffHeightFlag_14over10'], 'vel14'],
+                          s=4, color=flagged_ratio_c, marker='.', zorder=3)
+        ax1[2][1].scatter(df_14_10.loc[np.logical_not(df_14_10['diffHeightFlag_14over10']), 'vel10'],
+                          df_14_10.loc[np.logical_not(df_14_10['diffHeightFlag_14over10']), 'vel14'],
+                          s=4, color=normal_ratio_c, marker='.', zorder=3)
         ax1[2][1].text(-490, 425, 'n=' + str(df_14_10.shape[0]), fontsize=12)
 
         # Set up the second plot
         fig2, ax2 = plt.subplots(figsize=(8, 9), dpi=300, nrows=n_rows, ncols=n_cols)
         plt.subplots_adjust(hspace=0.4, wspace=0.4)
         fig2.suptitle("Velocity Frequency Dependence: Ratios vs Time"
-                      + "\n" + numonic + " " + year + "." + month + "." + day
+                      + "\n" + mnemonic + " " + year + "." + month + "." + day
                       + " " + str(start_time) + "-" + str(end_time) + " UT"
                       + "\nProduced by " + str(os.path.basename(__file__)),
                       fontsize=13)
@@ -191,36 +215,35 @@ if __name__ == '__main__':
         ax2[2][1].set_ylabel("Velocity Ratio: 14/10")
 
         # Plot 10 to 12 Comparison data in ROW: 0, COL: 0
-        ax2[0][0].scatter(df_10_12['decimalTime'], df_10_12['10over12'], s=4, color='b', marker='.', label=gate_label)
+        ax2[0][0].scatter(df_10_12['decimalTime'], df_10_12['10over12'], s=4, color='b', marker='.')
 
         # Plot 13 to 12 Comparison data in ROW: 1, COL: 0
-        ax2[1][0].scatter(df_13_12['decimalTime'], df_13_12['13over12'], s=4, color='b', marker='.', label=gate_label)
+        ax2[1][0].scatter(df_13_12['decimalTime'], df_13_12['13over12'], s=4, color='b', marker='.')
 
         # Plot 14 to 12 Comparison data in ROW: 2, COL: 0
-        ax2[2][0].scatter(df_14_12['decimalTime'], df_14_12['14over12'], s=4, color='b', marker='.', label=gate_label)
+        ax2[2][0].scatter(df_14_12['decimalTime'], df_14_12['14over12'], s=4, color='b', marker='.')
 
         # Plot 12 to 10 Comparison data in ROW: 0, COL: 1
-        ax2[0][1].scatter(df_14_13['decimalTime'], df_14_13['14over13'], s=4, color='b', marker='.', label=gate_label)
+        ax2[0][1].scatter(df_14_13['decimalTime'], df_14_13['14over13'], s=4, color='b', marker='.')
 
         # Plot 13 to 10 Comparison data in ROW: 1, COL: 1
-        ax2[1][1].scatter(df_13_10['decimalTime'], df_13_10['13over10'], s=4, color='b', marker='.', label=gate_label)
+        ax2[1][1].scatter(df_13_10['decimalTime'], df_13_10['13over10'], s=4, color='b', marker='.')
 
         # Plot 14 to 10 Comparison data in ROW: 2, COL: 1
-        ax2[2][1].scatter(df_14_10['decimalTime'], df_14_10['14over10'], s=4, color='b', marker='.', label=gate_label)
+        ax2[2][1].scatter(df_14_10['decimalTime'], df_14_10['14over10'], s=4, color='b', marker='.')
 
         # Add legends to the plots
-        ax1[0][0].legend(loc=(0, 1.05))
-        ax2[0][0].legend(loc=(0, 1.05))
+        ax1[0][0].legend(loc=(0, 1.05), ncol=2)
 
         if SHOW_PLOTS:
             plt.show()
 
         if SAVE_PLOTS:
             # Save the files as a temp file
-            fig1.savefig(out_dir + "/" + numonic + "_vel_comp_" + year + month + day
+            fig1.savefig(out_dir + "/" + mnemonic + "_vel_comp_" + year + month + day
                          + "_" + chr(ord('a') + time_chunk) + " " + str(start_time) + "-" + str(end_time) + "UT"
                          + "_temp1.pdf", format='pdf', dpi=300)
-            fig2.savefig(out_dir + "/" + numonic + "_vel_comp_" + year + month + day
+            fig2.savefig(out_dir + "/" + mnemonic + "_vel_comp_" + year + month + day
                          + "_" + chr(ord('a') + time_chunk) + " " + str(start_time) + "-" + str(end_time) + "UT"
                          + "_temp2.pdf", format='pdf', dpi=300)
 
@@ -231,7 +254,7 @@ if __name__ == '__main__':
             merger.append(pdf)
         for pdf in glob.iglob("out/*_temp2.pdf"):
             merger.append(pdf)
-        with open(out_dir + "/" + numonic + "_vel_comp_" + year + month + day
+        with open(out_dir + "/" + mnemonic + "_vel_comp_" + year + month + day
                   + "_gg" + str(gates[0]) + "-" + str(gates[1]) + ".pdf",
                   "wb") as fout:
             merger.write(fout)
