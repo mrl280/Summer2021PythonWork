@@ -101,8 +101,7 @@ def elevation_v2(df, t_diff):
 
 if __name__ == '__main__':
     """
-    Read in and look at pickled SuperDARN data
-    Doesn't produce anything, just for looking at the file structure
+    Compare fitACF elevation angles to elevation angles computed by elevation_v2()
     """
 
     station = "rkn"
