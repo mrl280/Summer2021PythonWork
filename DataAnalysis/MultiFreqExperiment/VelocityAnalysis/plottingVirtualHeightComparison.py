@@ -12,10 +12,6 @@ if __name__ == '__main__':
     Create scatter plots comparing virtual height at one frequency to virtual height at another frequency
     """
 
-    # TODO: Need to plot the points flagged with the height ratio in a different colour This needs to be done on both
-    #  this plot and the vel ratios plots This is needed to flag points where data at one frequency is coming from a
-    #  noticeably different height than data at another frequency
-
     SAVE_PLOTS = True
     SHOW_PLOTS = False
 
@@ -25,7 +21,7 @@ if __name__ == '__main__':
 
     station = "rkn"
     count_min = 4
-    gates = [19, 21]
+    gates = [10, 30]
     data_match_type = "Median"
     second_resolution = 60
 
