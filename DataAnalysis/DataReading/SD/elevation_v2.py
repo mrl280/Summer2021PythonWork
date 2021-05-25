@@ -13,9 +13,10 @@ def elevation_v2(df, t_diff):
     Note: In the fitACF file, a phase offset of 0 results in an elevation angle of 0.
         However, that is not the case for this program.  Rather, you will get the appropriate non-zero elevation angle.
 
-    :param df: SuperDARN data frame.  Must contain the following standard parameters: 'tfreq', 'phase'
+    :param df: SuperDARN data frame.  Must contain the following standard parameters: 'tfreq', 'phase', 'stationId',
+        'bmnum'
     :param t_diff: The extra time delay to add in, in microseconds.
-    :return: The input dataframe, but with the added parameters:
+    :return: The input dataframe, but with the added parameters: 'adjPhase', 'adjElv'
     """
 
     c = 2.998e+8  # Speed of light in vacuum [m/s]
