@@ -1,34 +1,28 @@
 import calendar
 import math
 import os
-
-import numpy as np
 import time
 import pathlib
 import statistics
 
+import numpy as np
 import pandas as pd
 
 from DataAnalysis.DataReading.SD.basic_SD_df_filter import basic_SD_df_filter
 from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
 
-
 if __name__ == '__main__':
     """
     Match up SuperDARN velocity points from multi-freq mode
-
+    Use median filtering - it is thought that median filtering smooths out velocity differences
     """
+    # EVENTS:
     # 2016 09 25 at RKN: gg [40, 74]
-
-    # 2016 09 26 at RKN: gg [10, 74]
-
+    # 2016 09 26 at RKN: gg [10, 74]  t_diff = 0.003
     # 2016 09 25 at CLY: gg [30, 74]
-
     # 2016 09 26 at CLY: gg [10, 74]  # Not much here
-
     # 2016 09 25 at INV: gg [10 74]
-
-    # 2017 10 23 between 4 and 8 UT
+    # 2017 10 23 at RKN between 4 and 8 UT.  t_diff = 0.003
 
     year = "2016"  # yyyy
     month = "09"  # mm
@@ -39,12 +33,14 @@ if __name__ == '__main__':
     end_hour = 4
     time_interval_s = 60  # seconds
 
-    h_ratio_limits = [0.9, 1.1]  # If two points height ratio is outside of this range, they points are flagged
+    h_ratio_limits = [0.9, 1.1]  # Height ratio limits.  If a height ratio is outside of this range,
+    # then the points are flagged
     t_diff = 0.003  # Elevation angle correction in microseconds
 
     start_date_time = year + "-" + month + "-" + day + " " + str(start_hour) + ":00:00"
     end_date_time = year + "-" + month + "-" + day + " " + str(end_hour) + ":00:00"
     gates = [10, 74]  # We will match up data over the whole gate range now and just restrict when plotting
+    # Note: you can not use elevation angle data before gate 5ish because elevation is resolved in the 0-40 deg range
     Re = 6370  # Radius of the Earth, [km]
 
     # Compute start and end epoch
@@ -214,6 +210,6 @@ if __name__ == '__main__':
         os.makedirs(out_dir)
 
     # Save the data for later
-    out_file = out_dir + "/" + station + year + month + day + ".MatchedData.1gg" + str(time_interval_s) + "s.pkl"
+    out_file = out_dir + "/" + station + year + month + day + ".MedianMatchedData.1gg" + str(time_interval_s) + "s.pkl"
     print("Pickling as " + out_file + "...")
     matched_data.to_pickle(out_file)
