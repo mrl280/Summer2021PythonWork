@@ -187,22 +187,25 @@ if __name__ == '__main__':
     h_ratio_13over10 = matched_data['height13'] / matched_data['height10']
     h_ratio_14over10 = matched_data['height14'] / matched_data['height10']
 
-    # Based on height ratios, flag points that where one frequency is seeing a significantly different height than
-    # the other frequency
-    matched_data['diffHeightFlag_10over12'] = np.logical_or(
-        h_ratio_10over12 < h_ratio_limits[0], h_ratio_10over12 > h_ratio_limits[1])
-    matched_data['diffHeightFlag_13over12'] = np.logical_or(
-        h_ratio_13over12 < h_ratio_limits[0], h_ratio_13over12 > h_ratio_limits[1])
-    matched_data['diffHeightFlag_14over12'] = np.logical_or(
-        h_ratio_14over12 < h_ratio_limits[0], h_ratio_14over12 > h_ratio_limits[1])
+    # Flag points where the y-axis frequency is larger
+    matched_data['diffHeightFlag_10largerthan12'] = h_ratio_10over12 > h_ratio_limits[1]
+    matched_data['diffHeightFlag_13largerthan12'] = h_ratio_13over12 > h_ratio_limits[1]
+    matched_data['diffHeightFlag_14largerthan12'] = h_ratio_14over12 > h_ratio_limits[1]
 
-    matched_data['diffHeightFlag_14over13'] = np.logical_or(
-        h_ratio_14over13 < h_ratio_limits[0], h_ratio_14over13 > h_ratio_limits[1])
+    matched_data['diffHeightFlag_14largerthan13'] = h_ratio_14over13 > h_ratio_limits[1]
 
-    matched_data['diffHeightFlag_13over10'] = np.logical_or(
-        h_ratio_13over10 < h_ratio_limits[0], h_ratio_13over10 > h_ratio_limits[1])
-    matched_data['diffHeightFlag_14over10'] = np.logical_or(
-        h_ratio_14over10 < h_ratio_limits[0], h_ratio_14over10 > h_ratio_limits[1])
+    matched_data['diffHeightFlag_13largerthan10'] = h_ratio_13over10 > h_ratio_limits[1]
+    matched_data['diffHeightFlag_14largerthan10'] = h_ratio_14over10 > h_ratio_limits[1]
+
+    # Flag points where the base (x-axis) frequency is larger
+    matched_data['diffHeightFlag_10lessthan12'] = h_ratio_10over12 < h_ratio_limits[0]
+    matched_data['diffHeightFlag_13lessthan12'] = h_ratio_13over12 < h_ratio_limits[0]
+    matched_data['diffHeightFlag_14lessthan12'] = h_ratio_14over12 < h_ratio_limits[0]
+
+    matched_data['diffHeightFlag_14lessthan13'] = h_ratio_14over13 < h_ratio_limits[0]
+
+    matched_data['diffHeightFlag_13lessthan10'] = h_ratio_13over10 < h_ratio_limits[0]
+    matched_data['diffHeightFlag_14lessthan10'] = h_ratio_14over10 < h_ratio_limits[0]
 
     # Ensure out directory
     out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station + "/" + station + year + month + day
