@@ -128,7 +128,8 @@ if __name__ == '__main__':
 
             # Look at the next three points (i=1, 2, 3), we might use them
             for dt in range(1, 4):
-                try:
+                if t + dt < len(gg_df['epoch']):  # So as to not run off the edge
+
                     if (abs(gg_df['epoch'][t + dt] - gg_df['epoch'][t]) < time_interval_s) \
                             and (gg_df['transFreq'][t + dt] != gg_df['transFreq'][t]):
 
@@ -156,29 +157,30 @@ if __name__ == '__main__':
                                                     * np.sin(np.radians(np.asarray(gg_df['adjElv'][t + dt])))) - Re)
                             found14 = True
                         else:
-                            raise Exception("Error: found a point with an unrecognized frequency: "
-                                            + str(gg_df['transFreq'][t + dt]))
-                except:
-                    # We have ran off the end of the array, no action required
-                    pass
+                            # There were 2 measurements at the same frequency, ignore the second one
+                            pass
 
             # Any frequencies that were not found, just fill in with nan
             if not found10:
                 vel10.append(math.nan)
+                height10.append(math.nan)
             if not found12:
                 vel12.append(math.nan)
+                height12.append(math.nan)
             if not found13:
                 vel13.append(math.nan)
+                height13.append(math.nan)
             if not found14:
                 vel14.append(math.nan)
+                height14.append(math.nan)
 
     # Put the data into a dataframe
     matched_data = pd.DataFrame({'decimalTime': matched_times,
                                  'gate': matched_gates,
-                                 'vel10': vel10,
-                                 'vel12': vel12,
-                                 'vel13': vel13,
-                                 'vel14': vel14,
+                                 'vel10': vel10, 'height10': height10,
+                                 'vel12': vel12, 'height12': height12,
+                                 'vel13': vel13, 'height13': height13,
+                                 'vel14': vel14, 'height14': height14,
                                  })
 
     # Compute velocity ratios
