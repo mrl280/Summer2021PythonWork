@@ -20,17 +20,17 @@ if __name__ == '__main__':
     SAVE_PLOTS = True
     SHOW_PLOTS = False
 
-    year = "2016"  # yyyy
-    month = "09"  # mm
-    day = "26"  # dd
+    year = "2017"  # yyyy
+    month = "10"  # mm
+    day = "23"  # dd
 
     station = "rkn"
     gates = [10, 30]
     data_match_type = "Median"  # "Matched" or "Raw"
     count_min = 4  # Only used for median matched data
 
-    start_hour = 0
-    end_hour = 4
+    start_hour = 4
+    end_hour = 8
 
     show_scatter = False
 
@@ -206,7 +206,7 @@ if __name__ == '__main__':
         purple = np.array([155/256, 53/256, 161/256, 1])  # RGBA colours
         white = np.array([0, 0, 0, 0])
         newcolours[:35, :] = white  # Make the first few colours white
-        newcolours[231:255, :] = purple  # Make the last few colours purple
+        newcolours[220:255, :] = purple  # Make the last few colours purple
         newcmp = ListedColormap(newcolours)
 
         # Plot 10 to 12 Comparison data in ROW: 0
