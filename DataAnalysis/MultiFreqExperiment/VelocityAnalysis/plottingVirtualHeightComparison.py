@@ -54,7 +54,7 @@ if __name__ == '__main__':
     normal_ratio_c = "k"
     ylarger_ratio_c = "b"
     xlarger_ratio_c = "r"
-    pts_size = 3
+    pts_size = 2
 
     # For 4 hours, we need 8 time periods (half an hour periods)
     if SHOW_PLOTS:
@@ -156,7 +156,7 @@ if __name__ == '__main__':
                           df_10_12.loc[df_10_12['diffHeightFlag_10about12'], 'height10'],
                           s=pts_size, color=normal_ratio_c, marker='.', zorder=3,
                           label="Similar Heights")
-        ax1[0][0].text(52, 172, 'n=' + str(df_10_12.shape[0]), fontsize=12)
+        ax1[0][0].text(52, 172, 'n=' + str(df_10_12.shape[0]), fontsize=12, c='purple')
 
         # Plot 13 to 12 Comparison data in ROW: 1, COL: 0
         ax1[1][0].scatter(df_13_12.loc[df_13_12['diffHeightFlag_13largerthan12'], 'height12'],
@@ -168,7 +168,7 @@ if __name__ == '__main__':
         ax1[1][0].scatter(df_13_12.loc[df_13_12['diffHeightFlag_13about12'], 'height12'],
                           df_13_12.loc[df_13_12['diffHeightFlag_13about12'], 'height13'],
                           s=4, color=normal_ratio_c, marker='.', zorder=3)
-        ax1[1][0].text(52, 172, 'n=' + str(df_13_12.shape[0]), fontsize=12)
+        ax1[1][0].text(52, 172, 'n=' + str(df_13_12.shape[0]), fontsize=12, c='purple')
 
         # Plot 14 to 12 Comparison data in ROW: 2, COL: 0
         ax1[2][0].scatter(df_14_12.loc[df_14_12['diffHeightFlag_14largerthan12'], 'height12'],
@@ -180,7 +180,7 @@ if __name__ == '__main__':
         ax1[2][0].scatter(df_14_12.loc[df_14_12['diffHeightFlag_14about12'], 'height12'],
                           df_14_12.loc[df_14_12['diffHeightFlag_14about12'], 'height14'],
                           s=4, color=normal_ratio_c, marker='.', zorder=3)
-        ax1[2][0].text(52, 172, 'n=' + str(df_14_12.shape[0]), fontsize=12)
+        ax1[2][0].text(52, 172, 'n=' + str(df_14_12.shape[0]), fontsize=12, c='purple')
 
         # Plot 14 to 13 Comparison data in ROW: 0, COL: 1
         ax1[0][1].scatter(df_14_13.loc[df_14_13['diffHeightFlag_14largerthan13'], 'height13'],
@@ -192,7 +192,7 @@ if __name__ == '__main__':
         ax1[0][1].scatter(df_14_13.loc[df_14_13['diffHeightFlag_14about13'], 'height13'],
                           df_14_13.loc[df_14_13['diffHeightFlag_14about13'], 'height14'],
                           s=4, color=normal_ratio_c, marker='.', zorder=3)
-        ax1[0][1].text(52, 172, 'n=' + str(df_14_13.shape[0]), fontsize=12)
+        ax1[0][1].text(52, 172, 'n=' + str(df_14_13.shape[0]), fontsize=12, c='purple')
 
         # Plot 13 to 10 Comparison data in ROW: 1, COL: 1
         ax1[1][1].scatter(df_13_10.loc[df_13_10['diffHeightFlag_13largerthan10'], 'height10'],
@@ -204,7 +204,7 @@ if __name__ == '__main__':
         ax1[1][1].scatter(df_13_10.loc[df_13_10['diffHeightFlag_13about10'], 'height10'],
                           df_13_10.loc[df_13_10['diffHeightFlag_13about10'], 'height13'],
                           s=4, color=normal_ratio_c, marker='.', zorder=3)
-        ax1[1][1].text(52, 172, 'n=' + str(df_13_10.shape[0]), fontsize=12)
+        ax1[1][1].text(52, 172, 'n=' + str(df_13_10.shape[0]), fontsize=12, c='purple')
 
         # Plot 14 to 10 Comparison data in ROW: 2, COL: 1
         ax1[2][1].scatter(df_14_10.loc[df_14_10['diffHeightFlag_14largerthan10'], 'height10'],
@@ -216,7 +216,7 @@ if __name__ == '__main__':
         ax1[2][1].scatter(df_14_10.loc[df_14_10['diffHeightFlag_14about10'], 'height10'],
                           df_14_10.loc[df_14_10['diffHeightFlag_14about10'], 'height14'],
                           s=4, color=normal_ratio_c, marker='.', zorder=3)
-        ax1[2][1].text(52, 172, 'n=' + str(df_14_10.shape[0]), fontsize=12)
+        ax1[2][1].text(52, 172, 'n=' + str(df_14_10.shape[0]), fontsize=12, c='purple')
 
         # Add legends to the plots
         ax1[0][0].legend(loc=(0.2, 1.03), ncol=3)
