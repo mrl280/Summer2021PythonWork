@@ -116,7 +116,7 @@ if __name__ == '__main__':
         plt.subplots_adjust(hspace=0.4, wspace=0.4)
         fig1.suptitle("Velocity Frequency Dependence: Vel vs Vel Scatter"
                       + "\n" + mnemonic + " " + year + "." + month + "." + day
-                      + "; " + gate_label
+                      + "; " + gate_label + "; " + data_match_type + " Matched Data"
                       + "; " + str(start_time) + "-" + str(end_time) + " UT"
                       + "\nProduced by " + str(os.path.basename(__file__)),
                       fontsize=13)

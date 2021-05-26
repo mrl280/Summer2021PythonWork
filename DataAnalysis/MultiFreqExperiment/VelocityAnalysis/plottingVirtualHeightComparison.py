@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     station = "rkn"
     gates = [10, 30]
-    data_match_type = "Median"     # "Matched" or "Raw"
+    data_match_type = "Raw"     # "Matched" or "Raw"
     count_min = 4   # Only used for median matched data
 
     start_hour = 0
@@ -106,7 +106,7 @@ if __name__ == '__main__':
         plt.subplots_adjust(hspace=0.4, wspace=0.4)
         fig1.suptitle("Echo Frequency Dependence: Virtual Height Comparison"
                       + "\n" + mnemonic + " " + year + "." + month + "." + day
-                      + "; " + gate_label
+                      + "; " + gate_label + "; " + data_match_type + " Matched Data"
                       + "; " + str(start_time) + "-" + str(end_time) + " UT"
                       + "\nProduced by " + str(os.path.basename(__file__)),
                       fontsize=13)
