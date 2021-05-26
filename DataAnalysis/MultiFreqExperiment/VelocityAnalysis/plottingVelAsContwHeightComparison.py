@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     station = "rkn"
     gates = [10, 30]
-    data_match_type = "Raw"  # "Matched" or "Raw"
+    data_match_type = "Median"  # "Matched" or "Raw"
     count_min = 4  # Only used for median matched data
 
     start_hour = 0

@@ -18,19 +18,19 @@ if __name__ == '__main__':
     """
     # EVENTS:
     # 2016 09 25 at RKN: gg [40, 74]
-    # 2016 09 26 at RKN: gg [10, 74]  t_diff = 0.003
+    # 2016 09 26 at RKN: gg [10, 74]  t_diff = 0.003, between 0 and 4 UT
     # 2016 09 25 at CLY: gg [30, 74]
     # 2016 09 26 at CLY: gg [10, 74]  # Not much here
     # 2016 09 25 at INV: gg [10 74]
     # 2017 10 23 at RKN between 4 and 8 UT.  t_diff = 0.003
 
-    year = "2016"  # yyyy
-    month = "09"  # mm
-    day = "26"  # dd
+    year = "2017"  # yyyy
+    month = "10"  # mm
+    day = "23"  # dd
 
     station = "rkn"
-    start_hour = 0  # Start and end times must be integer values for the loop
-    end_hour = 4
+    start_hour = 4  # Start and end times must be integer values for the loop
+    end_hour = 8
     time_interval_s = 60  # seconds
 
     h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range,
