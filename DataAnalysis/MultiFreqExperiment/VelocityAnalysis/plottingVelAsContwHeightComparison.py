@@ -4,7 +4,9 @@ import pathlib
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import matplotlib.cm as cm
+from matplotlib.colors import Normalize, ListedColormap
 
 from matplotlib.ticker import MultipleLocator
 from PyPDF2 import PdfFileMerger
@@ -198,12 +200,21 @@ if __name__ == '__main__':
         bin_xcenters_h = bin_xedges_h[1:] - bin_xwidth_h / 2
         bin_ycenters_h = bin_yedges_h[1:] - bin_ywidth_h / 2
 
+        # Modify the 'jet' colour map
+        jet = cm.get_cmap('jet', 256)
+        newcolours = jet(np.linspace(0, 1, 256))
+        purple = np.array([155/256, 53/256, 161/256, 1])  # RGBA colours
+        white = np.array([0, 0, 0, 0])
+        newcolours[:35, :] = white  # Make the first few colours white
+        newcolours[231:255, :] = purple  # Make the last few colours purple
+        newcmp = ListedColormap(newcolours)
+
         # Plot 10 to 12 Comparison data in ROW: 0
         cont = ax1[0][0].contourf(bin_xcenters_vel, bin_ycenters_vel, binned_counts_10_12_vel.transpose(),
-                                  5, cmap=cm.get_cmap('Blues'))
+                                  5, cmap=newcmp)
         fig1.colorbar(cont, ax=ax1[0][0])
         cont = ax1[0][1].contourf(bin_xcenters_h, bin_ycenters_h, binned_counts_10_12_h.transpose(),
-                                  5, cmap=cm.get_cmap('Blues'))
+                                  5, cmap=newcmp)
         fig1.colorbar(cont, ax=ax1[0][1])
         if show_scatter:
             ax1[0][0].scatter(df_10_12['vel12'], df_10_12['vel10'],
@@ -215,10 +226,10 @@ if __name__ == '__main__':
 
         # Plot 13 to 12 Comparison data in ROW: 1
         cont = ax1[1][0].contourf(bin_xcenters_vel, bin_ycenters_vel, binned_counts_13_12_vel.transpose(),
-                                  5, cmap=cm.get_cmap('Blues'))
+                                  5, cmap=newcmp)
         fig1.colorbar(cont, ax=ax1[1][0])
         cont = ax1[1][1].contourf(bin_xcenters_h, bin_ycenters_h, binned_counts_13_12_h.transpose(),
-                                  5, cmap=cm.get_cmap('Blues'))
+                                  5, cmap=newcmp)
         fig1.colorbar(cont, ax=ax1[1][1])
         if show_scatter:
             ax1[1][0].scatter(df_13_12['vel12'], df_13_12['vel13'],
@@ -230,10 +241,10 @@ if __name__ == '__main__':
 
         # Plot 14 to 12 Comparison data in ROW: 2
         cont = ax1[2][0].contourf(bin_xcenters_vel, bin_ycenters_vel, binned_counts_14_12_vel.transpose(),
-                                  5, cmap=cm.get_cmap('Blues'))
+                                  5, cmap=newcmp)
         fig1.colorbar(cont, ax=ax1[2][0])
         cont = ax1[2][1].contourf(bin_xcenters_h, bin_ycenters_h, binned_counts_14_12_h.transpose(),
-                                  5, cmap=cm.get_cmap('Blues'))
+                                  5, cmap=newcmp)
         fig1.colorbar(cont, ax=ax1[2][1])
         if show_scatter:
             ax1[2][0].scatter(df_14_12['vel12'], df_14_12['vel14'],
