@@ -26,16 +26,22 @@ if __name__ == '__main__':
     day = "26"  # dd
 
     station = "rkn"
-    count_min = 4
     gates = [10, 30]
-    data_match_type = "Median"
-    second_resolution = 60
+    data_match_type = "Raw"     # "Matched" or "Raw"
+    count_min = 4   # Only used for median matched data
 
     start_hour = 0
     end_hour = 4
 
     mnemonic = station.upper()
     gate_label = "gg: " + str(gates[0]) + "-" + str(gates[1])
+
+    if data_match_type == "Median":
+        second_resolution = 60
+    elif data_match_type == "Raw":
+        second_resolution = 14
+    else:
+        raise Exception("Error: data match type " + data_match_type + " not recognized.")
 
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
@@ -70,24 +76,34 @@ if __name__ == '__main__':
                                 & (df['decimalTime'] < end_time)]
 
         # Build frequency dependant data frames
-        df_10_12 = time_restricted_df[(time_restricted_df['count10'] >= count_min)
-                                      & (time_restricted_df['count12'] >= count_min)
-                                      & time_restricted_df['10over12'].notna()]
-        df_13_12 = time_restricted_df[(time_restricted_df['count13'] >= count_min)
-                                      & (time_restricted_df['count12'] >= count_min)
-                                      & time_restricted_df['13over12'].notna()]
-        df_14_12 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
-                                      & (time_restricted_df['count12'] >= count_min)
-                                      & time_restricted_df['14over12'].notna()]
-        df_14_13 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
-                                      & (time_restricted_df['count13'] >= count_min)
-                                      & time_restricted_df['14over13'].notna()]
-        df_13_10 = time_restricted_df[(time_restricted_df['count13'] >= count_min)
-                                      & (time_restricted_df['count10'] >= count_min)
-                                      & time_restricted_df['13over10'].notna()]
-        df_14_10 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
-                                      & (time_restricted_df['count10'] >= count_min)
-                                      & time_restricted_df['14over10'].notna()]
+        if data_match_type == "Median":
+            df_10_12 = time_restricted_df[(time_restricted_df['count10'] >= count_min)
+                                          & (time_restricted_df['count12'] >= count_min)
+                                          & time_restricted_df['10over12'].notna()]
+            df_13_12 = time_restricted_df[(time_restricted_df['count13'] >= count_min)
+                                          & (time_restricted_df['count12'] >= count_min)
+                                          & time_restricted_df['13over12'].notna()]
+            df_14_12 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
+                                          & (time_restricted_df['count12'] >= count_min)
+                                          & time_restricted_df['14over12'].notna()]
+            df_14_13 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
+                                          & (time_restricted_df['count13'] >= count_min)
+                                          & time_restricted_df['14over13'].notna()]
+            df_13_10 = time_restricted_df[(time_restricted_df['count13'] >= count_min)
+                                          & (time_restricted_df['count10'] >= count_min)
+                                          & time_restricted_df['13over10'].notna()]
+            df_14_10 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
+                                          & (time_restricted_df['count10'] >= count_min)
+                                          & time_restricted_df['14over10'].notna()]
+        elif data_match_type == "Raw":
+            df_10_12 = time_restricted_df[time_restricted_df['10over12'].notna()]
+            df_13_12 = time_restricted_df[time_restricted_df['13over12'].notna()]
+            df_14_12 = time_restricted_df[time_restricted_df['14over12'].notna()]
+            df_14_13 = time_restricted_df[time_restricted_df['14over13'].notna()]
+            df_13_10 = time_restricted_df[time_restricted_df['13over10'].notna()]
+            df_14_10 = time_restricted_df[time_restricted_df['14over10'].notna()]
+        else:
+            raise Exception("Error: data match type " + data_match_type + " not recognized.")
 
         # We will have 2 plots, one for vel v vel ratios and one for ratios v time
         # First lets just deal with the first plot
@@ -180,7 +196,7 @@ if __name__ == '__main__':
         # Plot 14 to 10 Comparison data in ROW: 2, COL: 1
         ax1[2][1].scatter(df_14_10.loc[df_14_10['diffHeightFlag_14over10'], 'vel10'],
                           df_14_10.loc[df_14_10['diffHeightFlag_14over10'], 'vel14'],
-                          s=pts_size, color=flagged_ratio_c, marker='.', zorder=4)
+                          s=pts_size, color=flagged_ratio_c, marker='.', zorder=3)
         ax1[2][1].scatter(df_14_10.loc[np.logical_not(df_14_10['diffHeightFlag_14over10']), 'vel10'],
                           df_14_10.loc[np.logical_not(df_14_10['diffHeightFlag_14over10']), 'vel14'],
                           s=pts_size, color=normal_ratio_c, marker='.', zorder=3)
@@ -256,7 +272,7 @@ if __name__ == '__main__':
         for pdf in glob.iglob("out/*_temp2.pdf"):
             merger.append(pdf)
         with open(out_dir + "/" + mnemonic + "_vel_comp_" + year + month + day
-                  + "_gg" + str(gates[0]) + "-" + str(gates[1]) + ".pdf",
+                  + "_gg" + str(gates[0]) + "-" + str(gates[1]) + "_" + data_match_type + ".pdf",
                   "wb") as fout:
             merger.write(fout)
         merger.close()
