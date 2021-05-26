@@ -24,13 +24,13 @@ if __name__ == '__main__':
 
     station = "rkn"
     gates = [10, 30]
-    data_match_type = "Median"  # "Matched" or "Raw"
+    data_match_type = "Raw"  # "Matched" or "Raw"
     count_min = 4  # Only used for median matched data
 
     start_hour = 0
     end_hour = 4
 
-    show_scatter = True
+    show_scatter = False
 
     gate_label = "gg: " + str(gates[0]) + "-" + str(gates[1])
     mnemonic = station.upper()
@@ -117,8 +117,7 @@ if __name__ == '__main__':
         # Format subplots
         for row in range(n_rows):
             # First row will be velocity contour plots
-            ax1[row][0].set_xlabel("12 MHz Virtual Heights [km]")
-            ax1[row][1].set_xlabel("12 MHz Virtual Heights [km]")
+            ax1[row][0].set_xlabel("12 MHz Velocities [m/s]")
             ax1[row][0].set_ylim([-600, 600])
             ax1[row][0].set_xlim([-600, 600])
             ax1[row][0].yaxis.set_minor_locator(MultipleLocator(100))
@@ -135,7 +134,7 @@ if __name__ == '__main__':
             ax1[row][0].tick_params(axis='x', labelrotation=25)
 
             # Second row will be height comparison plots
-            ax1[row][0].set_xlabel("12 MHz Virtual Heights [km]")
+            ax1[row][1].set_xlabel("12 MHz Virtual Heights [km]")
             ax1[row][1].set_ylim([40, 200])
             ax1[row][1].set_xlim([40, 200])
             ax1[row][1].yaxis.set_minor_locator(MultipleLocator(10))
@@ -148,10 +147,14 @@ if __name__ == '__main__':
                              [ax1[row][1].get_xlim()[0], ax1[row][1].get_xlim()[1]],
                              linestyle='--', linewidth=0.75, color='red')
 
-        for col in range(n_cols):
-            ax1[0][col].set_ylabel("10 MHz Virtual Heights [km]")
-            ax1[1][col].set_ylabel("13 MHz Virtual Heights [km]")
-            ax1[2][col].set_ylabel("14 MHz Virtual Heights [km]")
+
+        ax1[0][0].set_ylabel("10 MHz Velocities [m/s]")
+        ax1[1][0].set_ylabel("13 MHz Velocities [m/s]")
+        ax1[2][0].set_ylabel("14 MHz Velocities [m/s]")
+
+        ax1[0][1].set_ylabel("10 MHz Virtual Heights [km]")
+        ax1[1][1].set_ylabel("13 MHz Virtual Heights [km]")
+        ax1[2][1].set_ylabel("14 MHz Virtual Heights [km]")
 
         # Compute binned velocity counts
         n_bins_vel = 48  # 25 m/s bins
