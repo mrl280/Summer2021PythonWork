@@ -24,13 +24,14 @@ if __name__ == '__main__':
     station = "rkn"
     start_hour = 0
     end_hour = 4
-    time_interval_s = 60  # seconds
 
+    h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range,
+    #  then the points are flagged
     t_diff = 0.003  # Elevation angle correction in microseconds
 
     start_date_time = year + "-" + month + "-" + day + " " + str(start_hour) + ":00:00"
     end_date_time = year + "-" + month + "-" + day + " " + str(end_hour) + ":00:00"
-    gates = [10, 74]  # We will match up data over the whole gate range now and just restrict when plotting # TODO
+    gates = [10, 74]  # We will match up data over the whole gate range now and just restrict when plotting
     # Note: you can not use elevation angle data before gate 5ish because elevation is resolved in the 0-40 deg range
     Re = 6370  # Radius of the Earth, [km]
 
@@ -66,7 +67,8 @@ if __name__ == '__main__':
     # Put frequencies in MHz and round, this makes them easier to compare
     df['transFreq'] = round(df['transFreq'] * 1e-3, 0)
 
-    # print(df[['epoch', 'minute', 'second', 'gate', 'transFreq', 'vel', 'adjElv']].tail())
+    # print(df[['epoch', 'minute', 'second', 'gate', 'transFreq', 'vel', 'adjElv']].head())
+    time_interval_s = 14  # Max allowed separation between points
 
     # Initialize arrays to hold matched data
     matched_times = []
@@ -78,11 +80,10 @@ if __name__ == '__main__':
 
     # Loop through all the gates
     for start_gate in range(gates[0], gates[1] + 1, 1):
-        end_gate = start_gate
         print("Looking at gate " + str(start_gate))
 
         # Build a gate restricted data frame
-        gg_df = df[(df['gate'] >= start_gate) & (df['gate'] <= end_gate)]
+        gg_df = df[(df['gate'] == start_gate)]
         gg_df.reset_index(drop=True, inplace=True)
         print("     Number of points at this gate: " + str(len(gg_df['epoch'])))
 
@@ -97,7 +98,7 @@ if __name__ == '__main__':
                 continue
 
             used[t] = True  # We have found a point to use
-            matched_times.append(gg_df['decimalTime'][t] + 5 / 3600)  # Best guess
+            matched_times.append(gg_df['decimalTime'][t] + 4.5 / 3600)  # Best guess
             matched_gates.append(start_gate)
             found10, found12, found13, found14 = False, False, False, False
 
@@ -128,7 +129,7 @@ if __name__ == '__main__':
             # Look at the next three points (i=1, 2, 3), we might use them
             for dt in range(1, 4):
                 try:
-                    if (abs(gg_df['epoch'][t + dt] - gg_df['epoch'][t]) < 13) \
+                    if (abs(gg_df['epoch'][t + dt] - gg_df['epoch'][t]) < time_interval_s) \
                             and (gg_df['transFreq'][t + dt] != gg_df['transFreq'][t]):
 
                         used[t + dt] = True  # The point is close by and of a different frequency, it is a match, use it
@@ -190,6 +191,39 @@ if __name__ == '__main__':
     matched_data['13over10'] = matched_data['vel13'] / matched_data['vel10']
     matched_data['14over10'] = matched_data['vel14'] / matched_data['vel10']
 
-    print(matched_data[['vel10', 'vel12', 'vel13', 'vel14']])
+    # Compute height ratios
+    h_ratio_10over12 = matched_data['height10'] / matched_data['height12']
+    h_ratio_13over12 = matched_data['height13'] / matched_data['height12']
+    h_ratio_14over12 = matched_data['height14'] / matched_data['height12']
 
-    # TODO: add in height flag and save to file
+    h_ratio_14over13 = matched_data['height14'] / matched_data['height13']
+
+    h_ratio_13over10 = matched_data['height13'] / matched_data['height10']
+    h_ratio_14over10 = matched_data['height14'] / matched_data['height10']
+
+    # Based on height ratios, flag points that where one frequency is seeing a significantly different height than
+    # the other frequency
+    matched_data['diffHeightFlag_10over12'] = np.logical_or(
+        h_ratio_10over12 < h_ratio_limits[0], h_ratio_10over12 > h_ratio_limits[1])
+    matched_data['diffHeightFlag_13over12'] = np.logical_or(
+        h_ratio_13over12 < h_ratio_limits[0], h_ratio_13over12 > h_ratio_limits[1])
+    matched_data['diffHeightFlag_14over12'] = np.logical_or(
+        h_ratio_14over12 < h_ratio_limits[0], h_ratio_14over12 > h_ratio_limits[1])
+
+    matched_data['diffHeightFlag_14over13'] = np.logical_or(
+        h_ratio_14over13 < h_ratio_limits[0], h_ratio_14over13 > h_ratio_limits[1])
+
+    matched_data['diffHeightFlag_13over10'] = np.logical_or(
+        h_ratio_13over10 < h_ratio_limits[0], h_ratio_13over10 > h_ratio_limits[1])
+    matched_data['diffHeightFlag_14over10'] = np.logical_or(
+        h_ratio_14over10 < h_ratio_limits[0], h_ratio_14over10 > h_ratio_limits[1])
+
+    # Ensure out directory
+    out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station + "/" + station + year + month + day
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    # Save the data for later
+    out_file = out_dir + "/" + station + year + month + day + ".RawMatchedData.1gg" + str(time_interval_s) + "s.pkl"
+    print("Pickling as " + out_file + "...")
+    matched_data.to_pickle(out_file)
