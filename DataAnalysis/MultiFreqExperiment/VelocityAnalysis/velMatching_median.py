@@ -34,7 +34,7 @@ if __name__ == '__main__':
     time_interval_s = 60  # seconds
 
     h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range,
-    # then the points are flagged
+    #  then the points are flagged
     t_diff = 0.003  # Elevation angle correction in microseconds
 
     start_date_time = year + "-" + month + "-" + day + " " + str(start_hour) + ":00:00"
