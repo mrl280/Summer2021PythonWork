@@ -57,7 +57,8 @@ if __name__ == '__main__':
     out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/out/"
 
     normal_ratio_c = "k"
-    flagged_ratio_c = "b"
+    ylarger_ratio_c = "b"
+    xlarger_ratio_c = "r"
     pts_size = 3
 
     # For each time period, we need 2 pages
@@ -149,9 +150,12 @@ if __name__ == '__main__':
         ax1[2][1].set_ylabel("14 MHz Velocities [m/s]")
 
         # Plot 10 to 12 Comparison data in ROW: 0, COL: 0
-        ax1[0][0].scatter(df_10_12.loc[df_10_12['diffHeightFlag_10over12'], 'vel12'],
-                          df_10_12.loc[df_10_12['diffHeightFlag_10over12'], 'vel10'],
-                          s=pts_size, color=flagged_ratio_c, marker='.', zorder=4, label="Frequencies Measuring Different Heights")
+        ax1[0][0].scatter(df_10_12.loc[df_10_12['diffHeightFlag_10largerthan12'], 'vel12'],
+                          df_10_12.loc[df_10_12['diffHeightFlag_10largerthan12'], 'vel10'],
+                          s=pts_size, color=ylarger_ratio_c, marker='.', zorder=4, label="y larger than x")
+        ax1[0][0].scatter(df_10_12.loc[df_10_12['diffHeightFlag_10lessthan12'], 'vel12'],
+                          df_10_12.loc[df_10_12['diffHeightFlag_10lessthan12'], 'vel10'],
+                          s=pts_size, color=xlarger_ratio_c, marker='.', zorder=4, label="x larger than y")
         ax1[0][0].scatter(df_10_12.loc[np.logical_not(df_10_12['diffHeightFlag_10over12']), 'vel12'],
                           df_10_12.loc[np.logical_not(df_10_12['diffHeightFlag_10over12']), 'vel10'],
                           s=pts_size, color=normal_ratio_c, marker='.', zorder=3, label="Frequencies Measuring Similar Heights")

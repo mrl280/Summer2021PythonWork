@@ -207,6 +207,22 @@ if __name__ == '__main__':
     matched_data['diffHeightFlag_13lessthan10'] = h_ratio_13over10 < h_ratio_limits[0]
     matched_data['diffHeightFlag_14lessthan10'] = h_ratio_14over10 < h_ratio_limits[0]
 
+    # Flag points where both heights are about the same - this simplifies plotting
+    matched_data['diffHeightFlag_10about12'] = np.logical_and(h_ratio_10over12 >= h_ratio_limits[0],
+                                                              h_ratio_10over12 <= h_ratio_limits[1])
+    matched_data['diffHeightFlag_13about12'] = np.logical_and(h_ratio_13over12 >= h_ratio_limits[0],
+                                                              h_ratio_13over12 <= h_ratio_limits[1])
+    matched_data['diffHeightFlag_14about12'] = np.logical_and(h_ratio_14over12 >= h_ratio_limits[0],
+                                                              h_ratio_14over12 <= h_ratio_limits[1])
+
+    matched_data['diffHeightFlag_14about13'] = np.logical_and(h_ratio_14over13 >= h_ratio_limits[0],
+                                                              h_ratio_14over13 <= h_ratio_limits[1])
+
+    matched_data['diffHeightFlag_13about10'] = np.logical_and(h_ratio_13over10 >= h_ratio_limits[0],
+                                                              h_ratio_13over10 <= h_ratio_limits[1])
+    matched_data['diffHeightFlag_14about10'] = np.logical_and(h_ratio_14over10 >= h_ratio_limits[0],
+                                                              h_ratio_14over10 <= h_ratio_limits[1])
+
     # Ensure out directory
     out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station + "/" + station + year + month + day
     if not os.path.exists(out_dir):
