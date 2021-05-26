@@ -85,7 +85,6 @@ if __name__ == '__main__':
         gg_df = df[(df['gate'] >= start_gate) & (df['gate'] <= end_gate)]
         gg_df.reset_index(drop=True, inplace=True)
         print("     Number of points at this gate: " + str(len(gg_df['epoch'])))
-        # print(df[['epoch', 'minute', 'second', 'gate', 'transFreq', 'vel', 'adjElv']].head())
 
         range_here = 90 + 15 * start_gate + 15 / 2  # Slant range [km]
         used = [False] * len(gg_df['epoch'])  # Flag points that have already been matched up
@@ -119,16 +118,15 @@ if __name__ == '__main__':
                                         * np.sin(np.radians(np.asarray(gg_df['adjElv'][t])))) - Re)
                 found13 = True
             elif gg_df['transFreq'][t] == 14:
+                found14 = True
                 vel14.append(gg_df['vel'][t])
                 height14.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                         * np.sin(np.radians(np.asarray(gg_df['adjElv'][t])))) - Re)
-                found14 = True
             else:
                 raise Exception("Error: found a point with an unrecognized frequency: " + str(gg_df['transFreq'][t]))
 
             # Look at the next three points (i=1, 2, 3), we might use them
             for dt in range(1, 4):
-                # This is wrapped in a try block because we might run off the end of the array
                 try:
                     if (abs(gg_df['epoch'][t + dt] - gg_df['epoch'][t]) < 13) \
                             and (gg_df['transFreq'][t + dt] != gg_df['transFreq'][t]):
@@ -136,22 +134,22 @@ if __name__ == '__main__':
                         used[t + dt] = True  # The point is close by and of a different frequency, it is a match, use it
 
                         # Find out what frequency it is, and put it in it's place
-                        if gg_df['transFreq'][t + dt] == 10:
+                        if gg_df['transFreq'][t + dt] == 10 and not found10:
                             vel10.append(gg_df['vel'][t + dt])
                             height10.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                     * np.sin(np.radians(np.asarray(gg_df['adjElv'][t + dt])))) - Re)
                             found10 = True
-                        elif gg_df['transFreq'][t + dt] == 12:
+                        elif gg_df['transFreq'][t + dt] == 12 and not found12:
                             vel12.append(gg_df['vel'][t + dt])
                             height12.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                     * np.sin(np.radians(np.asarray(gg_df['adjElv'][t + dt])))) - Re)
                             found12 = True
-                        elif gg_df['transFreq'][t + dt] == 13:
+                        elif gg_df['transFreq'][t + dt] == 13 and not found13:
                             vel13.append(gg_df['vel'][t + dt])
                             height13.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                     * np.sin(np.radians(np.asarray(gg_df['adjElv'][t + dt])))) - Re)
                             found13 = True
-                        elif gg_df['transFreq'][t + dt] == 14:
+                        elif gg_df['transFreq'][t + dt] == 14 and not found14:
                             vel14.append(gg_df['vel'][t + dt])
                             height14.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                     * np.sin(np.radians(np.asarray(gg_df['adjElv'][t + dt])))) - Re)
@@ -160,8 +158,8 @@ if __name__ == '__main__':
                             raise Exception("Error: found a point with an unrecognized frequency: "
                                             + str(gg_df['transFreq'][t + dt]))
                 except:
+                    # We have ran off the end of the array, no action required
                     pass
-                    # print("We are on t=" + str(t) + " and dt=" + str(dt))
 
             # Any frequencies that were not found, just fill in with nan
             if not found10:
@@ -173,7 +171,6 @@ if __name__ == '__main__':
             if not found14:
                 vel14.append(math.nan)
 
-    print(np.asarray(vel14))
     # Put the data into a dataframe
     matched_data = pd.DataFrame({'decimalTime': matched_times,
                                  'gate': matched_gates,
@@ -193,4 +190,6 @@ if __name__ == '__main__':
     matched_data['13over10'] = matched_data['vel13'] / matched_data['vel10']
     matched_data['14over10'] = matched_data['vel14'] / matched_data['vel10']
 
-    print(matched_data.tail())
+    print(matched_data[['vel10', 'vel12', 'vel13', 'vel14']])
+
+    # TODO: add in height flag and save to file
