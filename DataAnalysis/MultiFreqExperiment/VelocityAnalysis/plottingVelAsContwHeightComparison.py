@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import matplotlib.cm as cm
-from matplotlib.colors import Normalize, ListedColormap
 
+from matplotlib.colors import ListedColormap
 from matplotlib.ticker import MultipleLocator
 from PyPDF2 import PdfFileMerger
 from scipy import stats
