@@ -184,6 +184,6 @@ if __name__ == '__main__':
                 PickleFITACF(station, in_dir[3:])
     else:
         station = "rkn"
-        date = "20171023"
+        date = "20161105"
         print("Pickling " + station + date + "...")
         PickleFITACF(station, date)

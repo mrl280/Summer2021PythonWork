@@ -17,12 +17,12 @@ if __name__ == '__main__':
     Use raw matching - it is thought that median filtering smooths out velocity differences
     """
 
-    year = "2017"  # yyyy
-    month = "10"  # mm
-    day = "23"  # dd
+    year = "2016"  # yyyy
+    month = "11"  # mm
+    day = "05"  # dd
 
     station = "rkn"
-    start_hour = 4
+    start_hour = 0
     end_hour = 8
 
     h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range,

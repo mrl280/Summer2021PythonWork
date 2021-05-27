@@ -21,7 +21,7 @@ if __name__ == '__main__':
     SAVE_PLOTS = True
     SHOW_PLOTS = False
 
-    year = "2017"  # yyyy
+    year = "2016"  # yyyy
     month = "10"  # mm
     day = "23"  # dd
 
