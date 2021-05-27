@@ -36,8 +36,8 @@ if __name__ == '__main__':
     end_hour = 4
     time_interval_s = 60  # seconds
 
-    h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range,
-    #  then the points are flagged
+    h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range, it is flagged
+    elv_ratio_limits = [0.92, 1.08]  # Elv ratio limits.  If an elev ratio is outside of this range, it is flagged
     t_diff = 0.003  # Elevation angle correction in microseconds
 
     start_date_time = year + "-" + month + "-" + day + " " + str(start_hour) + ":00:00"
@@ -233,6 +233,52 @@ if __name__ == '__main__':
                                                               h_ratio_13over10 <= h_ratio_limits[1])
     matched_data['diffHeightFlag_14about10'] = np.logical_and(h_ratio_14over10 >= h_ratio_limits[0],
                                                               h_ratio_14over10 <= h_ratio_limits[1])
+
+    # Compute elevation angle ratios
+    elv_ratio_10over12 = matched_data['elv10'] / matched_data['elv12']
+    elv_ratio_13over12 = matched_data['elv13'] / matched_data['elv12']
+    elv_ratio_14over12 = matched_data['elv14'] / matched_data['elv12']
+
+    elv_ratio_14over13 = matched_data['elv14'] / matched_data['elv13']
+
+    elv_ratio_13over10 = matched_data['elv13'] / matched_data['elv10']
+    elv_ratio_14over10 = matched_data['elv14'] / matched_data['elv10']
+
+    # Flag points where the y-axis frequency is larger
+    matched_data['diffElvFlag_10largerthan12'] = elv_ratio_10over12 > elv_ratio_limits[1]
+    matched_data['diffElvFlag_13largerthan12'] = elv_ratio_13over12 > elv_ratio_limits[1]
+    matched_data['diffElvFlag_14largerthan12'] = elv_ratio_14over12 > elv_ratio_limits[1]
+
+    matched_data['diffElvFlag_14largerthan13'] = elv_ratio_14over13 > elv_ratio_limits[1]
+
+    matched_data['diffElvFlag_13largerthan10'] = elv_ratio_13over10 > elv_ratio_limits[1]
+    matched_data['diffElvFlag_14largerthan10'] = elv_ratio_14over10 > elv_ratio_limits[1]
+
+    # Flag points where the base (x-axis) frequency is larger
+    matched_data['diffElvFlag_10lessthan12'] = elv_ratio_10over12 < elv_ratio_limits[0]
+    matched_data['diffElvFlag_13lessthan12'] = elv_ratio_13over12 < elv_ratio_limits[0]
+    matched_data['diffElvFlag_14lessthan12'] = elv_ratio_14over12 < elv_ratio_limits[0]
+
+    matched_data['diffElvFlag_14lessthan13'] = elv_ratio_14over13 < elv_ratio_limits[0]
+
+    matched_data['diffElvFlag_13lessthan10'] = elv_ratio_13over10 < elv_ratio_limits[0]
+    matched_data['diffElvFlag_14lessthan10'] = elv_ratio_14over10 < elv_ratio_limits[0]
+
+    # Flag points where both heights are about the same - this simplifies plotting
+    matched_data['diffElvFlag_10about12'] = np.logical_and(elv_ratio_10over12 >= elv_ratio_limits[0],
+                                                           elv_ratio_10over12 <= elv_ratio_limits[1])
+    matched_data['diffElvFlag_13about12'] = np.logical_and(elv_ratio_13over12 >= elv_ratio_limits[0],
+                                                           elv_ratio_13over12 <= elv_ratio_limits[1])
+    matched_data['diffElvFlag_14about12'] = np.logical_and(elv_ratio_14over12 >= elv_ratio_limits[0],
+                                                           elv_ratio_14over12 <= elv_ratio_limits[1])
+
+    matched_data['diffElvFlag_14about13'] = np.logical_and(elv_ratio_14over13 >= elv_ratio_limits[0],
+                                                           elv_ratio_14over13 <= elv_ratio_limits[1])
+
+    matched_data['diffElvFlag_13about10'] = np.logical_and(elv_ratio_13over10 >= elv_ratio_limits[0],
+                                                           elv_ratio_13over10 <= elv_ratio_limits[1])
+    matched_data['diffElvFlag_14about10'] = np.logical_and(elv_ratio_14over10 >= elv_ratio_limits[0],
+                                                           elv_ratio_14over10 <= elv_ratio_limits[1])
 
     # Ensure out directory
     out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station + "/" + station + year + month + day
