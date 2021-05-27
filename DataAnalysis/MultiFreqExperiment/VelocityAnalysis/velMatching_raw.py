@@ -19,11 +19,11 @@ if __name__ == '__main__':
 
     year = "2016"  # yyyy
     month = "09"  # mm
-    day = "05"  # dd
+    day = "26"  # dd
 
     station = "rkn"
-    start_hour = 1
-    end_hour = 8
+    start_hour = 0
+    end_hour = 4
 
     h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range,
     #  then the points are flagged
@@ -73,10 +73,10 @@ if __name__ == '__main__':
     # Initialize arrays to hold matched data
     matched_times = []
     matched_gates = []
-    vel10, height10 = [], []
-    vel12, height12 = [], []
-    vel13, height13 = [], []
-    vel14, height14 = [], []
+    vel10, elv10, height10 = [], [], []
+    vel12, elv12, height12 = [], [], []
+    vel13, elv13, height13 = [], [], []
+    vel14, elv14, height14 = [], [], []
 
     # Loop through all the gates
     for start_gate in range(gates[0], gates[1] + 1, 1):
@@ -105,24 +105,28 @@ if __name__ == '__main__':
             # Find out what frequency our point is, and put it in it's place
             if gg_df['transFreq'][t] == 10:
                 vel10.append(gg_df['vel'][t])
+                elv10.append(gg_df['adjElv'][t])
                 height10.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                         * np.sin(np.radians(np.asarray(gg_df['adjElv'][t])))) - Re)
                 found10 = True
             elif gg_df['transFreq'][t] == 12:
                 vel12.append(gg_df['vel'][t])
+                elv12.append(gg_df['adjElv'][t])
                 height12.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                         * np.sin(np.radians(np.asarray(gg_df['adjElv'][t])))) - Re)
                 found12 = True
             elif gg_df['transFreq'][t] == 13:
                 vel13.append(gg_df['vel'][t])
+                elv13.append(gg_df['adjElv'][t])
                 height13.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                         * np.sin(np.radians(np.asarray(gg_df['adjElv'][t])))) - Re)
                 found13 = True
             elif gg_df['transFreq'][t] == 14:
-                found14 = True
                 vel14.append(gg_df['vel'][t])
+                elv14.append(gg_df['adjElv'][t])
                 height14.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                         * np.sin(np.radians(np.asarray(gg_df['adjElv'][t])))) - Re)
+                found14 = True
             else:
                 raise Exception("Error: found a point with an unrecognized frequency: " + str(gg_df['transFreq'][t]))
 
@@ -138,21 +142,25 @@ if __name__ == '__main__':
                         # Find out what frequency it is, and put it in it's place
                         if gg_df['transFreq'][t + dt] == 10 and not found10:
                             vel10.append(gg_df['vel'][t + dt])
+                            elv10.append(gg_df['adjElv'][t + dt])
                             height10.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                     * np.sin(np.radians(np.asarray(gg_df['adjElv'][t + dt])))) - Re)
                             found10 = True
                         elif gg_df['transFreq'][t + dt] == 12 and not found12:
                             vel12.append(gg_df['vel'][t + dt])
+                            elv12.append(gg_df['adjElv'][t + dt])
                             height12.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                     * np.sin(np.radians(np.asarray(gg_df['adjElv'][t + dt])))) - Re)
                             found12 = True
                         elif gg_df['transFreq'][t + dt] == 13 and not found13:
                             vel13.append(gg_df['vel'][t + dt])
+                            elv13.append(gg_df['adjElv'][t + dt])
                             height13.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                     * np.sin(np.radians(np.asarray(gg_df['adjElv'][t + dt])))) - Re)
                             found13 = True
                         elif gg_df['transFreq'][t + dt] == 14 and not found14:
                             vel14.append(gg_df['vel'][t + dt])
+                            elv14.append(gg_df['adjElv'][t + dt])
                             height14.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                     * np.sin(np.radians(np.asarray(gg_df['adjElv'][t + dt])))) - Re)
                             found14 = True
@@ -163,24 +171,28 @@ if __name__ == '__main__':
             # Any frequencies that were not found, just fill in with nan
             if not found10:
                 vel10.append(math.nan)
+                elv10.append(math.nan)
                 height10.append(math.nan)
             if not found12:
                 vel12.append(math.nan)
+                elv12.append(math.nan)
                 height12.append(math.nan)
             if not found13:
                 vel13.append(math.nan)
+                elv13.append(math.nan)
                 height13.append(math.nan)
             if not found14:
                 vel14.append(math.nan)
+                elv14.append(math.nan)
                 height14.append(math.nan)
 
     # Put the data into a dataframe
     matched_data = pd.DataFrame({'decimalTime': matched_times,
                                  'gate': matched_gates,
-                                 'vel10': vel10, 'height10': height10,
-                                 'vel12': vel12, 'height12': height12,
-                                 'vel13': vel13, 'height13': height13,
-                                 'vel14': vel14, 'height14': height14,
+                                 'vel10': vel10, 'elv10': elv10, 'height10': height10,
+                                 'vel12': vel12, 'elv12': elv12, 'height12': height12,
+                                 'vel13': vel13, 'elv13': elv13, 'height13': height13,
+                                 'vel14': vel14, 'elv14': elv14, 'height14': height14,
                                  })
 
     # Compute velocity ratios

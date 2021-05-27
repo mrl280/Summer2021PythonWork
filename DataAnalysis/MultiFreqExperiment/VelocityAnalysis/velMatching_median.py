@@ -29,11 +29,11 @@ if __name__ == '__main__':
 
     year = "2016"  # yyyy
     month = "09"  # mm
-    day = "05"  # dd
+    day = "26"  # dd
 
     station = "rkn"
-    start_hour = 1  # Start and end times must be integer values for the loop
-    end_hour = 8
+    start_hour = 0  # Start and end times must be integer values for the loop
+    end_hour = 4
     time_interval_s = 60  # seconds
 
     h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range,
@@ -80,10 +80,10 @@ if __name__ == '__main__':
     # Initialize arrays to hold matched data
     matched_times = []
     matched_gates = []
-    vel10, count10, height10 = [], [], []
-    vel12, count12, height12 = [], [], []
-    vel13, count13, height13 = [], [], []
-    vel14, count14, height14 = [], [], []
+    vel10, elv10, count10, height10 = [], [], [], []
+    vel12, elv12, count12, height12 = [], [], [], []
+    vel13, elv13, count13, height13 = [], [], [], []
+    vel14, elv14, count14, height14 = [], [], [], []
 
     time_step_h = time_interval_s / 3600
     # Look through the gates (we need to maintain 15 km resolution)
@@ -113,12 +113,14 @@ if __name__ == '__main__':
 
             try:
                 vel10.append(statistics.median(df_10['vel']))
+                elv10.append(statistics.median(df_10['adjElv']))
                 count10.append(df_10.shape[0])
                 height10.append(statistics.median(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                           * np.sin(np.radians(np.asarray(df_10['adjElv']))))
                                                   - Re))
             except:
                 vel10.append(math.nan)
+                elv10.append(math.nan)
                 count10.append(math.nan)
                 height10.append(math.nan)
 
@@ -126,12 +128,14 @@ if __name__ == '__main__':
                                        & (time_restricted_df['transFreq'] <= (12 + 0.4) * 1000)]
             try:
                 vel12.append(statistics.median(df_12['vel']))
+                elv12.append(statistics.median(df_12['adjElv']))
                 count12.append(df_12.shape[0])
                 height12.append(statistics.median(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                           * np.sin(np.radians(np.asarray(df_12['adjElv']))))
                                                   - Re))
             except:
                 vel12.append(math.nan)
+                elv12.append(math.nan)
                 count12.append(math.nan)
                 height12.append(math.nan)
 
@@ -139,12 +143,14 @@ if __name__ == '__main__':
                                        & (time_restricted_df['transFreq'] <= (13 + 0.4) * 1000)]
             try:
                 vel13.append(statistics.median(df_13['vel']))
+                elv13.append(statistics.median(df_13['adjElv']))
                 count13.append(df_13.shape[0])
                 height13.append(statistics.median(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                           * np.sin(np.radians(np.asarray(df_13['adjElv']))))
                                                   - Re))
             except:
                 vel13.append(math.nan)
+                elv13.append(math.nan)
                 count13.append(math.nan)
                 height13.append(math.nan)
 
@@ -152,22 +158,24 @@ if __name__ == '__main__':
                                        & (time_restricted_df['transFreq'] <= (14 + 0.4) * 1000)]
             try:
                 vel14.append(statistics.median(df_14['vel']))
+                elv14.append(statistics.median(df_14['adjElv']))
                 count14.append(df_14.shape[0])
                 height14.append(statistics.median(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                           * np.sin(np.radians(np.asarray(df_14['adjElv']))))
                                                   - Re))
             except:
                 vel14.append(math.nan)
+                elv14.append(math.nan)
                 count14.append(math.nan)
                 height14.append(math.nan)
 
     # Put the data into a dataframe
     matched_data = pd.DataFrame({'decimalTime': matched_times,
                                  'gate': matched_gates,
-                                 'vel10': vel10, 'count10': count10, 'height10': height10,
-                                 'vel12': vel12, 'count12': count12, 'height12': height12,
-                                 'vel13': vel13, 'count13': count13, 'height13': height13,
-                                 'vel14': vel14, 'count14': count14, 'height14': height14
+                                 'vel10': vel10, 'elv10': elv10, 'count10': count10, 'height10': height10,
+                                 'vel12': vel12, 'elv12': elv12, 'count12': count12, 'height12': height12,
+                                 'vel13': vel13, 'elv13': elv13, 'count13': count13, 'height13': height13,
+                                 'vel14': vel14, 'elv14': elv14, 'count14': count14, 'height14': height14
                                  })
 
     # Compute velocity ratios
