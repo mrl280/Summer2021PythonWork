@@ -18,11 +18,11 @@ if __name__ == '__main__':
     """
 
     year = "2016"  # yyyy
-    month = "11"  # mm
+    month = "09"  # mm
     day = "05"  # dd
 
     station = "rkn"
-    start_hour = 0
+    start_hour = 1
     end_hour = 8
 
     h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range,

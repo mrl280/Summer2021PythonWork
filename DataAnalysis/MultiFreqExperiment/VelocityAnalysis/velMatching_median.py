@@ -23,16 +23,16 @@ if __name__ == '__main__':
     # 2016 09 26 at CLY: gg [10, 74]  # Not much here
     # 2016 09 25 at INV: gg [10 74]
     # 2017 10 23 at RKN between 4 and 8 UT.  t_diff = 0.003
-    # 2016 09 05 at RKN between 1 and 8 UT
-    # 2017 02 04 at RKN between 4 and 7 UT
-    # 2016 11 05 at RKN between 0 and 8 UT
+    # 2016 09 05 at RKN between 1 and 8 UT.  t_diff = 0
+    # 2017 02 04 at RKN between 4 and 7 UT.  t_diff = 0.003
+    # 2016 11 05 at RKN between 0 and 8 UT.  elevation angle data doesn't make sense but I used t_diff = 0.003
 
     year = "2016"  # yyyy
-    month = "11"  # mm
+    month = "09"  # mm
     day = "05"  # dd
 
     station = "rkn"
-    start_hour = 0  # Start and end times must be integer values for the loop
+    start_hour = 1  # Start and end times must be integer values for the loop
     end_hour = 8
     time_interval_s = 60  # seconds
 
