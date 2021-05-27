@@ -3,7 +3,6 @@ import math
 import os
 import time
 import pathlib
-import statistics
 
 import numpy as np
 import pandas as pd
@@ -26,7 +25,7 @@ if __name__ == '__main__':
     end_hour = 4
 
     h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range, it is flagged
-    elv_ratio_limits = [0.92, 1.08]  # Elv ratio limits.  If an elev ratio is outside of this range, it is flagged
+    elv_ratio_limits = [0.88, 1.12]  # Elv ratio limits.  If an elev ratio is outside of this range, it is flagged
     t_diff = 0.003  # Elevation angle correction in microseconds
 
     start_date_time = year + "-" + month + "-" + day + " " + str(start_hour) + ":00:00"
