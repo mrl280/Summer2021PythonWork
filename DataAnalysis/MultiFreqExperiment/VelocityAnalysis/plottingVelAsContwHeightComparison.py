@@ -20,16 +20,16 @@ if __name__ == '__main__':
     SAVE_PLOTS = True
     SHOW_PLOTS = False
 
-    year = "2017"  # yyyy
-    month = "10"  # mm
-    day = "23"  # dd
+    year = "2016"  # yyyy
+    month = "09"  # mm
+    day = "05"  # dd
 
     station = "rkn"
-    gates = [10, 30]
+    gates = [10, 40]
     data_match_type = "Median"  # "Matched" or "Raw"
     count_min = 4  # Only used for median matched data
 
-    start_hour = 4
+    start_hour = 1
     end_hour = 8
 
     show_scatter = False
@@ -65,9 +65,10 @@ if __name__ == '__main__':
     if SHOW_PLOTS:
         time_chunks = 1
     else:
-        time_chunks = 8
+        time_chunks = (end_hour - start_hour) * 2
 
     for time_chunk in range(time_chunks):
+
         start_time = start_hour + time_chunk * 0.5
         end_time = (start_hour + 0.5) + time_chunk * 0.5
 
@@ -161,38 +162,59 @@ if __name__ == '__main__':
         # Compute binned velocity counts
         n_bins_vel = 48  # 25 m/s bins
         contour_range_vel = [ax1[0][0].get_ylim(), ax1[0][0].get_xlim()]
-        binned_counts_10_12_vel, bin_xedges_vel, bin_yedges_vel, bin_numbers_vel = stats.binned_statistic_2d(
-            df_10_12['vel12'], df_10_12['vel10'], values=None,
-            statistic='count', bins=[n_bins_vel, n_bins_vel], range=contour_range_vel)
+        try:
+            binned_counts_10_12_vel, bin_xedges_vel, bin_yedges_vel, bin_numbers_vel = stats.binned_statistic_2d(
+                df_10_12['vel12'], df_10_12['vel10'], values=None,
+                statistic='count', bins=[n_bins_vel, n_bins_vel], range=contour_range_vel)
+        except:
+            pass
 
-        binned_counts_13_12_vel, i, ii, iii = stats.binned_statistic_2d(
-            df_13_12['vel12'], df_13_12['vel13'], values=None,
-            statistic='count', bins=[n_bins_vel, n_bins_vel], range=contour_range_vel)
+        try:
+            binned_counts_13_12_vel, i, ii, iii = stats.binned_statistic_2d(
+                df_13_12['vel12'], df_13_12['vel13'], values=None,
+                statistic='count', bins=[n_bins_vel, n_bins_vel], range=contour_range_vel)
+        except:
+            pass
 
-        binned_counts_14_12_vel, j, jj, jjj = stats.binned_statistic_2d(
-            df_14_12['vel12'], df_14_12['vel14'], values=None,
-            statistic='count', bins=[n_bins_vel, n_bins_vel], range=contour_range_vel)
+        try:
+            binned_counts_14_12_vel, j, jj, jjj = stats.binned_statistic_2d(
+                df_14_12['vel12'], df_14_12['vel14'], values=None,
+                statistic='count', bins=[n_bins_vel, n_bins_vel], range=contour_range_vel)
+        except:
+            pass
 
         # Compute bin centers, these will be the same for all frequency comparisons
-        bin_xwidth_vel = (bin_xedges_vel[1] - bin_xedges_vel[0])
-        bin_ywidth_vel = (bin_yedges_vel[1] - bin_yedges_vel[0])
-        bin_xcenters_vel = bin_xedges_vel[1:] - bin_xwidth_vel / 2
-        bin_ycenters_vel = bin_yedges_vel[1:] - bin_ywidth_vel / 2
+        try:
+            bin_xwidth_vel = (bin_xedges_vel[1] - bin_xedges_vel[0])
+            bin_ywidth_vel = (bin_yedges_vel[1] - bin_yedges_vel[0])
+            bin_xcenters_vel = bin_xedges_vel[1:] - bin_xwidth_vel / 2
+            bin_ycenters_vel = bin_yedges_vel[1:] - bin_ywidth_vel / 2
+        except:
+            continue
 
         # Compute binned height counts
         n_bins_h = 32  # 5 km bins
         contour_range_h = [ax1[0][1].get_ylim(), ax1[0][1].get_xlim()]
-        binned_counts_10_12_h, bin_xedges_h, bin_yedges_h, bin_numbers_h = stats.binned_statistic_2d(
-            df_10_12['height12'], df_10_12['height10'], values=None,
-            statistic='count', bins=[n_bins_h, n_bins_h], range=contour_range_h)
+        try:
+            binned_counts_10_12_h, bin_xedges_h, bin_yedges_h, bin_numbers_h = stats.binned_statistic_2d(
+                df_10_12['height12'], df_10_12['height10'], values=None,
+                statistic='count', bins=[n_bins_h, n_bins_h], range=contour_range_h)
+        except:
+            pass
 
-        binned_counts_13_12_h, k, kk, kkk = stats.binned_statistic_2d(
-            df_13_12['height12'], df_13_12['height13'], values=None,
-            statistic='count', bins=[n_bins_h, n_bins_h], range=contour_range_h)
+        try:
+            binned_counts_13_12_h, k, kk, kkk = stats.binned_statistic_2d(
+                df_13_12['height12'], df_13_12['height13'], values=None,
+                statistic='count', bins=[n_bins_h, n_bins_h], range=contour_range_h)
+        except:
+            pass
 
-        binned_counts_14_12_h, l, ll, lll = stats.binned_statistic_2d(
-            df_14_12['height12'], df_14_12['height14'], values=None,
-            statistic='count', bins=[n_bins_h, n_bins_h], range=contour_range_h)
+        try:
+            binned_counts_14_12_h, l, ll, lll = stats.binned_statistic_2d(
+                df_14_12['height12'], df_14_12['height14'], values=None,
+                statistic='count', bins=[n_bins_h, n_bins_h], range=contour_range_h)
+        except:
+            pass
 
         # Compute bin centers, these will be the same for all frequency comparisons
         bin_xwidth_h = (bin_xedges_h[1] - bin_xedges_h[0])
