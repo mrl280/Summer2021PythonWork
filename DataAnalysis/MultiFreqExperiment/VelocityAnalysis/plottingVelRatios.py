@@ -22,15 +22,15 @@ if __name__ == '__main__':
     SHOW_PLOTS = False
 
     year = "2016"  # yyyy
-    month = "10"  # mm
-    day = "23"  # dd
+    month = "11"  # mm
+    day = "05"  # dd
 
     station = "rkn"
-    gates = [10, 30]
-    data_match_type = "Median"     # "Matched" or "Raw"
+    gates = [10, 40]
+    data_match_type = "Raw"     # "Median" or "Raw"
     count_min = 4   # Only used for median matched data
 
-    start_hour = 4
+    start_hour = 0
     end_hour = 8
 
     mnemonic = station.upper()
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     if SHOW_PLOTS:
         time_chunks = 1
     else:
-        time_chunks = 8
+        time_chunks = (end_hour - start_hour) * 2
 
     for time_chunk in range(time_chunks):
         start_time = start_hour + time_chunk * 0.5
