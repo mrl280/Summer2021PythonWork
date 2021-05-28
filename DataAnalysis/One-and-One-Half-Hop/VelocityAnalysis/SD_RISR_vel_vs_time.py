@@ -22,17 +22,17 @@ if __name__ == '__main__':
     SAVE_PLOTS = True
     SHOW_PLOTS = False
 
-    year = "2014"  # yyyy
-    month = "03"  # mm
-    day = "04"  # dd
+    year = "2012"  # yyyy
+    month = "10"  # mm
+    day = "15"  # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
-    SD_gate_range = [30, 40]
+    SD_gate_range = [25, 32]
 
     RISR_station = "ran"
     RISR_wd_beam_range = [5, 5]
-    resolution = 5  # minutes
+    resolution = 1  # minutes
 
     SD_numonic = SD_station.upper()
     if RISR_station == "ran":
