@@ -7,7 +7,7 @@ def get_df_multi_event(file_name=None, flag=None):
     Get a dataframe with data for multiple events
     :param file_name: str: The name of the pickled data frame you would like to use.  e.g. "event_summary"
     :param flag: str: optional: only events that have this flag will be considered
-    :return:
+    :return: a dataframe with data for multiple events
     """
 
     # Check the file_name
