@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     # Save the dataframe to file
     loc_root = str(pathlib.Path().absolute())
-    out_dir = loc_root + "/VelocityAnalysis/data"
+    out_dir = loc_root + "/data"
     out_file = out_dir + "/" + file_name + ".pkl"
     print("Saving event summary as " + out_file)
     df.to_pickle(out_file)
