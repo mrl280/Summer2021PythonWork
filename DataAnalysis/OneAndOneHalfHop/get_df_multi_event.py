@@ -16,10 +16,18 @@ def get_df_multi_event(file_name=None, flag=None):
         file_name = "event_summary.pkl"
 
     # Read in the data
-    loc_root = pathlib.Path().absolute()
-    event_summary_dir = str(loc_root) + "/data"
-    event_summary_path = event_summary_dir + "/" + file_name + ".pkl"
-    event_summary = pd.read_pickle(event_summary_path)
+    try:
+        # This works if it is called from the same level
+        loc_root = pathlib.Path().absolute()
+        event_summary_dir = str(loc_root) + "/data"
+        event_summary_path = event_summary_dir + "/" + file_name + ".pkl"
+        event_summary = pd.read_pickle(event_summary_path)
+    except:
+        # This works if we are calling from a sub-folder
+        loc_root = pathlib.Path().absolute().parent
+        event_summary_dir = str(loc_root) + "/data"
+        event_summary_path = event_summary_dir + "/" + file_name + ".pkl"
+        event_summary = pd.read_pickle(event_summary_path)
 
     if flag is not None:
         # Only keep the rows that are flagged
@@ -48,7 +56,6 @@ def get_df_multi_event(file_name=None, flag=None):
         df = pd.read_pickle(in_file)
         df = df.loc[(df['hour'] >= start_hour_UT) & (df['hour'] <= end_hour_UT)]
         df.reset_index(drop=True, inplace=True)
-        print(df)
 
         # Loop through every other event and add the data to the dataframe
         for event in range(number_of_events):

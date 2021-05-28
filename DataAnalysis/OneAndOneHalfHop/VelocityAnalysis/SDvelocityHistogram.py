@@ -1,7 +1,7 @@
 import pandas as pd
 
 import pathlib
-
+from DataAnalysis.OneAndOneHalfHop.get_df_multi_event import get_df_multi_event
 
 def SDvelocityHistogram(file_name, flag):
     """
@@ -18,7 +18,7 @@ def SDvelocityHistogram(file_name, flag):
     if not isinstance(flag, str) or not isinstance(file_name, str):
         raise Exception("Error: both file_name and flag must be strings.")
 
-    # df = get_df_multi_event()
+    df = get_df_multi_event(file_name, flag)
 
     print(df)
 
