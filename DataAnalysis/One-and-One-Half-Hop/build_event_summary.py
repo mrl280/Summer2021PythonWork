@@ -19,8 +19,9 @@ if __name__ == '__main__':
                     "day",
                     "start_hour_UT",  # int
                     "end_hour_UT",    # int
-                    "quality_flag"
-                    # I am sure we will track more flags in the future
+
+                    # flags
+                    "for_vel_hist"
                     ]
     df = pd.DataFrame(columns=column_names)
 
@@ -34,7 +35,7 @@ if __name__ == '__main__':
                     'day': 11,
                     'start_hour_UT': 16,
                     'end_hour_UT': 22,
-                    'quality_flag': 1,
+                    'for_vel_hist': 1,
                     }, ignore_index=True)
 
     # Notes:
@@ -45,7 +46,7 @@ if __name__ == '__main__':
                     'day': 12,
                     'start_hour_UT': 18,
                     'end_hour_UT': 21,
-                    'quality_flag': 1
+                    'for_vel_hist': 1
                     }, ignore_index=True)
 
     # Notes:
@@ -56,7 +57,7 @@ if __name__ == '__main__':
                     'day': 14,
                     'start_hour_UT': 17,
                     'end_hour_UT': 21,
-                    'quality_flag': 1
+                    'for_vel_hist': 1
                     }, ignore_index=True)
 
     # Notes:
@@ -67,7 +68,7 @@ if __name__ == '__main__':
                     'day': 15,
                     'start_hour_UT': 18,
                     'end_hour_UT': 20,
-                    'quality_flag': 1
+                    'for_vel_hist': 1
                     }, ignore_index=True)
 
 
