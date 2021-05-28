@@ -4,8 +4,8 @@ import pathlib
 
 if __name__ == '__main__':
     """
-    This script builds a dataframe containing relevant events
-    This dataframe can then be used to loop through all relevant events
+    This script builds a dataframe summarizing the relevant events
+    The dataframe is pickled, so it can later be used to loop through the relevant events
     
     If you only want to process a sub-set of the events in the database, use a flag
     """
