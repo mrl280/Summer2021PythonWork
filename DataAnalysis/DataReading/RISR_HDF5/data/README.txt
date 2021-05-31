@@ -6,7 +6,7 @@ RISR‐N is typically scheduled to run for 5–6 days per month in a common mode
 Sometimes there may be seemingly duplicate files.  If so, the files differ in integration times (/Data/Array Layout/1D Parameters/inttms).
 The longer the integration time, the fewer data points held within a file.
 
-Density (Ne) data is corrected.  I believe Te/Ti is used to correct.
+Density (Ne) data is uncorrected.  I believe Te/Ti is used to correct.
 
 Newer files provide data access through both a table layout and an array layout.
 The array layout is more user friendly, but older data only supports the table layout
