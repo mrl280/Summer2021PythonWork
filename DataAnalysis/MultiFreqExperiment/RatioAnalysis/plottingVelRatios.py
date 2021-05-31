@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
-    in_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station + "/" + station + year + month + day
+    in_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/data/" + station + "/" + station + year + month + day
     in_file = in_dir + "/" + station + year + month + day + "." + \
               data_match_type + "MatchedData.1gg" + str(second_resolution) + "s.pkl"
     df = pd.read_pickle(in_file)
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     df = df.loc[(df['gate'] >= gates[0]) & (df['gate'] <= gates[1])]
     df.reset_index(drop=True, inplace=True)
 
-    out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/out/"
+    out_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/out/"
 
     normal_ratio_c = "k"
     ylarger_ratio_c = "b"

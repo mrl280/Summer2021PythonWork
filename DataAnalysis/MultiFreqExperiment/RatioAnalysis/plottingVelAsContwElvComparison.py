@@ -14,7 +14,7 @@ from scipy import stats
 
 if __name__ == '__main__':
     """
-    Plot velocity comparison (as contour) beside height comparison
+    Plot velocity comparison (as contour) beside elevation comparison (also as contour)
     """
 
     SAVE_PLOTS = True
@@ -22,15 +22,15 @@ if __name__ == '__main__':
 
     year = "2016"  # yyyy
     month = "09"  # mm
-    day = "05"  # dd
+    day = "26"  # dd
 
     station = "rkn"
-    gates = [10, 40]
-    data_match_type = "Median"  # "Matched" or "Raw"
+    gates = [10, 30]
+    data_match_type = "Raw"  # "Matched" or "Raw"
     count_min = 4  # Only used for median matched data
 
-    start_hour = 1
-    end_hour = 8
+    start_hour = 0
+    end_hour = 4
 
     show_scatter = False
 
@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
-    in_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station + "/" + station + year + month + day
+    in_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/data/" + station + "/" + station + year + month + day
     in_file = in_dir + "/" + station + year + month + day + "." + \
               data_match_type + "MatchedData.1gg" + str(second_resolution) + "s.pkl"
     df = pd.read_pickle(in_file)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     df = df.loc[(df['gate'] >= gates[0]) & (df['gate'] <= gates[1])]
     df.reset_index(drop=True, inplace=True)
 
-    out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/out/"
+    out_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/out/"
 
     height_scat_c = 'k'
     vel_scat_c = 'k'
@@ -110,7 +110,7 @@ if __name__ == '__main__':
         n_cols = 2
         fig1, ax1 = plt.subplots(figsize=(8, 9), dpi=300, nrows=n_rows, ncols=n_cols)
         plt.subplots_adjust(hspace=0.4, wspace=0.4)
-        fig1.suptitle("Echo Frequency Dependence: Virtual Height Comparison"
+        fig1.suptitle("Echo Frequency Dependence: Velocity Comparison w Elevation Angle"
                       + "\n" + mnemonic + " " + year + "." + month + "." + day
                       + "; " + gate_label + "; " + data_match_type + " Matched Data"
                       + "; " + str(start_time) + "-" + str(end_time) + " UT"
@@ -137,15 +137,13 @@ if __name__ == '__main__':
             ax1[row][0].tick_params(axis='x', labelrotation=25)
 
             # Second row will be height comparison plots
-            ax1[row][1].set_xlabel("12 MHz Virtual Heights [km]")
-            ax1[row][1].set_ylim([40, 200])
-            ax1[row][1].set_xlim([40, 200])
+            ax1[row][1].set_xlabel("12 MHz Elevation Angles [deg]")
+            ax1[row][1].set_ylim([0, 40])
+            ax1[row][1].set_xlim([0, 40])
             ax1[row][1].yaxis.set_minor_locator(MultipleLocator(10))
             ax1[row][1].xaxis.set_minor_locator(MultipleLocator(10))
             ax1[row][1].grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5)
             ax1[row][1].grid(b=True, which='minor', axis='both', linestyle='--', linewidth=0.2)
-            ax1[row][1].plot(ax1[row][1].get_ylim(), [120, 120], linestyle='-', linewidth=0.5, color='black')
-            ax1[row][1].plot([120, 120], ax1[row][1].get_xlim(), linestyle='-', linewidth=0.5, color='black')
             ax1[row][1].plot([ax1[row][1].get_ylim()[0], ax1[row][1].get_ylim()[1]],
                              [ax1[row][1].get_xlim()[0], ax1[row][1].get_xlim()[1]],
                              linestyle='--', linewidth=0.75, color='red')
@@ -155,9 +153,9 @@ if __name__ == '__main__':
         ax1[1][0].set_ylabel("13 MHz Velocities [m/s]")
         ax1[2][0].set_ylabel("14 MHz Velocities [m/s]")
 
-        ax1[0][1].set_ylabel("10 MHz Virtual Heights [km]")
-        ax1[1][1].set_ylabel("13 MHz Virtual Heights [km]")
-        ax1[2][1].set_ylabel("14 MHz Virtual Heights [km]")
+        ax1[0][1].set_ylabel("10 MHz Elevation Angles [deg]")
+        ax1[1][1].set_ylabel("13 MHz Elevation Angles [deg]")
+        ax1[2][1].set_ylabel("14 MHz Elevation Angles [deg]")
 
         # Compute binned velocity counts
         n_bins_vel = 48  # 25 m/s bins
@@ -193,34 +191,34 @@ if __name__ == '__main__':
             continue
 
         # Compute binned height counts
-        n_bins_h = 32  # 5 km bins
+        n_bins_h = 20  # 2 deg bins
         contour_range_h = [ax1[0][1].get_ylim(), ax1[0][1].get_xlim()]
         try:
-            binned_counts_10_12_h, bin_xedges_h, bin_yedges_h, bin_numbers_h = stats.binned_statistic_2d(
-                df_10_12['height12'], df_10_12['height10'], values=None,
+            binned_counts_10_12_elv, bin_xedges_elv, bin_yedges_elv, bin_numbers_elv = stats.binned_statistic_2d(
+                df_10_12['elv12'], df_10_12['elv10'], values=None,
                 statistic='count', bins=[n_bins_h, n_bins_h], range=contour_range_h)
         except:
             pass
 
         try:
-            binned_counts_13_12_h, k, kk, kkk = stats.binned_statistic_2d(
-                df_13_12['height12'], df_13_12['height13'], values=None,
+            binned_counts_13_12_elv, k, kk, kkk = stats.binned_statistic_2d(
+                df_13_12['elv12'], df_13_12['elv13'], values=None,
                 statistic='count', bins=[n_bins_h, n_bins_h], range=contour_range_h)
         except:
             pass
 
         try:
-            binned_counts_14_12_h, l, ll, lll = stats.binned_statistic_2d(
-                df_14_12['height12'], df_14_12['height14'], values=None,
+            binned_counts_14_12_elv, l, ll, lll = stats.binned_statistic_2d(
+                df_14_12['elv12'], df_14_12['elv14'], values=None,
                 statistic='count', bins=[n_bins_h, n_bins_h], range=contour_range_h)
         except:
             pass
 
         # Compute bin centers, these will be the same for all frequency comparisons
-        bin_xwidth_h = (bin_xedges_h[1] - bin_xedges_h[0])
-        bin_ywidth_h = (bin_yedges_h[1] - bin_yedges_h[0])
-        bin_xcenters_h = bin_xedges_h[1:] - bin_xwidth_h / 2
-        bin_ycenters_h = bin_yedges_h[1:] - bin_ywidth_h / 2
+        bin_xwidth_elv = (bin_xedges_elv[1] - bin_xedges_elv[0])
+        bin_ywidth_elv = (bin_yedges_elv[1] - bin_yedges_elv[0])
+        bin_xcenters_elv = bin_xedges_elv[1:] - bin_xwidth_elv / 2
+        bin_ycenters_elv = bin_yedges_elv[1:] - bin_ywidth_elv / 2
 
         # Modify the 'jet' colour map
         jet = cm.get_cmap('jet', 256)
@@ -235,53 +233,53 @@ if __name__ == '__main__':
         cont = ax1[0][0].contourf(bin_xcenters_vel, bin_ycenters_vel, binned_counts_10_12_vel.transpose(),
                                   5, cmap=newcmp)
         fig1.colorbar(cont, ax=ax1[0][0])
-        cont = ax1[0][1].contourf(bin_xcenters_h, bin_ycenters_h, binned_counts_10_12_h.transpose(),
+        cont = ax1[0][1].contourf(bin_xcenters_elv, bin_ycenters_elv, binned_counts_10_12_elv.transpose(),
                                   5, cmap=newcmp)
         fig1.colorbar(cont, ax=ax1[0][1])
         if show_scatter:
             ax1[0][0].scatter(df_10_12['vel12'], df_10_12['vel10'],
                               s=pts_size, color=height_scat_c, marker='.', zorder=3)
-            ax1[0][1].scatter(df_10_12['height12'], df_10_12['height10'],
+            ax1[0][1].scatter(df_10_12['elv12'], df_10_12['elv10'],
                               s=pts_size, color=height_scat_c, marker='.', zorder=3)
         ax1[0][0].text(-490, 425, 'n=' + str(df_10_12.shape[0]), fontsize=12, c='k')
-        ax1[0][1].text(52, 177, 'n=' + str(df_10_12.shape[0]), fontsize=12, c='k')
+        ax1[0][1].text(2, 34, 'n=' + str(df_10_12.shape[0]), fontsize=12, c='k')
 
         # Plot 13 to 12 Comparison data in ROW: 1
         cont = ax1[1][0].contourf(bin_xcenters_vel, bin_ycenters_vel, binned_counts_13_12_vel.transpose(),
                                   5, cmap=newcmp)
         fig1.colorbar(cont, ax=ax1[1][0])
-        cont = ax1[1][1].contourf(bin_xcenters_h, bin_ycenters_h, binned_counts_13_12_h.transpose(),
+        cont = ax1[1][1].contourf(bin_xcenters_elv, bin_ycenters_elv, binned_counts_13_12_elv.transpose(),
                                   5, cmap=newcmp)
         fig1.colorbar(cont, ax=ax1[1][1])
         if show_scatter:
             ax1[1][0].scatter(df_13_12['vel12'], df_13_12['vel13'],
                               s=pts_size, color=height_scat_c, marker='.', zorder=3)
-            ax1[1][1].scatter(df_13_12['height12'], df_13_12['height13'],
+            ax1[1][1].scatter(df_13_12['elv12'], df_13_12['elv13'],
                               s=pts_size, color=height_scat_c, marker='.', zorder=3)
         ax1[1][0].text(-490, 425, 'n=' + str(df_13_12.shape[0]), fontsize=12, c='k')
-        ax1[1][1].text(52, 177, 'n=' + str(df_13_12.shape[0]), fontsize=12, c='k')
+        ax1[1][1].text(2, 34, 'n=' + str(df_13_12.shape[0]), fontsize=12, c='k')
 
         # Plot 14 to 12 Comparison data in ROW: 2
         cont = ax1[2][0].contourf(bin_xcenters_vel, bin_ycenters_vel, binned_counts_14_12_vel.transpose(),
                                   5, cmap=newcmp)
         fig1.colorbar(cont, ax=ax1[2][0])
-        cont = ax1[2][1].contourf(bin_xcenters_h, bin_ycenters_h, binned_counts_14_12_h.transpose(),
+        cont = ax1[2][1].contourf(bin_xcenters_elv, bin_ycenters_elv, binned_counts_14_12_elv.transpose(),
                                   5, cmap=newcmp)
         fig1.colorbar(cont, ax=ax1[2][1])
         if show_scatter:
             ax1[2][0].scatter(df_14_12['vel12'], df_14_12['vel14'],
                               s=pts_size, color=height_scat_c, marker='.', zorder=3)
-            ax1[2][1].scatter(df_14_12['height12'], df_14_12['height14'],
+            ax1[2][1].scatter(df_14_12['elv12'], df_14_12['elv14'],
                               s=pts_size, color=height_scat_c, marker='.', zorder=3)
         ax1[2][0].text(-490, 425, 'n=' + str(df_14_12.shape[0]), fontsize=12, c='k')
-        ax1[2][1].text(52, 177, 'n=' + str(df_14_12.shape[0]), fontsize=12, c='k')
+        ax1[2][1].text(2, 34, 'n=' + str(df_14_12.shape[0]), fontsize=12, c='k')
 
         if SHOW_PLOTS:
             plt.show()
 
         if SAVE_PLOTS:
             # Save the files as a temp file
-            fig1.savefig(out_dir + "/" + mnemonic + "_velContourWithHeights_" + year + month + day
+            fig1.savefig(out_dir + "/" + mnemonic + "_velContourWithElv_" + year + month + day
                          + "_" + chr(ord('a') + time_chunk) + " " + str(start_time) + "-" + str(end_time) + "UT"
                          + "_temp.pdf", format='pdf', dpi=300)
 
@@ -290,7 +288,7 @@ if __name__ == '__main__':
         merger = PdfFileMerger()
         for pdf in glob.iglob("out/*_temp.pdf"):
             merger.append(pdf)
-        with open(out_dir + "/" + mnemonic + "_velContourWithHeights_" + year + month + day
+        with open(out_dir + "/" + mnemonic + "_velContourWithElv_" + year + month + day
                   + "_gg" + str(gates[0]) + "-" + str(gates[1]) + "_" + data_match_type + ".pdf",
                   "wb") as fout:
             merger.write(fout)

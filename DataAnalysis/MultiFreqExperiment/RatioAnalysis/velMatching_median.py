@@ -281,7 +281,7 @@ if __name__ == '__main__':
                                                            elv_ratio_14over10 <= elv_ratio_limits[1])
 
     # Ensure out directory
-    out_dir = loc_root + "/MultiFreqExperiment/VelocityAnalysis/data/" + station + "/" + station + year + month + day
+    out_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/data/" + station + "/" + station + year + month + day
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
