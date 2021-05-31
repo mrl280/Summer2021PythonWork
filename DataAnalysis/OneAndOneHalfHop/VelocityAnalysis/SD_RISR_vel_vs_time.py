@@ -101,7 +101,7 @@ if __name__ == '__main__':
         RISR_beam_string = "WD Beams " + str(RISR_wd_beam_range[0]) + "-" + str(RISR_wd_beam_range[1])
 
     # Ensure out directory
-    out_dir = loc_root + "/OneAndOneHalfHop/RatioAnalysis/out/" + year + month + day
+    out_dir = loc_root + "/OneAndOneHalfHop/VelocityAnalysis/out/" + year + month + day
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
