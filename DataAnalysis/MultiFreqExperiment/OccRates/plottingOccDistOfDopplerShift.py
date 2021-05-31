@@ -1,16 +1,15 @@
 import calendar
-import math
 import os
-import time
 import pathlib
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib import cm
 from matplotlib.colors import ListedColormap
-
 from scipy import stats
+
 from DataAnalysis.DataReading.SD.basic_SD_df_filter import basic_SD_df_filter
 from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
 
