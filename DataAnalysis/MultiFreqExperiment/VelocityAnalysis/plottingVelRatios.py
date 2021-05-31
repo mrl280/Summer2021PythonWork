@@ -26,12 +26,14 @@ if __name__ == '__main__':
     day = "26"  # dd
 
     station = "rkn"
-    gates = [10, 30]
+    gates = [19, 21]
     data_match_type = "Raw"     # "Median" or "Raw"
     count_min = 4   # Only used for median matched data
 
     start_hour = 0
     end_hour = 4
+
+    height_max = 200  # km  All points from heights above this are not considered
 
     # Whether or not to plot the coloured points that represent measurements from different virtual heights
     plot_diffHeight_flagged_data = False
@@ -83,22 +85,28 @@ if __name__ == '__main__':
         if data_match_type == "Median":
             df_10_12 = time_restricted_df[(time_restricted_df['count10'] >= count_min)
                                           & (time_restricted_df['count12'] >= count_min)
-                                          & time_restricted_df['10over12'].notna()]
+                                          & (time_restricted_df['10over12'].notna())
+                                          ]
             df_13_12 = time_restricted_df[(time_restricted_df['count13'] >= count_min)
                                           & (time_restricted_df['count12'] >= count_min)
-                                          & time_restricted_df['13over12'].notna()]
+                                          & (time_restricted_df['13over12'].notna())
+                                          ]
             df_14_12 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
                                           & (time_restricted_df['count12'] >= count_min)
-                                          & time_restricted_df['14over12'].notna()]
+                                          & (time_restricted_df['14over12'].notna())
+                                          ]
             df_14_13 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
                                           & (time_restricted_df['count13'] >= count_min)
-                                          & time_restricted_df['14over13'].notna()]
+                                          & (time_restricted_df['14over13'].notna())
+                                          ]
             df_13_10 = time_restricted_df[(time_restricted_df['count13'] >= count_min)
                                           & (time_restricted_df['count10'] >= count_min)
-                                          & time_restricted_df['13over10'].notna()]
+                                          & (time_restricted_df['13over10'].notna())
+                                          ]
             df_14_10 = time_restricted_df[(time_restricted_df['count14'] >= count_min)
                                           & (time_restricted_df['count10'] >= count_min)
-                                          & time_restricted_df['14over10'].notna()]
+                                          & (time_restricted_df['14over10'].notna())
+                                          ]
         elif data_match_type == "Raw":
             df_10_12 = time_restricted_df[time_restricted_df['10over12'].notna()]
             df_13_12 = time_restricted_df[time_restricted_df['13over12'].notna()]
@@ -108,6 +116,14 @@ if __name__ == '__main__':
             df_14_10 = time_restricted_df[time_restricted_df['14over10'].notna()]
         else:
             raise Exception("Error: data match type " + data_match_type + " not recognized.")
+
+        # Remove points that are above the height maximum
+        df_10_12 = df_10_12.loc[(df_10_12['height10'] <= height_max) & (df_10_12['height12'] <= height_max)]
+        df_13_12 = df_13_12.loc[(df_13_12['height13'] <= height_max) & (df_13_12['height12'] <= height_max)]
+        df_14_12 = df_14_12.loc[(df_14_12['height14'] <= height_max) & (df_14_12['height12'] <= height_max)]
+        df_14_13 = df_14_13.loc[(df_14_13['height14'] <= height_max) & (df_14_13['height13'] <= height_max)]
+        df_13_10 = df_13_10.loc[(df_13_10['height13'] <= height_max) & (df_13_10['height10'] <= height_max)]
+        df_14_10 = df_14_10.loc[(df_14_10['height14'] <= height_max) & (df_14_10['height10'] <= height_max)]
 
         # We will have 2 plots, one for vel v vel ratios and one for ratios v time
         # First lets just deal with the first plot
@@ -140,7 +156,7 @@ if __name__ == '__main__':
                 ax1[row][col].plot([0, 0], ax1[row][col].get_xlim(), linestyle='-', linewidth=0.5, color='black')
                 ax1[row][col].plot([ax1[row][col].get_ylim()[0], ax1[row][col].get_ylim()[1]],
                                    [ax1[row][col].get_xlim()[0], ax1[row][col].get_xlim()[1]],
-                                   linestyle='-', linewidth=1, color='m')
+                                   linestyle='-', linewidth=1, color='m', zorder=4)
 
         ax1[0][1].set_xlabel("13 MHz Velocities [m/s]")
 
