@@ -22,16 +22,19 @@ if __name__ == '__main__':
     SHOW_PLOTS = False
 
     year = "2016"  # yyyy
-    month = "11"  # mm
-    day = "05"  # dd
+    month = "09"  # mm
+    day = "26"  # dd
 
     station = "rkn"
-    gates = [10, 40]
+    gates = [10, 30]
     data_match_type = "Raw"     # "Median" or "Raw"
     count_min = 4   # Only used for median matched data
 
     start_hour = 0
-    end_hour = 8
+    end_hour = 4
+
+    # Whether or not to plot the coloured points that represent measurements from different virtual heights
+    plot_diffHeight_flagged_data = False
 
     mnemonic = station.upper()
     gate_label = "gg: " + str(gates[0]) + "-" + str(gates[1])
@@ -150,77 +153,101 @@ if __name__ == '__main__':
         ax1[2][1].set_ylabel("14 MHz Velocities [m/s]")
 
         # Plot 10 to 12 Comparison data in ROW: 0, COL: 0
-        ax1[0][0].scatter(df_10_12.loc[df_10_12['diffHeightFlag_10largerthan12'], 'vel12'],
-                          df_10_12.loc[df_10_12['diffHeightFlag_10largerthan12'], 'vel10'],
-                          s=pts_size, color=ylarger_ratio_c, marker='.', zorder=4, label="y height larger than x height")
-        ax1[0][0].scatter(df_10_12.loc[df_10_12['diffHeightFlag_10lessthan12'], 'vel12'],
-                          df_10_12.loc[df_10_12['diffHeightFlag_10lessthan12'], 'vel10'],
-                          s=pts_size, color=xlarger_ratio_c, marker='.', zorder=4, label="x height larger than y height")
         ax1[0][0].scatter(df_10_12.loc[df_10_12['diffHeightFlag_10about12'], 'vel12'],
                           df_10_12.loc[df_10_12['diffHeightFlag_10about12'], 'vel10'],
                           s=pts_size, color=normal_ratio_c, marker='.', zorder=3,
                           label="Similar Heights")
-        ax1[0][0].text(-490, 425, 'n=' + str(df_10_12.shape[0]), fontsize=12, c='purple')
+        if plot_diffHeight_flagged_data:
+            ax1[0][0].scatter(df_10_12.loc[df_10_12['diffHeightFlag_10largerthan12'], 'vel12'],
+                              df_10_12.loc[df_10_12['diffHeightFlag_10largerthan12'], 'vel10'],
+                              s=pts_size, color=ylarger_ratio_c, marker='.', zorder=4, label="y height larger than x height")
+            ax1[0][0].scatter(df_10_12.loc[df_10_12['diffHeightFlag_10lessthan12'], 'vel12'],
+                              df_10_12.loc[df_10_12['diffHeightFlag_10lessthan12'], 'vel10'],
+                              s=pts_size, color=xlarger_ratio_c, marker='.', zorder=4, label="x height larger than y height")
+            ax1[0][0].text(-490, 425, 'n=' + str(df_10_12.shape[0]), fontsize=12, c='purple')
+        else:
+            ax1[0][0].text(-490, 425, 'n=' + str((df_13_10.loc[df_13_10['diffHeightFlag_10about12']]).shape[0]),
+                           fontsize=12, c='k')
 
         # Plot 13 to 12 Comparison data in ROW: 1, COL: 0
-        ax1[1][0].scatter(df_13_12.loc[df_13_12['diffHeightFlag_13largerthan12'], 'vel12'],
-                          df_13_12.loc[df_13_12['diffHeightFlag_13largerthan12'], 'vel13'],
-                          s=4, color=ylarger_ratio_c, marker='.', zorder=4)
-        ax1[1][0].scatter(df_13_12.loc[df_13_12['diffHeightFlag_13lessthan12'], 'vel12'],
-                          df_13_12.loc[df_13_12['diffHeightFlag_13lessthan12'], 'vel13'],
-                          s=4, color=xlarger_ratio_c, marker='.', zorder=4)
         ax1[1][0].scatter(df_13_12.loc[df_13_12['diffHeightFlag_13about12'], 'vel12'],
                           df_13_12.loc[df_13_12['diffHeightFlag_13about12'], 'vel13'],
                           s=4, color=normal_ratio_c, marker='.', zorder=3)
-        ax1[1][0].text(-490, 425, 'n=' + str(df_13_12.shape[0]), fontsize=12, c='purple')
+        if plot_diffHeight_flagged_data:
+            ax1[1][0].scatter(df_13_12.loc[df_13_12['diffHeightFlag_13largerthan12'], 'vel12'],
+                              df_13_12.loc[df_13_12['diffHeightFlag_13largerthan12'], 'vel13'],
+                              s=4, color=ylarger_ratio_c, marker='.', zorder=4)
+            ax1[1][0].scatter(df_13_12.loc[df_13_12['diffHeightFlag_13lessthan12'], 'vel12'],
+                              df_13_12.loc[df_13_12['diffHeightFlag_13lessthan12'], 'vel13'],
+                              s=4, color=xlarger_ratio_c, marker='.', zorder=4)
+            ax1[1][0].text(-490, 425, 'n=' + str(df_13_12.shape[0]), fontsize=12, c='purple')
+        else:
+            ax1[1][0].text(-490, 425, 'n=' + str((df_13_10.loc[df_13_10['diffHeightFlag_13about12']]).shape[0]),
+                           fontsize=12, c='k')
 
         # Plot 14 to 12 Comparison data in ROW: 2, COL: 0
-        ax1[2][0].scatter(df_14_12.loc[df_14_12['diffHeightFlag_14largerthan12'], 'vel12'],
-                          df_14_12.loc[df_14_12['diffHeightFlag_14largerthan12'], 'vel14'],
-                          s=4, color=ylarger_ratio_c, marker='.', zorder=4)
-        ax1[2][0].scatter(df_14_12.loc[df_14_12['diffHeightFlag_14lessthan12'], 'vel12'],
-                          df_14_12.loc[df_14_12['diffHeightFlag_14lessthan12'], 'vel14'],
-                          s=4, color=xlarger_ratio_c, marker='.', zorder=4)
         ax1[2][0].scatter(df_14_12.loc[df_14_12['diffHeightFlag_14about12'], 'vel12'],
                           df_14_12.loc[df_14_12['diffHeightFlag_14about12'], 'vel14'],
                           s=4, color=normal_ratio_c, marker='.', zorder=3)
-        ax1[2][0].text(-490, 425, 'n=' + str(df_14_12.shape[0]), fontsize=12, c='purple')
+        if plot_diffHeight_flagged_data:
+            ax1[2][0].scatter(df_14_12.loc[df_14_12['diffHeightFlag_14largerthan12'], 'vel12'],
+                              df_14_12.loc[df_14_12['diffHeightFlag_14largerthan12'], 'vel14'],
+                              s=4, color=ylarger_ratio_c, marker='.', zorder=4)
+            ax1[2][0].scatter(df_14_12.loc[df_14_12['diffHeightFlag_14lessthan12'], 'vel12'],
+                              df_14_12.loc[df_14_12['diffHeightFlag_14lessthan12'], 'vel14'],
+                              s=4, color=xlarger_ratio_c, marker='.', zorder=4)
+            ax1[2][0].text(-490, 425, 'n=' + str(df_14_12.shape[0]), fontsize=12, c='purple')
+        else:
+            ax1[2][0].text(-490, 425, 'n=' + str((df_13_10.loc[df_13_10['diffHeightFlag_14about12']]).shape[0]),
+                           fontsize=12, c='k')
 
         # Plot 14 to 13 Comparison data in ROW: 0, COL: 1
-        ax1[0][1].scatter(df_14_13.loc[df_14_13['diffHeightFlag_14largerthan13'], 'vel13'],
-                          df_14_13.loc[df_14_13['diffHeightFlag_14largerthan13'], 'vel14'],
-                          s=4, color=ylarger_ratio_c, marker='.', zorder=4)
-        ax1[0][1].scatter(df_14_13.loc[df_14_13['diffHeightFlag_14lessthan13'], 'vel13'],
-                          df_14_13.loc[df_14_13['diffHeightFlag_14lessthan13'], 'vel14'],
-                          s=4, color=xlarger_ratio_c, marker='.', zorder=4)
         ax1[0][1].scatter(df_14_13.loc[df_14_13['diffHeightFlag_14about13'], 'vel13'],
                           df_14_13.loc[df_14_13['diffHeightFlag_14about13'], 'vel14'],
                           s=4, color=normal_ratio_c, marker='.', zorder=3)
-        ax1[0][1].text(-490, 425, 'n=' + str(df_14_13.shape[0]), fontsize=12, c='purple')
+        if plot_diffHeight_flagged_data:
+            ax1[0][1].scatter(df_14_13.loc[df_14_13['diffHeightFlag_14largerthan13'], 'vel13'],
+                              df_14_13.loc[df_14_13['diffHeightFlag_14largerthan13'], 'vel14'],
+                              s=4, color=ylarger_ratio_c, marker='.', zorder=4)
+            ax1[0][1].scatter(df_14_13.loc[df_14_13['diffHeightFlag_14lessthan13'], 'vel13'],
+                              df_14_13.loc[df_14_13['diffHeightFlag_14lessthan13'], 'vel14'],
+                              s=4, color=xlarger_ratio_c, marker='.', zorder=4)
+            ax1[0][1].text(-490, 425, 'n=' + str(df_14_13.shape[0]), fontsize=12, c='purple')
+        else:
+            ax1[0][1].text(-490, 425, 'n=' + str((df_13_10.loc[df_13_10['diffHeightFlag_14about13']]).shape[0]),
+                           fontsize=12, c='k')
 
         # Plot 13 to 10 Comparison data in ROW: 1, COL: 1
-        ax1[1][1].scatter(df_13_10.loc[df_13_10['diffHeightFlag_13largerthan10'], 'vel10'],
-                          df_13_10.loc[df_13_10['diffHeightFlag_13largerthan10'], 'vel13'],
-                          s=4, color=ylarger_ratio_c, marker='.', zorder=4)
-        ax1[1][1].scatter(df_13_10.loc[df_13_10['diffHeightFlag_13lessthan10'], 'vel10'],
-                          df_13_10.loc[df_13_10['diffHeightFlag_13lessthan10'], 'vel13'],
-                          s=4, color=xlarger_ratio_c, marker='.', zorder=4)
         ax1[1][1].scatter(df_13_10.loc[df_13_10['diffHeightFlag_13about10'], 'vel10'],
                           df_13_10.loc[df_13_10['diffHeightFlag_13about10'], 'vel13'],
                           s=4, color=normal_ratio_c, marker='.', zorder=3)
-        ax1[1][1].text(-490, 425, 'n=' + str(df_13_10.shape[0]), fontsize=12, c='purple')
+        if plot_diffHeight_flagged_data:
+            ax1[1][1].scatter(df_13_10.loc[df_13_10['diffHeightFlag_13largerthan10'], 'vel10'],
+                              df_13_10.loc[df_13_10['diffHeightFlag_13largerthan10'], 'vel13'],
+                              s=4, color=ylarger_ratio_c, marker='.', zorder=4)
+            ax1[1][1].scatter(df_13_10.loc[df_13_10['diffHeightFlag_13lessthan10'], 'vel10'],
+                              df_13_10.loc[df_13_10['diffHeightFlag_13lessthan10'], 'vel13'],
+                              s=4, color=xlarger_ratio_c, marker='.', zorder=4)
+            ax1[1][1].text(-490, 425, 'n=' + str(df_13_10.shape[0]), fontsize=12, c='purple')
+        else:
+            ax1[1][1].text(-490, 425, 'n=' + str((df_13_10.loc[df_13_10['diffHeightFlag_13about10']]).shape[0]),
+                           fontsize=12, c='k')
 
         # Plot 14 to 10 Comparison data in ROW: 2, COL: 1
-        ax1[2][1].scatter(df_14_10.loc[df_14_10['diffHeightFlag_14largerthan10'], 'vel10'],
-                          df_14_10.loc[df_14_10['diffHeightFlag_14largerthan10'], 'vel14'],
-                          s=4, color=ylarger_ratio_c, marker='.', zorder=4)
-        ax1[2][1].scatter(df_14_10.loc[df_14_10['diffHeightFlag_14lessthan10'], 'vel10'],
-                          df_14_10.loc[df_14_10['diffHeightFlag_14lessthan10'], 'vel14'],
-                          s=4, color=xlarger_ratio_c, marker='.', zorder=4)
         ax1[2][1].scatter(df_14_10.loc[df_14_10['diffHeightFlag_14about10'], 'vel10'],
                           df_14_10.loc[df_14_10['diffHeightFlag_14about10'], 'vel14'],
                           s=4, color=normal_ratio_c, marker='.', zorder=3)
-        ax1[2][1].text(-490, 425, 'n=' + str(df_14_10.shape[0]), fontsize=12, c='purple')
+        if plot_diffHeight_flagged_data:
+            ax1[2][1].scatter(df_14_10.loc[df_14_10['diffHeightFlag_14largerthan10'], 'vel10'],
+                              df_14_10.loc[df_14_10['diffHeightFlag_14largerthan10'], 'vel14'],
+                              s=4, color=ylarger_ratio_c, marker='.', zorder=4)
+            ax1[2][1].scatter(df_14_10.loc[df_14_10['diffHeightFlag_14lessthan10'], 'vel10'],
+                              df_14_10.loc[df_14_10['diffHeightFlag_14lessthan10'], 'vel14'],
+                              s=4, color=xlarger_ratio_c, marker='.', zorder=4)
+            ax1[2][1].text(-490, 425, 'n=' + str(df_14_10.shape[0]), fontsize=12, c='purple')
+        else:
+            ax1[2][1].text(-490, 425, 'n=' + str((df_13_10.loc[df_13_10['diffHeightFlag_14about10']]).shape[0]),
+                           fontsize=12, c='k')
 
         # Set up the second plot
         fig2, ax2 = plt.subplots(figsize=(8, 9), dpi=300, nrows=n_rows, ncols=n_cols)
