@@ -1,9 +1,10 @@
 import pandas as pd
 
-import pathlib
+
 from DataAnalysis.OneAndOneHalfHop.get_df_multi_event import get_df_multi_event
 
-def SDvelocityHistogram(file_name, flag):
+
+def SD_velocity_histogram(file_name, flag):
     """
 
     :param file_name: str: The name of the pickled data frame you would like to use.  e.g. "event_summary"
@@ -22,6 +23,8 @@ def SDvelocityHistogram(file_name, flag):
 
     print(df)
 
+    # TODO: The multi-event data is here, now we need to produce histogram
+
 
 if __name__ == '__main__':
     """
@@ -29,4 +32,4 @@ if __name__ == '__main__':
     """
 
     # Create a velocity histogram for a set of flagged events
-    SDvelocityHistogram(file_name="event_summary", flag='for_vel_hist')
+    SD_velocity_histogram(file_name="event_summary", flag='for_vel_hist')
