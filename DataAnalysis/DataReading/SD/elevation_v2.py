@@ -45,6 +45,8 @@ def elevation_v2(df, t_diff):
     else:
         raise Exception("Error in elevation_v2(), " + df['stationId'].iloc[0] + " station not recognized")
 
+    df.reset_index(drop=True, inplace=True)  # Just encase
+
     if y < 0:
         # Then the interferometer array is behind the main antenna
         y_sign = -1
