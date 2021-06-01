@@ -92,11 +92,13 @@ def get_df_multi_event(file_name=None, flag=None, include_adj_elv=False):
             if event_summary['month'][event] >= 10:
                 month = str(event_summary['month'][event])
             else:
+                # Single digit, buffer with 0
                 month = "0" + str(event_summary['month'][event])
 
             if event_summary['day'][event] >= 10:
                 day = str(event_summary['day'][event])
             else:
+                # Single digit, buffer with 0
                 day = "0" + str(event_summary['day'][event])
 
             start_hour_UT = event_summary['start_hour_UT'][event]
