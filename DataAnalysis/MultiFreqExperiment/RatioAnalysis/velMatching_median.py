@@ -16,16 +16,6 @@ if __name__ == '__main__':
     Match up SuperDARN velocity points from multi-freq mode
     Use median filtering - it is thought that median filtering smooths out velocity differences
     """
-    # EVENTS:
-    # 2016 09 25 at RKN: gg [40, 74]
-    # 2016 09 26 at RKN: gg [10, 74]  t_diff = 0.003, between 0 and 4 UT
-    # 2016 09 25 at CLY: gg [30, 74]
-    # 2016 09 26 at CLY: gg [10, 74]  # Not much here
-    # 2016 09 25 at INV: gg [10 74]
-    # 2017 10 23 at RKN between 4 and 8 UT.  t_diff = 0.003
-    # 2016 09 05 at RKN between 1 and 8 UT.  t_diff = 0
-    # 2017 02 04 at RKN between 4 and 7 UT.  t_diff = 0.003
-    # 2016 11 05 at RKN between 0 and 8 UT.  elevation angle data doesn't make sense but I used t_diff = 0.003
 
     year = "2016"  # yyyy
     month = "09"  # mm
