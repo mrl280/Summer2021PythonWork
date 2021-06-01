@@ -1,4 +1,5 @@
 import os
+import pathlib
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,7 +14,7 @@ if __name__ == '__main__':
     Produce a velocity histogram that includes data for several events
     """
 
-    PLOT_OUT = "show"  # "save" or "show"
+    PLOT_OUT = "save"  # "save" or "show"
 
     list_of_events = "event_summary"
     list_of_events_flag = "for_vel_hist"
@@ -32,7 +33,7 @@ if __name__ == '__main__':
 
     # Get multi-event data
     print("Getting multi-event data...")
-    df = get_df_multi_event(file_name=list_of_events, flag=list_of_events_flag, include_adj_elv=False)
+    df = get_df_multi_event(file_name=list_of_events, flag=list_of_events_flag, include_adj_elv=True)
 
     print("Filtering data...")
 
@@ -47,7 +48,7 @@ if __name__ == '__main__':
     # Compute virtual height
     slant_range = 90 + 15 * df['gate'] + 15 / 2  # Slant range [km]
     df['height'] = np.sqrt(Re * Re + slant_range * slant_range
-                           + 2 * Re * slant_range * np.sin(np.radians(np.asarray(df['elv'])))) - Re
+                           + 2 * Re * slant_range * np.sin(np.radians(np.asarray(df['adjElv'])))) - Re
     # Drop everything that is above the max height (this will be assumed to be F region scatter)
     df = df.loc[(df['height'] <= max_height)]
     df.reset_index(drop=True, inplace=True)
@@ -110,8 +111,8 @@ if __name__ == '__main__':
         ax[row].set_xlim(vel_lim)
         ax[row].set_ylim(occ_lim)
         ax[row].xaxis.set_minor_locator(MultipleLocator(50))
-        ax[row].grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5)
-        ax[row].grid(b=True, which='minor', axis='x', linestyle='--', linewidth=0.2)
+        ax[row].grid(b=True, which='major', axis='x', linestyle='--', linewidth=0.5)
+        ax[row].grid(b=True, which='minor', axis='x', linestyle='--', linewidth=0.1)
         ax[row].plot([0, 0], ax[row].get_ylim(), linestyle='-', linewidth=0.5, color='black')
         # ax[row][0].plot([-300, -300], ax[row][0].get_ylim(), linestyle='--', linewidth=0.5, color='black')
         # ax[row][0].plot([300, 300], ax[row][0].get_ylim(), linestyle='--', linewidth=0.5, color='black')
@@ -123,10 +124,10 @@ if __name__ == '__main__':
     if PLOT_OUT == "show":
         plt.show()
 
-    # if PLOT_OUT == "save":
-    #     # Save to file
-    #     out_dir = loc_root + "/MultiFreqExperiment/OccRates/out/"
-    #     fig.savefig(out_dir + "/" + mnemonic + "_occ_dist_of_vel_" + year + month + day
-    #                 + "_gg" + str(gate_range[0]) + "-" + str(gate_range[1])
-    #                 + "_" + str(start_hour) + "-" + str(end_hour) + "UT"
-    #                 + ".pdf", format='pdf', dpi=300)
+    if PLOT_OUT == "save":
+        # Save to file
+        loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
+        out_dir = loc_root + "/MultiFreqExperiment/OccRates/out/"
+        fig.savefig(out_dir + "/multi_event_occ_dist_of_vel_"
+                    + "_gg" + str(gate_range[0]) + "-" + str(gate_range[1])
+                    + ".pdf", format='pdf', dpi=300)
