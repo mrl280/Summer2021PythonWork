@@ -6,8 +6,6 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib import cm
-from matplotlib.colors import ListedColormap
 from scipy import stats
 
 from DataAnalysis.DataReading.SD.basic_SD_df_filter import basic_SD_df_filter
@@ -20,7 +18,7 @@ if __name__ == '__main__':
         In the second column, plot range vs velocity with occurrence rates as contours
     """
 
-    PLOT_OUT = "show"  # "save" or "show"
+    PLOT_OUT = "save"  # "save" or "show"
 
     year = "2016"  # yyyy
     month = "09"  # mm
@@ -36,7 +34,7 @@ if __name__ == '__main__':
     t_diff = 0.003  # Elevation angle correction in microseconds
     Re = 6370  # Radius of the Earth, [km]
     gate_range = [10, 30]  # Inclusive
-    frequencies = [10, 12, 13, 14]
+    frequencies = [10, 12, 13, 14]  # MHz
 
     mnemonic = station.upper()
     gate_label = "gg: " + str(gate_range[0]) + "-" + str(gate_range[1])
@@ -80,16 +78,16 @@ if __name__ == '__main__':
     df = df.loc[(df['height'] <= max_height)]
     df.reset_index(drop=True, inplace=True)
 
-    # Put frequencies in MHz and round, this makes them easier to compare, drop any rows with unrecognized frequencies
+    # Put frequencies in MHz and round, this makes them easier to compare
     df['transFreq'] = round(df['transFreq'] * 1e-3, 0)
-    df = df.loc[np.isin(df['transFreq'], frequencies)]
+    df = df.loc[np.isin(df['transFreq'], frequencies)]  # drop any rows with unrecognized frequencies
     df.reset_index(drop=True, inplace=True)
 
     # Set up the plot
     n_rows = len(frequencies)
     n_cols = 2
     fig, ax = plt.subplots(figsize=(8, 9), sharex='col', dpi=300, nrows=n_rows, ncols=n_cols)
-    plt.subplots_adjust(hspace=0.05, wspace=0.4)
+    plt.subplots_adjust(hspace=0.05, wspace=0.2)
     fig.suptitle("Velocity Frequency Dependence: Occurrence Distributions"
                  + "\n" + mnemonic + " " + year + "." + month + "." + day
                  + ";  " + gate_label
@@ -101,61 +99,57 @@ if __name__ == '__main__':
     for row in range(n_rows):
         freq_df = df[df['transFreq'] == frequencies[row]]
         ax[row][0].hist(freq_df['vel'], bins=n_bins, range=vel_lim, align='mid', histtype='step', zorder=3)
-        # ax[row][0].text(vel_lim[0] + 0.05 * (vel_lim[1] - vel_lim[0]),
-        #                 occ_lim[0] + 0.5 * (occ_lim[1] - occ_lim[0]), "f=" + str(frequencies[row]))
+
         ax[row][0].text(vel_lim[0] + 0.05 * (vel_lim[1] - vel_lim[0]),
-                        occ_lim[0] + 0.85 * (occ_lim[1] - occ_lim[0]), "n=" + str(freq_df.shape[0]))
-        print(ax[row][0].get_ylim()[0])
+                        occ_lim[0] + 0.80 * (occ_lim[1] - occ_lim[0]), "n=" + str(freq_df.shape[0]))
+        ax[row][0].text(vel_lim[0] + 0.05 * (vel_lim[1] - vel_lim[0]),
+                        occ_lim[0] + 0.88 * (occ_lim[1] - occ_lim[0]), str(frequencies[row]) + " MHz")
 
     # Format the first column
     ax[n_rows - 1][0].set_xlabel("Velocity [m/s]")
+    ax[n_rows - 1][0].set_ylabel("Occurrence")
     for row in range(n_rows):
         ax[row][0].set_xlim(vel_lim)
         ax[row][0].set_ylim(occ_lim)
-        ax[row][0].set_ylabel(str(frequencies[row]) + " MHz Occurrence")
         ax[row][0].grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5)
         ax[row][0].plot([0, 0], ax[row][0].get_ylim(), linestyle='-', linewidth=0.5, color='black')
         # ax[row][0].plot([-300, -300], ax[row][0].get_ylim(), linestyle='--', linewidth=0.5, color='black')
         # ax[row][0].plot([300, 300], ax[row][0].get_ylim(), linestyle='--', linewidth=0.5, color='black')
         ax[row][0].tick_params(direction="in")
 
-    # Modify the 'jet' colour map
-    jet = cm.get_cmap('jet', 256)
-    newcolours = jet(np.linspace(0, 1, 256))
-    purple = np.array([155 / 256, 53 / 256, 161 / 256, 1])  # RGBA colours
-    white = np.array([0, 0, 0, 0])
-    newcolours[:35, :] = white  # Make the first few colours white
-    newcolours[220:255, :] = purple  # Make the last few colours purple
-    newcmp = ListedColormap(newcolours)
-
-    # Plot something else in the second column
+    # Plot gate vs UT pixel plot in the second plot
     for row in range(n_rows):
         freq_df = df[df['transFreq'] == frequencies[row]]
-        freq_df = freq_df.loc[(freq_df['vel'] <= 600) & (freq_df['vel'] >= -600)]
+        freq_df = freq_df.loc[(freq_df['vel'] >= vel_lim[0]) & (freq_df['vel'] <= vel_lim[1])]
         contour_range = [[start_hour, end_hour], gate_range]
+
         binned_counts, bin_xedges, bin_yedges, bin_numbers = stats.binned_statistic_2d(
             freq_df['decimalTime'], freq_df['gate'], values=freq_df['vel'],
             statistic='median', bins=[80, 20], range=contour_range)
-
-        # TODO: Finish fixing up this contour plot
 
         pixel = ax[row][1].imshow(np.flip(binned_counts.transpose(), axis=0), aspect='auto', cmap="seismic_r",
                                   extent=(start_hour, end_hour, gate_range[0], gate_range[1]))
         fig.colorbar(pixel, ax=ax[row][1])
 
+        # ax[row][1].text(start_hour + 0.05 * (end_hour - start_hour),
+        #                 gate_range[0] + 0.88 * (gate_range[1] - gate_range[0]), str(frequencies[row]) + " MHz")
+
     # Format the second column
     ax[n_rows - 1][1].set_xlabel("Time, UT")
     ax[n_rows - 1][1].set_ylabel("Range Gate")
     for row in range(n_rows):
-        # ax[row][1].set_xlim([start_hour, end_hour])
+        ax[row][1].set_xlim([start_hour, end_hour])
         ax[row][1].set_ylim(gate_range)
-
         ax[row][1].grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5)
         ax[row][1].plot([0, 0], ax[row][0].get_ylim(), linestyle='-', linewidth=0.5, color='black')
-        # ax[row][0].plot([-300, -300], ax[row][0].get_ylim(), linestyle='--', linewidth=0.5, color='black')
-        # ax[row][0].plot([300, 300], ax[row][0].get_ylim(), linestyle='--', linewidth=0.5, color='black')
-        # ax[row][0].tick_params(direction="in")
-
 
     if PLOT_OUT == "show":
         plt.show()
+
+    if PLOT_OUT == "save":
+        # Save to file
+        out_dir = loc_root + "/MultiFreqExperiment/OccRates/out/"
+        fig.savefig(out_dir + "/" + mnemonic + "_occ_dist_of_vel_" + year + month + day
+                    + "_gg" + str(gate_range[0]) + "-" + str(gate_range[1])
+                    + "_" + str(start_hour) + "-" + str(end_hour) + "UT"
+                    + ".pdf", format='pdf', dpi=300)
