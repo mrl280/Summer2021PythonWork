@@ -21,8 +21,8 @@ if __name__ == '__main__':
     PLOT_OUT = "save"  # "save" or "show"
 
     year = "2016"  # yyyy
-    month = "09"  # mm
-    day = "26"  # dd
+    month = "11"  # mm
+    day = "05"  # dd
 
     station = "rkn"
     start_hour = 0
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     mnemonic = station.upper()
     gate_label = "gg: " + str(gate_range[0]) + "-" + str(gate_range[1])
     vel_lim = [-600, 600]
-    occ_lim = [-100, 2600]
+    occ_lim = [-100, 900]
     n_bins = int((vel_lim[1] - vel_lim[0]) / 50)  # 50 m/s bins
 
     # Compute start and end epoch
