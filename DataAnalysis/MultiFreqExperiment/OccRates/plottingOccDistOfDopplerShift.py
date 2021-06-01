@@ -20,9 +20,9 @@ if __name__ == '__main__':
 
     PLOT_OUT = "save"  # "save" or "show"
 
-    year = "2017"  # yyyy
-    month = "10"  # mm
-    day = "23"  # dd
+    year = "2016"  # yyyy
+    month = "09"  # mm
+    day = "26"  # dd
 
     station = "rkn"
     start_hour = 0
