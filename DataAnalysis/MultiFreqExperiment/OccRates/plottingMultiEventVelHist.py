@@ -119,7 +119,8 @@ if __name__ == '__main__':
         ax[row].tick_params(direction="in")
 
     # Add a legend to the first plot
-    ax[0].legend(loc='upper left')
+    handles, labels = ax[0].get_legend_handles_labels()
+    ax[0].legend(handles[::-1], labels[::-1], loc='upper left')
 
     if PLOT_OUT == "show":
         plt.show()

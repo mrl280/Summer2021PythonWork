@@ -28,7 +28,7 @@ if __name__ == '__main__':
     start_hour = 0
     end_hour = 4
 
-    max_height = 180  # The maximum allowed height, points coming from above this height will be assumed to be F
+    max_height = 160  # The maximum allowed height, points coming from above this height will be assumed to be F
     #  region scatter and will not be included
 
     t_diff = 0.003  # Elevation angle correction in microseconds
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     plt.subplots_adjust(hspace=0.05, wspace=0.2)
     fig.suptitle("Velocity Frequency Dependence: Occurrence Distributions"
                  + "\n" + mnemonic + " " + year + "." + month + "." + day
-                 + ";  " + gate_label
+                 + ";  " + gate_label + ";  Max Virtual Height: " + str(max_height) + " km"
                  + ";  " + str(start_hour) + "-" + str(end_hour) + " UT"
                  + "\nProduced by " + str(os.path.basename(__file__)),
                  fontsize=13)
