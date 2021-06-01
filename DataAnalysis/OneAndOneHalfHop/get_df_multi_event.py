@@ -3,6 +3,7 @@ import pathlib
 import calendar
 import time
 
+
 def get_df_multi_event(file_name=None, flag=None):
     """
     Get a dataframe with data for multiple events
@@ -53,11 +54,13 @@ def get_df_multi_event(file_name=None, flag=None):
         if event_summary['month'][0] >= 10:
             month = str(event_summary['month'][0])
         else:
+            # Single digit, buffer with 0
             month = "0" + str(event_summary['month'][0])
 
         if event_summary['day'][0] >= 10:
             day = str(event_summary['day'][0])
         else:
+            # Single digit, buffer with 0
             day = "0" + str(event_summary['day'][0])
 
         start_hour_UT = event_summary['start_hour_UT'][0]
