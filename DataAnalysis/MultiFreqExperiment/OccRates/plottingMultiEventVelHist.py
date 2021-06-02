@@ -14,7 +14,7 @@ if __name__ == '__main__':
     Produce a velocity histogram that includes data for several events
     """
 
-    PLOT_OUT = "save"  # "save" or "show"
+    PLOT_OUT = "show"  # "save" or "show"
 
     list_of_events = "event_summary"
     list_of_events_flag = "for_vel_hist"

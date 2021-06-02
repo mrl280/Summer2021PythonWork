@@ -35,6 +35,7 @@ if __name__ == '__main__':
                     'day': 11,
                     'start_hour_UT': 16,
                     'end_hour_UT': 22,
+
                     'for_vel_hist': 1,
                     }, ignore_index=True)
 
@@ -46,6 +47,7 @@ if __name__ == '__main__':
                     'day': 12,
                     'start_hour_UT': 18,
                     'end_hour_UT': 21,
+
                     'for_vel_hist': 1
                     }, ignore_index=True)
 
@@ -57,6 +59,7 @@ if __name__ == '__main__':
                     'day': 14,
                     'start_hour_UT': 17,
                     'end_hour_UT': 21,
+
                     'for_vel_hist': 1
                     }, ignore_index=True)
 
@@ -68,7 +71,8 @@ if __name__ == '__main__':
                     'day': 15,
                     'start_hour_UT': 18,
                     'end_hour_UT': 20,
-                    'for_vel_hist': 1
+
+                    'for_vel_hist': 0
                     }, ignore_index=True)
 
 

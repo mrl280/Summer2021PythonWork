@@ -84,15 +84,15 @@ def get_df_multi_event(file_name=None, flag=None):
             station = event_summary['SD_station'][event]
             year = str(event_summary['year'][event])
 
-            if event_summary['month'][0] >= 10:
-                month = str(event_summary['month'][0])
+            if event_summary['month'][event] >= 10:
+                month = str(event_summary['month'][event])
             else:
-                month = "0" + str(event_summary['month'][0])
+                month = "0" + str(event_summary['month'][event])
 
-            if event_summary['day'][0] >= 10:
-                day = str(event_summary['day'][0])
+            if event_summary['day'][event] >= 10:
+                day = str(event_summary['day'][event])
             else:
-                day = "0" + str(event_summary['day'][0])
+                day = "0" + str(event_summary['day'][event])
 
             start_hour_UT = event_summary['start_hour_UT'][event]
             end_hour_UT = event_summary['end_hour_UT'][event]
