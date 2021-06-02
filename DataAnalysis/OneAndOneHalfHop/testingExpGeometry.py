@@ -13,7 +13,7 @@ if __name__ == '__main__':
     """
     Check the RISR and SD overlap
     """
-    plot_out = "save"
+    plot_out = "show"
 
     rkn_lon, rkn_lat = -92.113, 62.82  # RKN
     inv_lon, inv_lat = -133.77, 68.41  # INV
@@ -109,6 +109,9 @@ if __name__ == '__main__':
 
     # At RKN the overlap is beam 5 and gates 25-32
     # At INV the overlap is beam 12 and gates 30-38
+
+    # plt.scatter(df['gdlon'], df['gdlat'],
+    #             s=1, c='k', marker='.', transform=ccrs.Geodetic(), zorder=3, label='All RISR beams')
 
     plt.scatter(df.query('wdBmnum == 2')['gdlon'], df.query('wdBmnum == 2')['gdlat'],
                 s=1, c='g', marker='.', transform=ccrs.Geodetic(), zorder=3, label='RISR-N WD beam 2')
