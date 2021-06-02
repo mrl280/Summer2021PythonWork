@@ -13,6 +13,8 @@ from datetime import datetime
 from cartopy.feature.nightshade import Nightshade
 from pydarn import radar_fov
 
+plot_out = "save"
+
 rkn_lon, rkn_lat = -92.113, 62.82  # RKN
 inv_lon, inv_lat = -133.77, 68.41  # INV
 risr_lon, risr_lat = -94.91, 74.73  # RISR
@@ -27,18 +29,22 @@ ax.add_feature(cfeature.BORDERS, linestyle="-", linewidth=0.5)
 radar_marker_size = 4
 
 # Add RKN to the map
-plt.plot([rkn_lon, rkn_lon], [rkn_lat, rkn_lat], 'go', markersize=radar_marker_size, transform=ccrs.Geodetic())
+plt.plot([rkn_lon, rkn_lon], [rkn_lat, rkn_lat], 'go',
+         markersize=radar_marker_size, transform=ccrs.Geodetic(), label="RKN")
 
 # Add INV to the map
-plt.plot([inv_lon, inv_lon], [inv_lat, inv_lat], 'bo', markersize=radar_marker_size, transform=ccrs.Geodetic())
+plt.plot([inv_lon, inv_lon], [inv_lat, inv_lat], 'bo',
+         markersize=radar_marker_size, transform=ccrs.Geodetic(), label="INV")
 
 # Add RISR to the map
-plt.plot([risr_lon, risr_lon], [risr_lat, risr_lat], 'ro', markersize=radar_marker_size, transform=ccrs.Geodetic(),
-         zorder=3)
+plt.plot([risr_lon, risr_lon], [risr_lat, risr_lat], 'ro',
+         markersize=radar_marker_size, transform=ccrs.Geodetic(), label="RISR", zorder=3)
 
 date_time = datetime.utcnow()
 ax.add_feature(Nightshade(date_time, alpha=0.25))
-ax.set_title("Night time shading for " + str(date_time) + " UT")
+# ax.set_title("Night time shading for " + str(date_time) + " UT")
+
+ax.set_title("One-and-one-half-hop Geometry Check")
 
 # Try to plot RKN's FoV  # RKN is id 65
 ranges = [0, 100]
@@ -105,19 +111,40 @@ print(df.keys())
 # At INV the overlap is beam 12 and gates 30-38
 
 plt.scatter(df.query('wdBmnum == 2')['gdlon'], df.query('wdBmnum == 2')['gdlat'],
-            s=1, c='r', marker='.', transform=ccrs.Geodetic(), zorder=3)
+            s=1, c='g', marker='.', transform=ccrs.Geodetic(), zorder=3, label='RISR-N WD beam 2')
 
 plt.scatter(df.query('wdBmnum == 10')['gdlon'], df.query('wdBmnum == 10')['gdlat'],
-            s=1, c='r', marker='.', transform=ccrs.Geodetic(), zorder=3)
+            s=1, c='b', marker='.', transform=ccrs.Geodetic(), zorder=3, label='RISR-N WD beam 10')
 
 # Highlight RKN beam 5
 for beam_line in [5, 6]:
-    plt.plot(rkn_beam_corners_lons[0:ranges[1] + 1, beam_line], rkn_beam_corners_lats[0:ranges[1] + 1, beam_line],
-             color='black', linewidth=0.5, transform=ccrs.Geodetic())
+    plt.plot(rkn_beam_corners_lons[31:43, beam_line], rkn_beam_corners_lats[31:43, beam_line],
+             color='m', linewidth=1, transform=ccrs.Geodetic())
+
+# Highlight RKN gates 31-41
+plt.plot(rkn_beam_corners_lons[31, 5:7], rkn_beam_corners_lats[31, 5:7],
+         color='m', linewidth=1, transform=ccrs.Geodetic())
+plt.plot(rkn_beam_corners_lons[42, 5:7], rkn_beam_corners_lats[42, 5:7],
+         color='m', linewidth=1, transform=ccrs.Geodetic())
 
 # Highlight INV beam 12
 for beam_line in [12, 13]:
-    plt.plot(inv_beam_corners_lons[0:ranges[1] + 1, beam_line], inv_beam_corners_lats[0:ranges[1] + 1, beam_line],
-             color='black', linewidth=0.5, transform=ccrs.Geodetic())
+    plt.plot(inv_beam_corners_lons[33:40 + 1, beam_line], inv_beam_corners_lats[33:40 + 1, beam_line],
+             color='m', linewidth=1, transform=ccrs.Geodetic())
 
-plt.show()
+# Highlight INV gates 33-39
+plt.plot(inv_beam_corners_lons[33, 12:14], inv_beam_corners_lats[33, 12:14],
+         color='m', linewidth=1, transform=ccrs.Geodetic(), zorder=4)
+plt.plot(inv_beam_corners_lons[40, 12:14], inv_beam_corners_lats[40, 12:14],
+         color='m', linewidth=1, transform=ccrs.Geodetic())
+
+plt.legend(loc='lower right')
+
+if plot_out == "show":
+    plt.show()
+
+if plot_out == "save":
+    out_dir = loc_root + "/OneAndOneHalfHop/out"
+    out_file = out_dir + "/geometryCheck"
+    fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
+    print(out_file)
