@@ -129,7 +129,8 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     :param day_range: (<int>, <int>) (optional):
             Inclusive. The days of the month to consider.  If omitted (or None), then all days will be considered.
     :param hour_range: (<int>, <int>) (optional):
-            Inclusive. The hour range to consider.  If omitted (or None), then all hours will be considered.
+            The hour range to consider.  If omitted (or None), then all hours will be considered.
+            Not inclusive: if you pass in (0, 5) you will get from 0:00-4:59 UT
     :param gate_range: (<int>, <int>) (optional):
             Inclusive. The gate range to consider.  If omitted (or None), then all the gates will be considered.
             Note that gates start at 0, so gates (0, 3) is 4 gates.
