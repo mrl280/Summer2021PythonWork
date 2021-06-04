@@ -1,5 +1,6 @@
 import bz2
 import glob
+import math
 import os
 import calendar
 import time
@@ -12,6 +13,9 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
     """
     Get all of the SuperDARN data within the desired range/time, put it into a dataframe,
     and then return the dataframe for plotting/analysis
+
+    Dataframe keys follow the same convention as fitACF:
+        https://radar-software-toolkit-rst.readthedocs.io/en/latest/references/general/fitacf/
 
     :param station: str:
             The radar station to consider, as a 3 character string (e.g. "rkn").
@@ -32,7 +36,6 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
     :return: pandas.DataFrame: A dataframe with select fitACF parameters.
-            Parameters are added on an as-need basis, this program is slow enough as it is.
     """
 
     loc_root = "/data/fitacf_30"    # fitACF 3.0
@@ -109,8 +112,20 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                                     v.extend(fitacf_data[scan]['v'])
                                     p_l.extend(fitacf_data[scan]['p_l'])
                                     w_l.extend(fitacf_data[scan]['w_l'])
-                                    phi0.extend(fitacf_data[scan]['phi0'])
-                                    elv.extend(fitacf_data[scan]['elv'])
+                                    try:
+                                        phi0.extend(fitacf_data[scan]['phi0'])
+                                    except KeyError:
+                                        # Some files might not have this parameter
+                                        phi0.extend([math.nan] * num_gates_reporting)
+                                    except BaseException:
+                                        raise
+                                    try:
+                                        elv.extend(fitacf_data[scan]['elv'])
+                                    except KeyError:
+                                        # Some files might not have this parameter
+                                        elv.extend([math.nan] * num_gates_reporting)
+                                    except BaseException:
+                                        raise
 
     df = pd.DataFrame({'epoch': epoch,
                        'bmnum': bmnum,
@@ -132,7 +147,7 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
     # Until I have an application that requires bad quality points, I will assume they always need to be filtered out
     df = df.loc[(df['qflg'] == 1)]
 
-    df.drop(['qflg', 'hour'])
+    df.drop(columns=['qflg', 'hour'], inplace=True)
     df.reset_index(drop=True, inplace=True)
 
     return df
@@ -140,7 +155,7 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
 
 if __name__ == '__main__':
     """ Testing """
-    df = get_data("sas", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 3), hour_range=(0, 24),
+    df = get_data("sas", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1), hour_range=(0, 24),
                   gate_range=(0, 99), beam_range=(0, 15))
 
     print(df.head())
