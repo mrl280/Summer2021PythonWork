@@ -92,7 +92,7 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     if local_testing:
         # Just read in some test data
         warnings.warn("Running in local testing mode, just going to use local dummy data", category=Warning)
-        df = get_local_dummy_data(station=station, year=2011, month=11, day=14, start_hour_UT=0, end_hour_UT=22)
+        df = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=23)
         # print(df.keys())
     else:
         df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
@@ -175,27 +175,27 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     if plot_ground_scat:
         modified_jet_cm = modified_jet()
         data = ax.pcolormesh(beam_corners_lons, beam_corners_lats, grndsct_scans,
-                             transform=ccrs.PlateCarree(), cmap=modified_jet_cm)
+                             transform=ccrs.PlateCarree(), cmap=modified_jet_cm, zorder=3)
     else:
         if parameter == 'v':
             cmap = "seismic_r"
         else:
             cmap = modified_jet()
         data = ax.pcolormesh(beam_corners_lons, beam_corners_lats, scans,
-                             transform=ccrs.PlateCarree(), cmap=cmap)
+                             transform=ccrs.PlateCarree(), cmap=cmap, zorder=3)
     fig.colorbar(data, ax=ax)
 
     # plot all the beam boundary lines
     for beam_line in range(beam_range[0], beam_range[1] + 2):
         plt.plot(beam_corners_lons[gate_range[0]:gate_range[1] + 2, beam_line],
                  beam_corners_lats[gate_range[0]:gate_range[1] + 2, beam_line],
-                 color='black', linewidth=0.1, transform=ccrs.Geodetic())
+                 color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
     # plot the arcs boundary lines
     for range_ in range(gate_range[0], gate_range[1] + 2):
         plt.plot(beam_corners_lons[range_, beam_range[0]:beam_range[1] + 2],
                  beam_corners_lats[range_, beam_range[0]:beam_range[1] + 2],
-                 color='black', linewidth=0.1, transform=ccrs.Geodetic())
+                 color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
     print("Returning the figure and scan...")
     if plot_ground_scat:
@@ -209,7 +209,7 @@ if __name__ == '__main__':
 
     station = "rkn"
     fig, scans = occ_fan(station=station, year_range=(2011, 2011), month_range=(11, 11), day_range=(11, 11),
-                         local_testing=True, parameter='v')
+                         local_testing=True, parameter=None)
 
     loc_root = str((pathlib.Path().parent.absolute()))
     out_dir = loc_root + "/out"

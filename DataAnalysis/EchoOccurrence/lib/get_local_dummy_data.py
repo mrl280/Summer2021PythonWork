@@ -11,13 +11,22 @@ def get_local_dummy_data(station, year, month, day, start_hour_UT, end_hour_UT):
     Needs to be called from the same level as the lib folder
     :return:  A dataframe with some dummy local data
     """
+    if month < 10:
+        month = "0" + str(month)
+    else:
+        month = str(month)
+    if day < 10:
+        day = "0" + str(day)
+    else:
+        day = str(day)
+
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).absolute())
-    in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + str(year) + str(month) + str(day)
-    in_file = in_dir + "/" + station + str(year) + str(month) + str(day) + ".pkl"
+    in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + str(year) + month + day
+    in_file = in_dir + "/" + station + str(year) + month + day + ".pkl"
     df = pd.read_pickle(in_file)
 
-    test_start_datetime, test_start_epoch = build_date_epoch(year, month, day, start_hour_UT)
-    test_end_datetime, test_end_epoch = build_date_epoch(year, month, day, end_hour_UT)
+    test_start_datetime, test_start_epoch = build_date_epoch(year, int(month), int(day), start_hour_UT)
+    test_end_datetime, test_end_epoch = build_date_epoch(year, int(month), int(day), end_hour_UT)
 
     df = df.loc[(df['epoch'] >= test_start_epoch) & (df['epoch'] <= test_end_epoch)]
     df.reset_index(drop=True, inplace=True)
