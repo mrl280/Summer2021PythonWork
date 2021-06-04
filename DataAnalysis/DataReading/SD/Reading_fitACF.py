@@ -6,7 +6,7 @@ if __name__ == '__main__':
     """
     Read in and look at a SuperDARN data file
     """
-    fitacf_file = "data/rkn/rkn20190318/20190318.0001.00.rkn.fitacf.bz2"
+    fitacf_file = "data/sas/sas20010101/20010101.0000.00.sas.fitacf.bz2"
     with bz2.open(fitacf_file) as fp:
         fitacf_stream = fp.read()
 
@@ -19,14 +19,22 @@ if __name__ == '__main__':
 
     slist = []  # an example vector parameter
     year = []  # an example scalar parameter
+    phi0 = []
     for i in range(5):
         num_gates_reporting = len(fitacf_data[i]['slist'])
         year.extend([fitacf_data[i]['time.yr']] * num_gates_reporting)
         slist.extend(fitacf_data[i]['slist'])
-        # slist = slist + fitacf_data[i]['slist']
+        try:
+            slist.extend(fitacf_data[i]['elv'])
+        except KeyError:
+            pass
+        except BaseException:
+            raise
+        # slist = slist + fitacf_data[i]['phi0']
 
     print(year)
     print(slist)
+    print(phi0)
 
     print(len(year))
     print(len(slist))
