@@ -20,11 +20,16 @@ def get_local_dummy_data(station, year, month, day, start_hour_UT, end_hour_UT):
     test_end_datetime, test_end_epoch = build_date_epoch(year, month, day, end_hour_UT)
 
     df = df.loc[(df['epoch'] >= test_start_epoch) & (df['epoch'] <= test_end_epoch)]
+    df.reset_index(drop=True, inplace=True)
 
+    # Fix up some of the column names so they match what is coming in from get_data()
+    df['slist'] = df['gate']
     df['v'] = df['vel']
     df['w_l'] = df['wdt']
     df['p_l'] = df['pwr']
     df['phi0'] = df['phase']
     df['tfreq'] = df['transFreq']
+    df['frang'] = df['firstRang']
+    df['rsep'] = df['rangeSep']
 
     return df
