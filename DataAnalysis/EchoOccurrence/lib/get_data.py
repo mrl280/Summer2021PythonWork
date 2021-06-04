@@ -146,7 +146,7 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
     # Filter the data for the needed time, beam, and gate ranges
     df = df.loc[(df['hour'] >= hour_range[0]) & (df['hour'] < hour_range[1]) &
                 (df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
-                (df['slist'] >= gate_range[0]) & (df['slist'] <= slist[1])]
+                (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1])]
 
     # Until I have an application that requires bad quality points, I will assume they always need to be filtered out
     df = df.loc[(df['qflg'] == 1)]
