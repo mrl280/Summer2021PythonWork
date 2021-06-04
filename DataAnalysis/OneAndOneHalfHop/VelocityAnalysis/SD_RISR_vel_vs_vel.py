@@ -12,7 +12,7 @@ from PyPDF2 import PdfFileMerger
 
 import pandas as pd
 
-from DataAnalysis.DataReading.SD.basic_SD_df_filter import basic_SD_df_filter
+from lib.basic_SD_df_filter import basic_SD_df_filter
 
 if __name__ == '__main__':
     """
