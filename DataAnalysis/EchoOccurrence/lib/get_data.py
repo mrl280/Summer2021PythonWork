@@ -10,11 +10,11 @@ import pandas as pd
 
 def get_data(station, year_range, month_range, day_range, hour_range, gate_range, beam_range):
     """
-    Get all of the data within the desired range/time, put it into a dataframe,
+    Get all of the SuperDARN data within the desired range/time, put it into a dataframe,
     and then return the dataframe for plotting/analysis
 
     :param station: str:
-            The radar station to consider, a 3 character string (e.g. "rkn").
+            The radar station to consider, as a 3 character string (e.g. "rkn").
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
     :param year_range: (<int>, <int>):
             Inclusive. The year range to consider.
@@ -23,7 +23,8 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
     :param day_range: (<int>, <int>) (optional):
             Inclusive. The days of the month to consider.  If omitted (or None), then all days will be considered.
     :param hour_range: (<int>, <int>) (optional):
-            Inclusive. The hour range to consider.  If omitted (or None), then all hours will be considered.
+            The hour range to consider.  If omitted (or None), then all hours will be considered.
+            Not inclusive: if you pass in (0, 5) you will get from 0:00-4:59 UT
     :param gate_range: (<int>, <int>) (optional):
             Inclusive. The gate range to consider.  If omitted (or None), then all the gates will be considered.
             Note that gates start at 0, so gates (0, 3) is 4 gates.
@@ -34,12 +35,13 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
             Parameters are added on an as-need basis, this program is slow enough as it is.
     """
 
-    loc_root = "/data/fitacf_30"
+    loc_root = "/data/fitacf_30"    # fitACF 3.0
+    # loc_root = "/data/fitacf_25"  # fitACF 2.5
     pattern = "%Y.%m.%d %H:%M:%S"
 
     # Create empty arrays for scalar parameters
     epoch = []
-    hour = []  # just for filtering, will be dropped
+    hour = []
     bmnum = []
     tfreq = []
     frang, rsep = [], []
@@ -50,7 +52,7 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
     v, p_l, w_l = [], [], []
     phi0, elv = [], []
 
-    # Data is stored in a file structure that looks like this:
+    # Data on maxwell.usask.ca is stored in a file structure that looks like this:
     # /data/fitacf_30/<year>/<month>/<year><month><day>.<start-time>.<radar-site>.fitacf.bz2
     for in_dir_parent in glob.iglob(loc_root + "/*"):
         year_here = int(os.path.basename(in_dir_parent))
@@ -87,13 +89,14 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                                 try:
                                     num_gates_reporting = len(fitacf_data[scan]['slist'])
                                 except:
-                                    # Sometimes there won't be any gates reporting, this is legacy behaviour and results in partial records
+                                    # Sometimes there won't be any gates reporting, this is legacy behaviour and
+                                    #  results in partial records
                                     num_gates_reporting = 0
 
                                 if num_gates_reporting > 0:
                                     # Build up scalar parameters
                                     epoch.extend([epoch_here] * num_gates_reporting)
-                                    hour.extend([fitacf_data[scan]['bmnum']] * num_gates_reporting)
+                                    hour.extend([fitacf_data[scan]['time.hr']] * num_gates_reporting)
                                     bmnum.extend([fitacf_data[scan]['bmnum']] * num_gates_reporting)
                                     tfreq.extend([fitacf_data[scan]['tfreq']] * num_gates_reporting)
                                     frang.extend([fitacf_data[scan]['frang']] * num_gates_reporting)
@@ -112,13 +115,13 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
     df = pd.DataFrame({'epoch': epoch,
                        'bmnum': bmnum,
                        'hour': hour,
-                       'tfreq': tfreq, 'frang': frang,
-                       'rsep': rsep,
+                       'tfreq': tfreq,
+                       'frang': frang,  'rsep': rsep,
 
                        'slist': slist,
-                       'qflg': qflg, 'gflg': gflg,
-                       'v': v, 'w_l': w_l,
-                       'phi0': phi0, 'elv': elv
+                       'qflg': qflg,    'gflg': gflg,
+                       'v': v,          'p_l': p_l,         'w_l': w_l,
+                       'phi0': phi0,    'elv': elv
                        })
 
     # Filter the data for the needed time, beam, and gate ranges
