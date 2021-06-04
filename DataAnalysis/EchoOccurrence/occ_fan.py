@@ -1,40 +1,25 @@
+import math
+import pathlib
+import statistics
 import warnings
-import calendar
-
 import pydarn
-import time
 
 import matplotlib.path as mpath
 import numpy as np
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+
 from matplotlib import pyplot as plt
 from pydarn import SuperDARNRadars, radar_fov
 
-
-def build_date_epoch(year, month, day, hour):
-    """
-    :param year: int: the year to consider
-    :param month: int: the month to consider
-    :param day: int: the day to consider
-    :param hour: int: The hour to consider
-    :return: time.struct_time, int: The datetime and epoch
-    """
-    pattern = '%Y.%m.%d %H:%M:%S'
-
-    if hour == 24:
-        datetime = str(year) + "." + str(month) + "." + str(day) \
-            + " " + "23:59:59"
-    else:
-        datetime = str(year) + "." + str(month) + "." + str(day) \
-            + " " + str(hour) + ":00:00"
-    datetime = time.strptime(datetime, pattern)
-    epoch = calendar.timegm(datetime)
-
-    return datetime, epoch
+from lib.cm.modified_jet import modified_jet
+from lib.get_data import get_data
+from lib.get_local_dummy_data import get_local_dummy_data
+from lib.range_checkers import *
 
 
-def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=None, gate_range=None, beam_range=None):
+def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=None, gate_range=None, beam_range=None,
+            local_testing=False, parameter=None, plot_ground_scat=False):
     """
 
     Produce a fan plot
@@ -42,7 +27,7 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
             occurrence investigations often require chewing large amounts of data.
-        - Only plots 45 km data
+        - Only does plots 45 km data
             (a warning will be printed if other spatial resolution data has been stripped from the dataset)
         - This program uses fitACF 3.0 data.  To change this, modify the source code.
         - All times and dates are assumed UT
@@ -65,18 +50,27 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     :param beam_range: (<int>, <int>) (optional):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
+    :param local_testing: bool (optional):
+            Set this to true if you are testing on your local machine.  Program will then use local dummy data.
+    :param parameter: str (optional):
+            Parameter to be averaged (e.g. 'v' or 'p_l')
+            If omitted, then a simple echo count will be plotted.
+    :param plot_ground_scat: bool (optional)
+            Set this to true if you would like to plot ground scatter counts.  Default is False
+            If plot_ground_scat is set to True, then :param parameter is ignored.
     :return: matplotlib.pyplot.figure: The figure.  It can then be modified, added to, printed out, or saved
             in whichever file format is desired.
     """
 
-    show_plot = True  # TODO: remove this
+    if parameter is not None:
+        defaultzminmax = {'p_l': [0, 50], 'v': [-600, 600],
+                          'w_l': [0, 250], 'elv': [0, 50]}
+        zmin = defaultzminmax[parameter][0]
+        zmax = defaultzminmax[parameter][1]
 
     month_range = check_month_range(month_range)
     day_range = check_day_range(day_range)
     hour_range = check_hour_range(hour_range)
-
-    start_datetime, start_epoch = build_date_epoch(year_range[0], month_range[0], day_range[0], hour_range[0])
-    end_datetime, end_epoch = build_date_epoch(year_range[1], month_range[1], day_range[1], hour_range[1])
 
     if isinstance(station, str):
         hdw_info = pydarn.read_hdw_file(station)  # Get the hardware file, there is lots of good stuff in there
@@ -90,31 +84,45 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     radar_lat = hdw_info.geographic.lat
     radar_id = hdw_info.stid
 
-    # We need some additional radar info to determine which hemisphere the radar is in
     all_radars_info = SuperDARNRadars()
-    additional_radar_info = all_radars_info.radars[radar_id]
+    additional_radar_info = all_radars_info.radars[radar_id]  # Grab some additional radar info
     hemisphere = additional_radar_info.hemisphere
 
+    print("Retrieving data...")
+    if local_testing:
+        # Just read in some test data
+        warnings.warn("Running in local testing mode, just going to use local dummy data", category=Warning)
+        df = get_local_dummy_data(station=station, year=2011, month=11, day=14, start_hour_UT=0, end_hour_UT=22)
+        # print(df.keys())
+    else:
+        df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
+                      hour_range=hour_range, gate_range=gate_range, beam_range=beam_range)
 
-    # TODO: Add data to fan
-    #  And put the extra functions in this file into the lib folder
+    if not plot_ground_scat:
+        df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
+        if parameter is not None:
+            df = df.loc[(df[parameter] >= zmin) & (df[parameter] <= zmax)]
+        df.reset_index(drop=True, inplace=True)
 
+    # Restrict to 45 km mode data, you need to modify the fan if you want to use data of a different spatial resolution
+    number_of_records_before_spatial_resolution_check = df.shape[0]
+    df = df.loc[(df['frang'] == 180) & (df['rsep'] == 45)]
+    df.reset_index(drop=True, inplace=True)
+    number_of_records_after_spatial_resolution_check = df.shape[0]
+    if number_of_records_before_spatial_resolution_check > number_of_records_after_spatial_resolution_check:
+        warnings.warn("Not all data within the specified range is 45 km resolution data.  "
+                      "All non-45 km data was discarded.", category=Warning)
 
-    # print("Station id: " + str(hdw_info.stid))
-    print("Gates: " + str(hdw_info.gates))
-    # print("Beams: " + str(hdw_info.beams))
-    # print("Location: " + str(hdw_info.geographic.lon))
-    # print(all_radars_info.radars[radar_id])
-
+    print("Preparing the plot...")
     # Prepare the figure
     fig = plt.figure(figsize=(5, 5), dpi=300)
     if hemisphere.value == 1:
-        # Northern hemisphere: plot above 37 deg lat
+        # Northern hemisphere
         min_lat = 37  # deg
         ax = fig.add_subplot(1, 1, 1, projection=ccrs.NorthPolarStereo())
         ax.set_extent([-180, 180, 90, min_lat], crs=ccrs.PlateCarree())
     elif hemisphere.value == -1:
-        # Southern hemisphere: plot below 50 deg lat
+        # Southern hemisphere
         max_lat = -34  # deg
         ax = fig.add_subplot(1, 1, 1, projection=ccrs.SouthPolarStereo())
         ax.set_extent([-180, 180, -90, max_lat], crs=ccrs.PlateCarree())
@@ -136,11 +144,46 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     ax.set_boundary(circle, transform=ax.transAxes)
 
     # Plot the radar as a red dot
-    plt.plot([radar_lon, radar_lon], [radar_lat, radar_lat], 'ro', markersize=1.5, transform=ccrs.Geodetic(),
+    plt.plot([radar_lon, radar_lon], [radar_lat, radar_lat], 'ro', markersize=1, transform=ccrs.Geodetic(),
              label=additional_radar_info.name)
 
     beam_corners_lats, beam_corners_lons = radar_fov(radar_id, coords='geo')  # Get the radar field of view
     fan_shape = beam_corners_lons.shape
+
+    print("Computing scan...")
+    # Loop through all the gate/beam cells and build the scans
+    # First index will be gates, the second will be beams
+    scans = np.zeros((fan_shape[0] - 1, fan_shape[1] - 1))
+    grndsct_scans = np.zeros((fan_shape[0] - 1, fan_shape[1] - 1))
+    for gate in range(scans.shape[0]):
+        for beam in range(scans.shape[1]):
+            cell_df = df[(df['slist'] == gate) & (df['bmnum'] == beam)]
+            grndsct_scans[gate, beam] = cell_df[(cell_df['gflg'] == 1)].shape[0]
+
+            if parameter is None:
+                # We want a simple echo count
+                scans[gate, beam] = cell_df[(cell_df['gflg'] == 0)].shape[0]
+            else:
+                # Otherwise average the provided parameter
+                try:
+                    scans[gate, beam] = statistics.mean(cell_df.query('gflg == 0')[parameter])
+                except statistics.StatisticsError:
+                    # We can't take a median because there are no points
+                    scans[gate, beam] = math.nan
+
+    print("Plotting Data...")
+    if plot_ground_scat:
+        modified_jet_cm = modified_jet()
+        data = ax.pcolormesh(beam_corners_lons, beam_corners_lats, grndsct_scans,
+                             transform=ccrs.PlateCarree(), cmap=modified_jet_cm)
+    else:
+        if parameter == 'v':
+            cmap = "seismic_r"
+        else:
+            cmap = modified_jet()
+        data = ax.pcolormesh(beam_corners_lons, beam_corners_lats, scans,
+                             transform=ccrs.PlateCarree(), cmap=cmap)
+    fig.colorbar(data, ax=ax)
 
     # plot all the beam boundary lines
     for beam_line in range(beam_range[0], beam_range[1] + 2):
@@ -148,17 +191,30 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
                  beam_corners_lats[gate_range[0]:gate_range[1] + 2, beam_line],
                  color='black', linewidth=0.1, transform=ccrs.Geodetic())
 
-    # plot all the arcs
+    # plot the arcs boundary lines
     for range_ in range(gate_range[0], gate_range[1] + 2):
         plt.plot(beam_corners_lons[range_, beam_range[0]:beam_range[1] + 2],
                  beam_corners_lats[range_, beam_range[0]:beam_range[1] + 2],
                  color='black', linewidth=0.1, transform=ccrs.Geodetic())
 
-    if show_plot:
-        plt.show()
-        warnings.warn("This is a test warning", category=Warning)
+    print("Returning the figure and scan...")
+    if plot_ground_scat:
+        return fig, grndsct_scans
+    else:
+        return fig, scans
 
 
 if __name__ == '__main__':
-    thisTuple = (0, 15)
-    occ_fan(station="hal", year_range=(2010, 2011))
+    """ Testing """
+
+    station = "rkn"
+    fig, scans = occ_fan(station=station, year_range=(2011, 2011), month_range=(11, 11), day_range=(11, 11),
+                         local_testing=True, parameter='v')
+
+    loc_root = str((pathlib.Path().parent.absolute()))
+    out_dir = loc_root + "/out"
+    out_file = out_dir + "/occ_fan_" + station
+    print("Saving plot as " + out_file)
+    fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
+
+    # plt.show()
