@@ -127,6 +127,10 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                                     except BaseException:
                                         raise
 
+    if len(epoch) == 0:
+        # We have found no data, panic
+        raise Exception("get_data() found no data matching the provided criteria.")
+
     df = pd.DataFrame({'epoch': epoch,
                        'bmnum': bmnum,
                        'hour': hour,
@@ -155,7 +159,7 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
 
 if __name__ == '__main__':
     """ Testing """
-    df = get_data("sas", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1), hour_range=(0, 24),
+    df = get_data("rkn", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1), hour_range=(0, 24),
                   gate_range=(0, 99), beam_range=(0, 15))
 
     print(df.head())
