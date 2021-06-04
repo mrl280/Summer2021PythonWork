@@ -22,12 +22,8 @@ def PickleFITACF(station, date):
                     This is a combination of year 'time.yr', month 'time.mo', day 'time.dy', 
                     hour 'time.hr', minute 'time.mt', second 'time.sc', and microsecond 'time.us'
             - Date time (human readable date time)
-            - Year
-            - Month
-            - Day
-            - Hour
-            - Minute
-            - Second (included microseconds)
+            - Year 'year', Month 'month', Day 'day'
+            - Hour, Minute, Second (included microseconds)
             - Beam azimuth 'bmazm'
             - Integration Seconds (include microseconds) 'intt' 
             - Beam Number 'bmnum' (starting at Beam 0)
@@ -49,7 +45,7 @@ def PickleFITACF(station, date):
             - Elevation angle 'elv' with low 'elv_low' and high 'elv_high' estimates
     """
 
-    pattern = '%Y.%m.%d %H:%M:%S'  # This is the pattern we will use to convert time info to epoch
+    pattern = "%Y.%m.%d %H:%M:%S"  # This is the pattern we will use to convert time info to epoch
 
     # Create empty arrays for scalar parameters
     epoch = []
