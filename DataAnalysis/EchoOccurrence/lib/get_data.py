@@ -71,10 +71,14 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                         if day_range[0] <= day_here <= day_range[1]:
                             # We will read in the whole day, and worry about hour restrictions later
                             print("    Reading: " + str(in_file))
-                            with bz2.open(in_file) as fp:
-                                fitacf_stream = fp.read()
-                            sdarn_read = pydarn.SuperDARNRead(fitacf_stream, True)
-                            fitacf_data = sdarn_read.read_fitacf()  # this is
+                            try:
+                                with bz2.open(in_file) as fp:
+                                    fitacf_stream = fp.read()
+                                sdarn_read = pydarn.SuperDARNRead(fitacf_stream, True)
+                                fitacf_data = sdarn_read.read_fitacf()  # this is
+                            except BaseException:
+                                # Sometimes files are corrupted, or there is something wrong with them
+                                pass
 
                             # Loop through all the scans and build up the arrays
                             # As far as I know, list extensions are the fastest way to do this
