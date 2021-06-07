@@ -23,7 +23,7 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     """
 
     Produce a fan plot.  Can plot a simple echo count, ground scatter count, or average a fitACF parameter over the
-     privided time range.
+     provided time range.
 
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
