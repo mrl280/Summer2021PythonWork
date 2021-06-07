@@ -60,8 +60,8 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     :param plot_ground_scat: bool (optional)
             Set this to true if you would like to plot ground scatter counts.  Default is False
             If plot_ground_scat is set to True, then :param parameter is ignored.
-    :return: matplotlib.pyplot.figure: The figure.  It can then be modified, added to, printed out, or saved
-            in whichever file format is desired.
+    :return: matplotlib.pyplot.figure, 2d np.array: The figure and the scan data plotted.
+            The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
     if parameter is not None:
@@ -71,6 +71,7 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
         zmin = defaultzminmax[parameter][0]
         zmax = defaultzminmax[parameter][1]
 
+    year_range = check_year_range(year_range)
     month_range = check_month_range(month_range)
     day_range = check_day_range(day_range)
     hour_range = check_hour_range(hour_range)

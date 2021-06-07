@@ -1,3 +1,21 @@
+import datetime
+
+
+def check_year_range(year_range):
+    """
+    :param year_range: (<int>, <int>) or None: The year range to check
+    :return: (<int>, <int>): A suitable year range
+    """
+    now = datetime.datetime.now()
+    if year_range is None:
+        year_range = (1993, now.year)  # Assume we all data
+    if year_range[0] < 1993:
+        year_range = (1993, year_range[1])
+    if year_range[1] > now.year:
+        year_range = (year_range[0], now.year)
+    return year_range
+
+
 def check_month_range(month_range):
     """
     :param month_range: (<int>, <int>) or None: The month range to check
