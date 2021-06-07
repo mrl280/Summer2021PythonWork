@@ -22,13 +22,14 @@ if __name__ == '__main__':
     SAVE_PLOTS = True
     SHOW_PLOTS = False
 
-    year = "2012"  # yyyy
-    month = "10"  # mm
-    day = "15"  # dd
+    year = "2011"  # yyyy
+    month = "11"  # mm
+    day = "14"  # dd
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
     SD_gate_range = [25, 32]
+    # SD_gate_range = [31, 41]
 
     RISR_station = "ran"
     RISR_wd_beam_range = [5, 5]
@@ -187,7 +188,7 @@ if __name__ == '__main__':
         plt.subplots_adjust(hspace=0.4)
         fig.suptitle(SD_numonic + " and " + RISR_numonic + " LOS Velocity Evolution; " + year + "." + month + "." + day
                      + "; " + str(start_hour_here) + "-" + str(end_hour_here) + " UT"
-                     + "\nNote: Positive Velocity Means Towards the Radars"
+                     + "\nNote: Positive Velocity Means Towards the Radars; " + SD_gate_string
                      + "\nProduced by " + str(os.path.basename(__file__)),
                      fontsize=13)
 

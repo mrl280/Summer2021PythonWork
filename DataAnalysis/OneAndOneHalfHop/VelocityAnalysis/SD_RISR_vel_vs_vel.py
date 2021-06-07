@@ -30,7 +30,9 @@ if __name__ == '__main__':
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
-    SD_gate_range = [30, 40]
+    # SD_gate_range = [30, 40]
+    SD_gate_range = [25, 32]
+    # SD_gate_range = [31, 41]
 
     RISR_station = "ran"
     RISR_wd_beam_range = [5, 5]
@@ -126,7 +128,7 @@ if __name__ == '__main__':
         fig, ax = plt.subplots(figsize=(8, 9), dpi=300, nrows=n_rows, ncols=n_cols)
         plt.subplots_adjust(hspace=0.4, wspace=0.4)
         fig.suptitle(SD_numonic + " and " + RISR_numonic + " LOS Velocity Comparison; " + year + "." + month + "." + day
-                     + "\nNote: Positive Velocity Means Towards the Radars"
+                     + "\nNote: Positive Velocity Means Towards the Radars; " + SD_gate_string
                      + "\nProduced by " + str(os.path.basename(__file__)),
                      fontsize=13)
 
