@@ -13,7 +13,7 @@ if __name__ == '__main__':
     """
     Check the RISR and SD overlap
     """
-    plot_out = "show"
+    plot_out = "save"
 
     rkn_lon, rkn_lat = -92.113, 62.82  # RKN
     inv_lon, inv_lat = -133.77, 68.41  # INV
@@ -21,11 +21,13 @@ if __name__ == '__main__':
 
     fig = plt.figure(figsize=(8, 5), dpi=300)
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.Orthographic(rkn_lon, rkn_lat))
-    ax.set_global()
+    # ax.set_global()
     ax.set_extent([-37, -143, 35, 90])
-    ax.stock_img()
-    ax.add_feature(cfeature.COASTLINE)
-    ax.add_feature(cfeature.BORDERS, linestyle="-", linewidth=0.5)
+    ax.add_feature(cfeature.OCEAN)
+    ax.add_feature(cfeature.LAND)
+    # ax.stock_img()
+    # ax.add_feature(cfeature.COASTLINE)
+    # ax.add_feature(cfeature.BORDERS, linestyle="-", linewidth=0.5)
     radar_marker_size = 4
 
     # Add RKN to the map

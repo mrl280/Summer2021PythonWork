@@ -28,11 +28,11 @@ if __name__ == '__main__':
 
     SD_station = "rkn"
     SD_beam_range = [5, 5]
-    SD_gate_range = [25, 32]
+    SD_gate_range = [29, 35]
     # SD_gate_range = [31, 41]
 
     RISR_station = "ran"
-    RISR_wd_beam_range = [5, 5]
+    RISR_wd_beam_range = [2, 2]
     resolution = 1  # minutes
 
     SD_numonic = SD_station.upper()
