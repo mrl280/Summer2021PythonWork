@@ -233,4 +233,4 @@ if __name__ == '__main__':
     print("Saving plot as " + out_file)
     fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
 
-    plt.show()
+    # plt.show()

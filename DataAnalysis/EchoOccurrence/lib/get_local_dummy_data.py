@@ -1,7 +1,7 @@
 import pathlib
 import pandas as pd
 
-from DataAnalysis.EchoOccurrence.lib.build_date_epoch import build_date_epoch
+from build_date_epoch import build_date_epoch
 
 
 def get_local_dummy_data(station, year, month, day, start_hour_UT, end_hour_UT):
