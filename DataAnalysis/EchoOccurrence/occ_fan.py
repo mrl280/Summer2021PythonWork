@@ -225,8 +225,9 @@ if __name__ == '__main__':
     """ Testing """
 
     station = "rkn"
-    fig, scans = occ_fan(station=station, year_range=(2011, 2011), month_range=(11, 11), day_range=(11, 11),
-                         gate_range=(0, 74), beam_range=(0, 15), local_testing=True, parameter='v')
+    fig, scans = occ_fan(station=station, year_range=(2007, 2009), month_range=(2, 2), day_range=None,
+                         gate_range=(0, 74), beam_range=(0, 15), plot_ground_scat=True, parameter='v',
+                         local_testing=False)
 
     loc_root = str((pathlib.Path().parent.absolute()))
     out_dir = loc_root + "/out"
