@@ -105,7 +105,7 @@ def PickleRISR(station, date):
              'cbadl': df['CBADL'],
              'elv': df['ELM'],
              'transFreq': df['TFREQ'], 'reciveFreq': df['RFREQ'],
-             'gdlat': df['GDLAT'], 'gdlon': df['GLON'],
+             'gdlat': df['GDLAT'], 'gdlon': df['GLON'], 'gdalt': df['GDALT'],
              'Ne': df['NE'], 'NeErr': df['DNE'],
              'ionTemp': df['TI'], 'ionTempErr': df['DTI'],
              'eTemp': df['TE'], 'eTempErr': df['DTE'],
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     """
     Handler to call PickleRISR on RISR txt data files
     """
-    PICKLE_ALL = True  # To prevent accidentally pickling all data
+    PICKLE_ALL = False  # To prevent accidentally pickling all data
 
     if PICKLE_ALL:
         print("Pickling all downloaded RISR data...")
@@ -145,6 +145,6 @@ if __name__ == '__main__':
                 PickleRISR(station, in_dir[3:])
     else:
         station = "ran"
-        date = "20091107"
+        date = "20101106"
         print("Pickling " + station + date + "...")
         PickleRISR(station, date)
