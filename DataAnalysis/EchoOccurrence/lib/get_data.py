@@ -44,7 +44,8 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
 
     # Create empty arrays for scalar parameters
     epoch = []
-    hour = []
+    year, month, day = [], [], []
+    hour, minute, second = [], [], []
     bmnum = []
     tfreq = []
     frang, rsep = [], []
@@ -103,7 +104,12 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                                 if num_gates_reporting > 0:
                                     # Build up scalar parameters
                                     epoch.extend([epoch_here] * num_gates_reporting)
+                                    year.extend([fitacf_data[scan]['time.yr']] * num_gates_reporting)
+                                    month.extend([fitacf_data[scan]['time.mo']] * num_gates_reporting)
+                                    day.extend([fitacf_data[scan]['time.dy']] * num_gates_reporting)
                                     hour.extend([fitacf_data[scan]['time.hr']] * num_gates_reporting)
+                                    minute.extend([fitacf_data[scan]['time.mt']] * num_gates_reporting)
+                                    second.extend([fitacf_data[scan]['time.sc']] * num_gates_reporting)
                                     bmnum.extend([fitacf_data[scan]['bmnum']] * num_gates_reporting)
                                     tfreq.extend([fitacf_data[scan]['tfreq']] * num_gates_reporting)
                                     frang.extend([fitacf_data[scan]['frang']] * num_gates_reporting)
@@ -137,7 +143,8 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
 
     df = pd.DataFrame({'epoch': epoch,
                        'bmnum': bmnum,
-                       'hour': hour,
+                       'year': year,    'month': month,     'day': day,
+                       'hour': hour,   'minute': minute,   'second': second,
                        'tfreq': tfreq,
                        'frang': frang,  'rsep': rsep,
 
@@ -155,7 +162,7 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
     # Until I have an application that requires bad quality points, I will assume they always need to be filtered out
     df = df.loc[(df['qflg'] == 1)]
 
-    df.drop(columns=['qflg', 'hour'], inplace=True)
+    df.drop(columns=['qflg'], inplace=True)
     df.reset_index(drop=True, inplace=True)
 
     return df
