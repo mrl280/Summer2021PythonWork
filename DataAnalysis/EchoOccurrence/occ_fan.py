@@ -22,13 +22,14 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
             local_testing=False, parameter=None, plot_ground_scat=False):
     """
 
-    Produce a fan plot
+    Produce a fan plot.  Can plot a simple echo count, ground scatter count, or average a fitACF parameter over the
+     privided time range.
 
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
             occurrence investigations often require chewing large amounts of data.
-        - Only does plots 45 km data
-            (a warning will be printed if other spatial resolution data has been stripped from the dataset)
+        - Only considers 45 km data.
+            (a warning will be printed if other spatial resolution data is stripped from the dataset)
         - This program uses fitACF 3.0 data.  To change this, modify the source code.
         - All times and dates are assumed UT
 
@@ -63,6 +64,7 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     """
 
     if parameter is not None:
+        # Obtain z limits
         defaultzminmax = {'p_l': [0, 50], 'v': [-600, 600],
                           'w_l': [0, 250], 'elv': [0, 50]}
         zmin = defaultzminmax[parameter][0]
@@ -92,17 +94,19 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     if local_testing:
         # Just read in some test data
         warnings.warn("Running in local testing mode, just going to use local dummy data", category=Warning)
-        df = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=23)
+        # df = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=23)
+        df = get_local_dummy_data(station=station, year=2014, month=3, day=3, start_hour_UT=0, end_hour_UT=23)
         # print(df.keys())
     else:
         df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
                       hour_range=hour_range, gate_range=gate_range, beam_range=beam_range)
 
-    if not plot_ground_scat:
-        df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
-        if parameter is not None:
-            df = df.loc[(df[parameter] >= zmin) & (df[parameter] <= zmax)]
-        df.reset_index(drop=True, inplace=True)
+    df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
+
+    if not plot_ground_scat and parameter is not None:
+        df = df.loc[(df[parameter] >= zmin) & (df[parameter] <= zmax)]
+
+    df.reset_index(drop=True, inplace=True)
 
     # Restrict to 45 km mode data, you need to modify the fan if you want to use data of a different spatial resolution
     number_of_records_before_spatial_resolution_check = df.shape[0]
@@ -148,40 +152,52 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
              label=additional_radar_info.name)
 
     beam_corners_lats, beam_corners_lons = radar_fov(radar_id, coords='geo')  # Get the radar field of view
-    fan_shape = beam_corners_lons.shape
 
     print("Computing scan...")
+
+    num_gates = (gate_range[1] + 1) - gate_range[0]
+    num_beams = (beam_range[1] + 1) - beam_range[0]
+
     # Loop through all the gate/beam cells and build the scans
     # First index will be gates, the second will be beams
-    scans = np.zeros((fan_shape[0] - 1, fan_shape[1] - 1))
-    grndsct_scans = np.zeros((fan_shape[0] - 1, fan_shape[1] - 1))
-    for gate in range(scans.shape[0]):
-        for beam in range(scans.shape[1]):
+    scans = np.zeros((num_gates, num_beams))
+    grndsct_scans = np.zeros((num_gates, num_beams))
+    for gate_idx in range(num_gates):
+        for beam_idx in range(num_beams):
+            gate = gate_range[0] + gate_idx
+            beam = beam_range[0] + beam_idx
+            # print("Gate: " + str(gate) + ", beam : " + str(beam))
             cell_df = df[(df['slist'] == gate) & (df['bmnum'] == beam)]
-            grndsct_scans[gate, beam] = cell_df[(cell_df['gflg'] == 1)].shape[0]
+            grndsct_scans[gate_idx, beam_idx] = cell_df[(cell_df['gflg'] == 1)].shape[0]
 
             if parameter is None:
                 # We want a simple echo count
-                scans[gate, beam] = cell_df[(cell_df['gflg'] == 0)].shape[0]
+                scans[gate_idx, beam_idx] = cell_df[(cell_df['gflg'] == 0)].shape[0]
             else:
                 # Otherwise average the provided parameter
                 try:
-                    scans[gate, beam] = statistics.mean(cell_df.query('gflg == 0')[parameter])
+                    scans[gate_idx, beam_idx] = statistics.mean(cell_df.query('gflg == 0')[parameter])
                 except statistics.StatisticsError:
                     # We can't take a median because there are no points
-                    scans[gate, beam] = math.nan
+                    scans[gate_idx, beam_idx] = math.nan
+
+    # Build reduced arrays containing only the cells in the specified gate/beam range
+    reduced_beam_corners_lons = beam_corners_lons[gate_range[0]: gate_range[1] + 2,
+                                                  beam_range[0]: beam_range[1] + 2]
+    reduced_beam_corners_lats = beam_corners_lats[gate_range[0]: gate_range[1] + 2,
+                                                  beam_range[0]: beam_range[1] + 2]
 
     print("Plotting Data...")
     if plot_ground_scat:
         modified_jet_cm = modified_jet()
-        data = ax.pcolormesh(beam_corners_lons, beam_corners_lats, grndsct_scans,
+        data = ax.pcolormesh(reduced_beam_corners_lons, reduced_beam_corners_lats, grndsct_scans,
                              transform=ccrs.PlateCarree(), cmap=modified_jet_cm, zorder=3)
     else:
         if parameter == 'v':
             cmap = "seismic_r"
         else:
             cmap = modified_jet()
-        data = ax.pcolormesh(beam_corners_lons, beam_corners_lats, scans,
+        data = ax.pcolormesh(reduced_beam_corners_lons, reduced_beam_corners_lats, scans,
                              transform=ccrs.PlateCarree(), cmap=cmap, zorder=3)
     fig.colorbar(data, ax=ax)
 
@@ -209,7 +225,7 @@ if __name__ == '__main__':
 
     station = "rkn"
     fig, scans = occ_fan(station=station, year_range=(2011, 2011), month_range=(11, 11), day_range=(11, 11),
-                         local_testing=True, parameter=None)
+                         gate_range=(0, 74), beam_range=(0, 15), local_testing=True, parameter='v')
 
     loc_root = str((pathlib.Path().parent.absolute()))
     out_dir = loc_root + "/out"
@@ -217,4 +233,4 @@ if __name__ == '__main__':
     print("Saving plot as " + out_file)
     fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
 
-    # plt.show()
+    plt.show()
