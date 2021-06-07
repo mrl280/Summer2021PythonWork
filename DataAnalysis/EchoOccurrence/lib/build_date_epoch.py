@@ -12,7 +12,20 @@ def build_date_epoch(year, month, day, hour):
     """
     pattern = '%Y.%m.%d %H:%M:%S'
 
-    if hour == 24:
+    if month < 10:
+        month = "0" + str(month)
+    else:
+        month = str(month)
+    if day < 10:
+        day = "0" + str(day)
+    else:
+        day = str(day)
+    if hour < 10:
+        hour = "0" + str(hour)
+    else:
+        hour = str(hour)
+
+    if hour == "24":
         datetime = str(year) + "." + str(month) + "." + str(day) \
             + " " + "23:59:59"
     else:
