@@ -12,7 +12,7 @@ import cartopy.feature as cfeature
 from matplotlib import pyplot as plt
 from pydarn import SuperDARNRadars, radar_fov
 
-from lib.cm.modified_jet import modified_jet
+from lib.cm.modified_viridis import modified_viridis
 from lib.get_data import get_data
 from lib.get_local_dummy_data import get_local_dummy_data
 from lib.range_checkers import *
@@ -97,7 +97,7 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
         # Just read in some test data
         warnings.warn("Running in local testing mode, just going to use local dummy data", category=Warning)
         # df = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=23)
-        df = get_local_dummy_data(station=station, year=2014, month=3, day=3, start_hour_UT=0, end_hour_UT=23)
+        df = get_local_dummy_data(station=station, year=2014, month=3, day=3, start_hour_UT=0, end_hour_UT=12)
         # print(df.keys())
     else:
         df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
@@ -191,14 +191,14 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
 
     print("Plotting Data...")
     if plot_ground_scat:
-        modified_jet_cm = modified_jet()
+        cmap = modified_viridis()
         data = ax.pcolormesh(reduced_beam_corners_lons, reduced_beam_corners_lats, grndsct_scans,
-                             transform=ccrs.PlateCarree(), cmap=modified_jet_cm, zorder=3)
+                             transform=ccrs.PlateCarree(), cmap=cmap, zorder=3)
     else:
         if parameter == 'v':
-            cmap = "seismic_r"
+            cmap = 'seismic_r'
         else:
-            cmap = modified_jet()
+            cmap = modified_viridis()
         data = ax.pcolormesh(reduced_beam_corners_lons, reduced_beam_corners_lats, scans,
                              transform=ccrs.PlateCarree(), cmap=cmap, zorder=3)
     fig.colorbar(data, ax=ax)
@@ -227,13 +227,13 @@ if __name__ == '__main__':
 
     station = "rkn"
     fig, scans = occ_fan(station=station, year_range=(2007, 2009), month_range=(2, 2), day_range=None,
-                         gate_range=(0, 74), beam_range=(0, 15), plot_ground_scat=True, parameter='v',
-                         local_testing=False)
+                         gate_range=(0, 74), beam_range=(0, 15), plot_ground_scat=False, parameter='v',
+                         local_testing=True)
 
     loc_root = str((pathlib.Path().parent.absolute()))
     out_dir = loc_root + "/out"
     out_file = out_dir + "/occ_fan_" + station
     print("Saving plot as " + out_file)
-    fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
 
-    # plt.show()
+    # fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
+    plt.show()
