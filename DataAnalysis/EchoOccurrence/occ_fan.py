@@ -64,6 +64,8 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
             The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
+    # Test
+
     if parameter is not None:
         # Obtain z limits
         defaultzminmax = {'p_l': [0, 50], 'v': [-600, 600],
