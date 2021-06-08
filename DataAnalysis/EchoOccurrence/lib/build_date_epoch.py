@@ -1,3 +1,4 @@
+import datetime
 import time
 import calendar
 
@@ -26,12 +27,20 @@ def build_date_epoch(year, month, day, hour):
         hour = str(hour)
 
     if hour == "24":
-        datetime = str(year) + "." + str(month) + "." + str(day) \
+        date_time_str = str(year) + "." + str(month) + "." + str(day) \
             + " " + "23:59:59"
     else:
-        datetime = str(year) + "." + str(month) + "." + str(day) \
+        date_time_str = str(year) + "." + str(month) + "." + str(day) \
             + " " + str(hour) + ":00:00"
-    datetime = time.strptime(datetime, pattern)
-    epoch = calendar.timegm(datetime)
+    date_time_struct = time.strptime(date_time_str, pattern)
+    epoch = calendar.timegm(date_time_struct)
 
-    return datetime, epoch
+    date_time = datetime.datetime.fromtimestamp(time.mktime(date_time_struct))
+
+    return date_time, epoch
+
+
+if __name__ == "__main__":
+    date_time, epoch = build_date_epoch(2018, 1, 1, 1)
+
+    print(type(date_time))

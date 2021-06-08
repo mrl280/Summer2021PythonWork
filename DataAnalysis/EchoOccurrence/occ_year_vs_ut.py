@@ -1,12 +1,14 @@
 import pathlib
 import warnings
 
+import aacgmv2
 import numpy as np
 import pandas as pd
 import pydarn
 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
+from pydarn import radar_fov
 from scipy import stats
 
 from lib.build_date_epoch import build_date_epoch
@@ -15,7 +17,7 @@ from lib.get_local_dummy_data import get_local_dummy_data
 from lib.range_checkers import *
 
 
-def occ_year_vs_ut(station, year_range, hour_range=None, gate_range=None, beam_range=None,
+def occ_year_vs_ut(station, year_range, time_units='mlt', hour_range=None, gate_range=None, beam_range=None,
                    local_testing=False, parameter=None):
     """
 
@@ -34,6 +36,8 @@ def occ_year_vs_ut(station, year_range, hour_range=None, gate_range=None, beam_r
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
     :param year_range: (<int>, <int>):
             Inclusive. The year range to consider.
+    :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
+            The time units to plot along x.  Default is 'mlt'
     :param hour_range: (<int>, <int>) (optional):
             The hour range to consider.  If omitted (or None), then all hours will be considered.
             Not quite inclusive: if you pass in (0, 5) you will get from 0:00-4:59 UT
@@ -52,6 +56,13 @@ def occ_year_vs_ut(station, year_range, hour_range=None, gate_range=None, beam_r
             The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
+    if time_units.upper() == "MLT":
+        time_units = "mlt"
+    elif time_units.upper() == "UT":
+        time_units = "ut"
+    else:
+        raise Exception("invalid time units passed to occ_year_vs_ut().  Options are 'mlt' or 'ut'.")
+
     if parameter is not None:
         # Obtain z limits
         defaultzminmax = {'p_l': [0, 50], 'v': [-600, 600],
@@ -62,7 +73,7 @@ def occ_year_vs_ut(station, year_range, hour_range=None, gate_range=None, beam_r
     year_range = check_year_range(year_range)
     hour_range = check_hour_range(hour_range)
     month_range = (1, 12)
-    day_range = (1, 1)  # TODO: fix
+    day_range = (1, 2)  # TODO: fix
 
     if isinstance(station, str):
         hdw_info = pydarn.read_hdw_file(station)  # Get the hardware file, there is lots of good stuff in there
@@ -77,10 +88,10 @@ def occ_year_vs_ut(station, year_range, hour_range=None, gate_range=None, beam_r
         # Just read in some test data
         warnings.warn("Running in local testing mode, just going to use local dummy data", category=Warning)
         # df = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=23)
-        df = get_local_dummy_data(station=station, year=2011, month=11, day=12, start_hour_UT=0, end_hour_UT=24)
-        df_2 = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=24)
-        df_3 = get_local_dummy_data(station=station, year=2012, month=10, day=15, start_hour_UT=0, end_hour_UT=24)
-        df = pd.concat([df, df_2, df_3])
+        df = get_local_dummy_data(station=station, year=2011, month=11, day=12, start_hour_UT=0, end_hour_UT=2)
+        # df_2 = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=24)
+        # df_3 = get_local_dummy_data(station=station, year=2012, month=10, day=15, start_hour_UT=0, end_hour_UT=24)
+        # df = pd.concat([df, df_2, df_3])
         # print(df.keys())
     else:
         df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
@@ -108,7 +119,10 @@ def occ_year_vs_ut(station, year_range, hour_range=None, gate_range=None, beam_r
     plt.subplots_adjust(hspace=0.05)
 
     # Apply common subplot formatting
-    ax[n_rows - 1].set_xlabel('Time, UT')
+    if time_units == "mlt":
+        ax[n_rows - 1].set_xlabel('Time, MLT')
+    else:
+        ax[n_rows - 1].set_xlabel('Time, UT')
     for row in reversed(range(n_rows)):
         ax[row].set_ylim([0, 13])
         ax[row].set_xlim(hour_range)
@@ -125,18 +139,61 @@ def occ_year_vs_ut(station, year_range, hour_range=None, gate_range=None, beam_r
     n_bins_x = (hour_range[1] - hour_range[0]) * 2  # half hour bins
     contour_range = [ax[0].get_xlim(), ax[0].get_ylim()]  # All plots are the same size
     for row in reversed(range(n_rows)):
-        print(row)
         year = year_range[1] - row
-        start_datetime, start_epoch = build_date_epoch(year, 1, 1, 0)
-        end_datetime, end_epoch = build_date_epoch(year, 12, 31, 24)
 
-        # Restrict based on time and then hour range
+        # Build a restricted dataframe with the year's data
+        start_datetime, start_epoch = build_date_epoch(year=year, month=1, day=1, hour=0)
+        end_datetime, end_epoch = build_date_epoch(year=year, month=12, day=31, hour=24)
         df_yy = df[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)]
-        df_yy = df_yy.loc[(df['hour'] >= hour_range[0]) & (df['hour'] <= hour_range[1])]
-        df.reset_index(drop=True, inplace=True)
+        df_yy.reset_index(drop=True, inplace=True)
 
-        # Compute decimal time to plot along x, and decimal datetime to plot along y
-        df_yy['xdata'] = df_yy['hour'] + df_yy['minute'] / 60 + df_yy['second'] / 3600
+        df_yy = pd.concat([df_yy.head(n=10), df_yy.tail(n=10)])
+        df_yy.reset_index(drop=True, inplace=True)
+
+        if time_units == "mlt":
+            # To compute mlt we need longitudes.. we will assume they don't change much over the year
+            beam_corners_aacgm_lats, beam_corners_aacgm_lons = \
+                radar_fov(stid=hdw_info.stid, coords='aacgm', date=start_datetime)
+
+            print("Computing MLT...")
+            mlt = []
+            for i in range(len(df_yy)):
+                date = datetime.datetime(year, df_yy['month'][i], df_yy['day'][i],
+                                         df_yy['hour'][i], df_yy['minute'][i], int(df_yy['second'][i]))
+
+                # TODO: Figure out if you need to get beam_corners_aacgm_lons for every time
+                # beam_corners_aacgm_lats, beam_corners_aacgm_lons = \
+                #     radar_fov(stid=hdw_info.stid, coords='aacgm', date=date)
+                #
+
+
+                gate = df_yy['slist'][i]
+                beam = df_yy['bmnum'][i]
+
+                # estimate the cell longitude with the bottom corner
+                aacgm_lon = beam_corners_aacgm_lons[gate, beam]
+                mlt.extend(aacgmv2.convert_mlt(aacgm_lon, date))
+
+                # # Work out shift due in MLT
+                # mltshift = beam_corners_aacgm_lons[0, 0] - (aacgmv2.convert_mlt(beam_corners_aacgm_lons[0, 0], date) * 15)
+                # beam_corners_mlts = beam_corners_aacgm_lons - mltshift
+                # print(mltshift)
+            # print("Length: " + str(len(mlt)))
+            # print("Max: " + str(max(mlt)))
+            # print("Min: " + str(min(mlt)))
+            # print(np.asarray(mlt))
+
+            df_yy['mlt'] = mlt
+            df_yy = df_yy.loc[(df_yy['mlt'] >= hour_range[0]) & (df_yy['mlt'] <= hour_range[1])]
+            df_yy['xdata'] = df_yy['mlt']
+        else:
+            # Use UT
+            df_yy = df_yy.loc[(df_yy['hour'] >= hour_range[0]) & (df_yy['hour'] <= hour_range[1])]
+            df_yy['xdata'] = df_yy['hour'] + df_yy['minute'] / 60 + df_yy['second'] / 3600
+
+        df_yy.reset_index(drop=True, inplace=True)
+
+        # Compute decimal datetime to plot along y
         df_yy['ydata'] = (df_yy['month'] - 1) + (df_yy['day'] - 1) / 31 + df_yy['xdata'] / 730
 
         if parameter is None:
@@ -167,15 +224,19 @@ def occ_year_vs_ut(station, year_range, hour_range=None, gate_range=None, beam_r
 if __name__ == '__main__':
     """ Testing """
 
+    local_testing = False
+
     station = "rkn"
     fig = occ_year_vs_ut(station=station, year_range=(2011, 2012),
                          gate_range=(20, 30), beam_range=(7, 7),
-                         parameter='v', local_testing=False)
+                         parameter='v', local_testing=local_testing)
 
     loc_root = str((pathlib.Path().parent.absolute()))
     out_dir = loc_root + "/out"
-    out_file = out_dir + "/occ_year_vs_ut_" + station
+    out_file = out_dir + "/occ_year_vs_time_" + station
     print("Saving plot as " + out_file)
-    fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
 
-    # plt.show()
+    if local_testing:
+        plt.show()
+    else:
+        fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
