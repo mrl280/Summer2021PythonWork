@@ -62,7 +62,7 @@ def occ_year_vs_ut(station, year_range, hour_range=None, gate_range=None, beam_r
     year_range = check_year_range(year_range)
     hour_range = check_hour_range(hour_range)
     month_range = (1, 12)
-    day_range = (1, 2)  # TODO: Fix back to (1, 31)
+    day_range = (1, 31)
 
     if isinstance(station, str):
         hdw_info = pydarn.read_hdw_file(station)  # Get the hardware file, there is lots of good stuff in there
