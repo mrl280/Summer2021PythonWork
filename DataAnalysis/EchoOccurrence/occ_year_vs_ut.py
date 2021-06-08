@@ -62,7 +62,7 @@ def occ_year_vs_ut(station, year_range, hour_range=None, gate_range=None, beam_r
     year_range = check_year_range(year_range)
     hour_range = check_hour_range(hour_range)
     month_range = (1, 12)
-    day_range = (1, 31)
+    day_range = (1, 1)  # TODO: fix
 
     if isinstance(station, str):
         hdw_info = pydarn.read_hdw_file(station)  # Get the hardware file, there is lots of good stuff in there
@@ -170,12 +170,12 @@ if __name__ == '__main__':
     station = "rkn"
     fig = occ_year_vs_ut(station=station, year_range=(2011, 2012),
                          gate_range=(20, 30), beam_range=(7, 7),
-                         parameter='v', local_testing=True)
+                         parameter='v', local_testing=False)
 
     loc_root = str((pathlib.Path().parent.absolute()))
     out_dir = loc_root + "/out"
     out_file = out_dir + "/occ_year_vs_ut_" + station
     print("Saving plot as " + out_file)
-    # fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
+    fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
 
-    plt.show()
+    # plt.show()
