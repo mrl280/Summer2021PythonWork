@@ -61,7 +61,7 @@ else:
 
 if isfile(PERSONAL_UUID_FILENAME):
     with open(PERSONAL_UUID_FILENAME) as f:
-        PERSONAL_UUID = f.readline()
+        PERSONAL_UUID = f.readline().strip()
 else:
     raise FileNotFoundError("Client ID file not found: {}".format(PERSONAL_UUID_FILENAME))
 
