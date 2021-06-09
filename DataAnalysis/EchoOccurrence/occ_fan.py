@@ -126,7 +126,6 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     beam_corners_lats, beam_corners_lons = radar_fov(radar_id, coords='geo')  # Get the radar field of view
 
     print("Computing scan...")
-
     num_gates = (gate_range[1] + 1) - gate_range[0]
     num_beams = (beam_range[1] + 1) - beam_range[0]
 
