@@ -6,7 +6,7 @@ import aacgmv2
 def add_mlt_to_df(beam_corners_aacgm_lons, beam_corners_aacgm_lats, df):
     """
 
-    Add magnetic local time ('mlt') column to a dataframe
+    Add magnetic local time ('mlt') and aacgm latitude columns to a dataframe
 
     :param beam_corners_aacgm_lats: numpy.ndarray: Longitudes in aacgm units
     :param beam_corners_aacgm_lons: numpy.ndarray: Latitudes in aacgm units
@@ -15,6 +15,7 @@ def add_mlt_to_df(beam_corners_aacgm_lons, beam_corners_aacgm_lats, df):
     """
 
     aacgm_lons = []
+    aacgm_lats = []
     dates = []
 
     #  Loop through the dataframe, and build up aacgm_lons and dates
@@ -40,8 +41,11 @@ def add_mlt_to_df(beam_corners_aacgm_lons, beam_corners_aacgm_lats, df):
                                        (beam_corners_aacgm_lons[gate_corner + 1, beam_corner + 1],
                                         beam_corners_aacgm_lats[gate_corner + 1, beam_corner + 1])])
         aacgm_lons.append(cent_lon)
+        aacgm_lats.append(cent_lat)
 
     df['mlt'] = aacgmv2.convert_mlt(arr=aacgm_lons, dtime=dates, m2a=False)
+    df['lat'] = aacgm_lats
+
     return df
 
 
