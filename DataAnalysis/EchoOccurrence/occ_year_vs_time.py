@@ -1,8 +1,7 @@
 import pathlib
-
-import aacgmv2
-import numpy as np
 import pydarn
+
+import numpy as np
 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
@@ -13,8 +12,7 @@ from DataAnalysis.EchoOccurrence.lib.add_mlt_to_df import add_mlt_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.z_min_max_defaults import z_min_max_defaults
-from lib.centroid import centroid
-from lib.build_datetime_epoch import build_date_epoch
+from lib.build_datetime_epoch import build_datetime_epoch
 from lib.data_getters.range_checkers import *
 
 
@@ -117,8 +115,8 @@ def occ_year_vs_ut(station, year_range, time_units='mlt', hour_range=None, gate_
         year = year_range[1] - row
 
         # Build a restricted dataframe with the year's data
-        start_datetime, start_epoch = build_date_epoch(year=year, month=1, day=1, hour=0)
-        end_datetime, end_epoch = build_date_epoch(year=year, month=12, day=31, hour=24)
+        start_datetime, start_epoch = build_datetime_epoch(year=year, month=1, day=1, hour=0)
+        end_datetime, end_epoch = build_datetime_epoch(year=year, month=12, day=31, hour=24)
         df_yy = df.loc[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)].copy()
         df_yy.reset_index(drop=True, inplace=True)
 
