@@ -2,15 +2,17 @@ import pathlib
 import pydarn
 
 import cartopy.crs as ccrs
-import cartopy.feature as cfeature
 import matplotlib.path as mpath
 import numpy as np
 import matplotlib.ticker as mticker
 
 from matplotlib import pyplot as plt
-from pydarn import SuperDARNRadars
+from pydarn import SuperDARNRadars, radar_fov
+from scipy import stats
 
-from DataAnalysis.EchoOccurrence.lib.only_keep_45km_res_data import only_keep_45km_res_data
+from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_epoch
+from lib.add_mlt_to_df import add_mlt_to_df
+from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.z_min_max_defaults import z_min_max_defaults
 from lib.data_getters.range_checkers import check_year
@@ -20,7 +22,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
                     local_testing=False, parameter=None, plot_ground_scat=False):
     """
 
-    Produce a full circle plot in mlt.
+    Produce a full circle stereographic plot in mlt.
     Can plot a simple echo count, ground scatter count, or average a fitACF parameter over the provided time range.
 
     Notes:
@@ -58,8 +60,8 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
     :param plot_ground_scat: bool (optional)
             Set this to true if you would like to plot ground scatter counts.  Default is False
             If plot_ground_scat is set to True, then :param parameter is ignored.
-    :return: matplotlib.pyplot.figure, 2d np.array: The figure and the scan data plotted.
-            The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
+    :return: matplotlib.pyplot.figure: The figure.
+            It can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
     if parameter is not None:
@@ -103,7 +105,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
         ax = fig.add_subplot(1, 1, 1, projection=ccrs.SouthPolarStereo())
         ax.set_extent([-180, 180, -90, max_lat], crs=ccrs.PlateCarree())
     else:
-        raise Exception("Error: hemisphere not recognized")
+        raise Exception("occ_full_circle(): hemisphere not recognized")
 
     # Compute a circle in axis coordinates which can be used as a boundary
     theta = np.linspace(0, 2 * np.pi, 100)
@@ -121,9 +123,52 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
     ax.text(text_offset_multiplier * ax.get_xlim()[1], 0, "06", ha='left', va='center')
     ax.text(text_offset_multiplier * ax.get_xlim()[0], 0, "18", ha='right', va='center')
 
-    # TODO: Add the data to the plot
+    print("Computing MLT...")
+    # To compute mlt we need longitudes..
+    # we will use the start of the year and assume magnetic longitudes don't change much over the observation period
+    start_datetime, start_epoch = build_datetime_epoch(year=year, month=1, day=1, hour=0)
+    beam_corners_aacgm_lats, beam_corners_aacgm_lons = radar_fov(stid=radar_id, coords='aacgm', date=start_datetime)
 
-    return None, None
+    df = add_mlt_to_df(beam_corners_aacgm_lons=beam_corners_aacgm_lons,
+                       beam_corners_aacgm_lats=beam_corners_aacgm_lats, df=df)
+
+    # Right now MLT is in the range 0-24, we need to put it in the range 0-360 for circular plotting
+    df['mlt'] = 15 * df['mlt']
+
+    n_bins_x = 180  # 1 bin per every 2 degrees
+    n_bins_y = 40  # About 1 bin per degree
+    contour_range = [[0, 360], [37, 90]]
+    print(contour_range)
+    if parameter is None:
+        # We just want a simple echo count
+        binned_counts, bin_xedges, bin_yedges, bin_numbers = stats.binned_statistic_2d(
+            df['mlt'], df['lat'], values=None,
+            statistic='count', bins=[n_bins_x, n_bins_y], range=contour_range)
+    else:
+        # We want to the median of the chosen parameter
+        binned_counts, bin_xedges, bin_yedges, bin_numbers = stats.binned_statistic_2d(
+            df['mlt'], df['lat'], values=df[parameter],
+            statistic='median', bins=[n_bins_x, n_bins_y], range=contour_range)
+        binned_counts = np.nan_to_num(binned_counts)
+
+    # Compute bin centers
+    bin_xwidth = (bin_xedges[1] - bin_xedges[0])
+    bin_ywidth = (bin_yedges[1] - bin_yedges[0])
+    bin_xcenters = bin_xedges[1:] - bin_xwidth / 2
+    bin_ycenters = bin_yedges[1:] - bin_ywidth / 2
+
+    print("Here are the bin bin_ycenters:")
+    print(bin_ycenters)
+
+    print("Here are the counts")
+    print(binned_counts[np.nonzero(binned_counts)])
+
+    # Plot the data
+    ax.plot([radar_geo_lon, radar_geo_lon], [radar__geo_lat, radar__geo_lat], 'ro', transform=ccrs.PlateCarree())
+    cont = ax.contourf(bin_xcenters, bin_ycenters, binned_counts.transpose(), 5, transform=ccrs.PlateCarree())
+    fig.colorbar(cont, ax=ax)
+
+    return fig
 
 
 if __name__ == '__main__':
@@ -132,9 +177,9 @@ if __name__ == '__main__':
     local_testing = True
     station = "rkn"
 
-    fig, scans = occ_full_circle(station=station, year=2007, month_range=(2, 2), day_range=None,
-                                 gate_range=(0, 74), beam_range=(0, 15),
-                                 plot_ground_scat=False, parameter='v', local_testing=local_testing)
+    fig = occ_full_circle(station=station, year=2011, month_range=(2, 2), day_range=None,
+                          gate_range=(20, 30), beam_range=(7, 7),
+                          plot_ground_scat=False, parameter=None, local_testing=local_testing)
 
     if local_testing:
         plt.show()
