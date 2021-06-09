@@ -11,6 +11,7 @@ from matplotlib.ticker import MultipleLocator
 from pydarn import radar_fov
 from scipy import stats
 
+from lib.z_min_max_defaults import z_min_max_defaults
 from lib.centroid import centroid
 from lib.build_date_epoch import build_date_epoch
 from lib.get_data import get_data
@@ -65,10 +66,7 @@ def occ_year_vs_ut(station, year_range, time_units='mlt', hour_range=None, gate_
         raise Exception("invalid time units passed to occ_year_vs_ut().  Options are 'mlt' or 'ut'.")
 
     if parameter is not None:
-        # Obtain z limits
-        defaultzminmax = {'p_l': [0, 50], 'v': [-600, 600], 'w_l': [0, 250], 'elv': [0, 50]}
-        zmin = defaultzminmax[parameter][0]
-        zmax = defaultzminmax[parameter][1]
+        zmin, zmax = z_min_max_defaults(parameter)
 
     year_range = check_year_range(year_range)
     hour_range = check_hour_range(hour_range)

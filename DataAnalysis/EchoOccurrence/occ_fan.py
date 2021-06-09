@@ -12,6 +12,7 @@ import cartopy.feature as cfeature
 from matplotlib import pyplot as plt
 from pydarn import SuperDARNRadars, radar_fov
 
+from lib.z_min_max_defaults import z_min_max_defaults
 from lib.cm.modified_viridis import modified_viridis
 from lib.get_data import get_data
 from lib.get_local_dummy_data import get_local_dummy_data
@@ -64,14 +65,8 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
             The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
-    # Test
-
     if parameter is not None:
-        # Obtain z limits
-        defaultzminmax = {'p_l': [0, 50], 'v': [-600, 600],
-                          'w_l': [0, 250], 'elv': [0, 50]}
-        zmin = defaultzminmax[parameter][0]
-        zmax = defaultzminmax[parameter][1]
+        zmin, zmax = z_min_max_defaults(parameter)
 
     year_range = check_year_range(year_range)
     month_range = check_month_range(month_range)
