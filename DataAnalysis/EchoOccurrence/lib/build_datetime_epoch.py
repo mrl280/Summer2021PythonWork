@@ -3,7 +3,7 @@ import time
 import calendar
 
 
-def build_date_epoch(year, month, day, hour):
+def build_datetime_epoch(year, month, day, hour):
     """
     :param year: int: the year to consider
     :param month: int: the month to consider
@@ -41,6 +41,6 @@ def build_date_epoch(year, month, day, hour):
 
 
 if __name__ == "__main__":
-    date_time, epoch = build_date_epoch(2018, 1, 1, 1)
+    date_time, epoch = build_datetime_epoch(2018, 1, 1, 1)
 
     print(type(date_time))
