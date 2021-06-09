@@ -82,7 +82,6 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
 
     print("Filtering data...")
     df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
-
     if not plot_ground_scat and parameter is not None:
         df = df.loc[(df[parameter] >= zmin) & (df[parameter] <= zmax)]
 

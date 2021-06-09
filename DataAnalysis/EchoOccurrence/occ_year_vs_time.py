@@ -2,20 +2,19 @@ import pathlib
 
 import aacgmv2
 import numpy as np
-import pandas as pd
 import pydarn
 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from pydarn import radar_fov
+from pydarn import radar_fov, SuperDARNRadars
 from scipy import stats
 
+from lib.only_keep_45km_res_data import only_keep_45km_res_data
+from lib.get_data_handler import get_data_handler
 from lib.z_min_max_defaults import z_min_max_defaults
 from lib.centroid import centroid
 from lib.build_date_epoch import build_date_epoch
-from lib.data_getters.get_data import get_data
-from lib.data_getters.get_local_dummy_data import get_local_dummy_data
-from DataAnalysis.EchoOccurrence.lib.data_getters.range_checkers import *
+from lib.data_getters.range_checkers import *
 
 
 def occ_year_vs_ut(station, year_range, time_units='mlt', hour_range=None, gate_range=None, beam_range=None,
@@ -67,53 +66,28 @@ def occ_year_vs_ut(station, year_range, time_units='mlt', hour_range=None, gate_
     if parameter is not None:
         zmin, zmax = z_min_max_defaults(parameter)
 
-    year_range = check_year_range(year_range)
-    hour_range = check_hour_range(hour_range)
-    month_range = (1, 12)
-    day_range = (1, 31)  # TODO: fix
-
-    if isinstance(station, str):
-        hdw_info = pydarn.read_hdw_file(station)  # Get the hardware file, there is lots of good stuff in there
-    else:
-        raise Exception("Error: Please enter the station as a 3 character string.  e.g. 'rkn'")
-
-    beam_range = check_beam_range(beam_range, hdw_info)
-    gate_range = check_gate_range(gate_range, hdw_info)
-
     print("Retrieving data...")
-    if local_testing:
-        # Just read in some test data
-        warnings.warn("Running in local testing mode, just going to use local dummy data", category=Warning)
-        # df = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=23)
-        df = get_local_dummy_data(station=station, year=2011, month=11, day=12, start_hour_UT=0, end_hour_UT=2)
-        df_2 = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=24)
-        df_3 = get_local_dummy_data(station=station, year=2012, month=10, day=15, start_hour_UT=0, end_hour_UT=24)
-        df = pd.concat([df, df_2, df_3])
-        df = df.loc[(df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
-                    (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1])]
-        # print(df.keys())
-    else:
-        df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
-                      hour_range=hour_range, gate_range=gate_range, beam_range=beam_range)
+    # TODO: Decide what to do about month and day ranges
+    hour_range = check_hour_range(hour_range)
+    df = get_data_handler(station, year_range=year_range, month_range=(1, 12), day_range=(1, 31),
+                          hour_range=hour_range, gate_range=gate_range, beam_range=beam_range,
+                          local_testing=local_testing)
 
+    all_radars_info = SuperDARNRadars()
+    this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
+    radar_id = this_radars_info.hardware_info.stid
+
+    print("Filtering data...")
     df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
     if parameter is not None:
         df = df.loc[(df[parameter] >= zmin) & (df[parameter] <= zmax)]
+
     df.reset_index(drop=True, inplace=True)
 
-    # Restrict to 45 km mode data, you need to modify the fan if you want to use data of a different spatial resolution
-    number_of_records_before_spatial_resolution_check = df.shape[0]
-    df = df.loc[(df['frang'] == 180) & (df['rsep'] == 45)]
-    df.reset_index(drop=True, inplace=True)
-    number_of_records_after_spatial_resolution_check = df.shape[0]
-    if number_of_records_before_spatial_resolution_check > number_of_records_after_spatial_resolution_check:
-        warnings.warn("Not all data within the specified range is 45 km resolution data.  "
-                      "All non-45 km data was discarded.", category=Warning)
+    df = only_keep_45km_res_data(df)
 
-    # We will have one subplot for every year of observations
-    n_rows = (year_range[1] + 1) - year_range[0]
-
-    # Set up the plot
+    print("Preparing the plot...")
+    n_rows = (year_range[1] + 1) - year_range[0]  # We will have one subplot for every year of observations
     fig, ax = plt.subplots(figsize=(8, 9), sharex='col', dpi=300, nrows=n_rows, ncols=1)
     plt.subplots_adjust(hspace=0.05)
 
@@ -154,7 +128,7 @@ def occ_year_vs_ut(station, year_range, time_units='mlt', hour_range=None, gate_
             # we will use the middle of the year and assume magnetic longitudes don't change much over the year
             mid_datetime = start_datetime + (end_datetime - start_datetime) / 2
             beam_corners_aacgm_lats, beam_corners_aacgm_lons = \
-                radar_fov(stid=hdw_info.stid, coords='aacgm', date=mid_datetime)
+                radar_fov(stid=radar_id, coords='aacgm', date=mid_datetime)
 
             aacgm_lons = []
             dates = []
@@ -222,10 +196,10 @@ def occ_year_vs_ut(station, year_range, time_units='mlt', hour_range=None, gate_
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     station = "rkn"
-    fig = occ_year_vs_ut(station=station, time_units='mlt', year_range=(2012, 2013),
+    fig = occ_year_vs_ut(station=station, time_units='mlt', year_range=(2011, 2012),
                          gate_range=(20, 30), beam_range=(7, 7),
                          parameter='v', local_testing=local_testing)
 
