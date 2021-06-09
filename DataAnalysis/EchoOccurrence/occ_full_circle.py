@@ -3,14 +3,14 @@ import pydarn
 
 import cartopy.crs as ccrs
 import matplotlib.path as mpath
-import numpy as np
 import matplotlib.ticker as mticker
 
 from matplotlib import pyplot as plt
 from pydarn import SuperDARNRadars, radar_fov
 from scipy import stats
 
-from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_epoch
+from lib.build_datetime_epoch import build_datetime_epoch
+from lib.cm.modified_viridis import *
 from lib.add_mlt_to_df import add_mlt_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
@@ -157,15 +157,19 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
     bin_xcenters = bin_xedges[1:] - bin_xwidth / 2
     bin_ycenters = bin_yedges[1:] - bin_ywidth / 2
 
-    print("Here are the bin bin_ycenters:")
-    print(bin_ycenters)
-
-    print("Here are the counts")
-    print(binned_counts[np.nonzero(binned_counts)])
-
     # Plot the data
-    ax.plot([radar_geo_lon, radar_geo_lon], [radar__geo_lat, radar__geo_lat], 'ro', transform=ccrs.PlateCarree())
-    cont = ax.contourf(bin_xcenters, bin_ycenters, binned_counts.transpose(), 5, transform=ccrs.PlateCarree())
+    if plot_ground_scat:
+        raise Exception("Ground scatter not yet supported!")  # TODO: Ground scatter not currently supported
+    else:
+        if parameter == 'v':
+            cmap = 'seismic_r'
+        else:
+            cmap = modified_viridis_2()
+        cont = ax.contourf(bin_xcenters, bin_ycenters, binned_counts.transpose(),
+                           levels=5, cmap=cmap, transform=ccrs.PlateCarree())
+
+    # ax.plot([radar_geo_lon, radar_geo_lon], [radar__geo_lat, radar__geo_lat], 'ro', transform=ccrs.PlateCarree())
+    # cont = ax.contourf(bin_xcenters, bin_ycenters, binned_counts.transpose(), 5, transform=ccrs.PlateCarree())
     fig.colorbar(cont, ax=ax)
 
     return fig

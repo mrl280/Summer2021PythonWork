@@ -14,7 +14,7 @@ from pydarn import SuperDARNRadars, radar_fov
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.z_min_max_defaults import z_min_max_defaults
-from lib.cm.modified_viridis import modified_viridis
+from lib.cm.modified_viridis import modified_viridis_1
 
 
 def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=None, gate_range=None, beam_range=None,
@@ -160,14 +160,14 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
 
     print("Plotting Data...")
     if plot_ground_scat:
-        cmap = modified_viridis()
+        cmap = modified_viridis_1()
         data = ax.pcolormesh(reduced_beam_corners_lons, reduced_beam_corners_lats, grndsct_scans,
                              transform=ccrs.PlateCarree(), cmap=cmap, zorder=3)
     else:
         if parameter == 'v':
             cmap = 'seismic_r'
         else:
-            cmap = modified_viridis()
+            cmap = modified_viridis_1()
         data = ax.pcolormesh(reduced_beam_corners_lons, reduced_beam_corners_lats, scans,
                              transform=ccrs.PlateCarree(), cmap=cmap, zorder=3)
     fig.colorbar(data, ax=ax)
