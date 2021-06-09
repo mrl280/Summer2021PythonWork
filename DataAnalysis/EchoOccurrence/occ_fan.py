@@ -15,7 +15,7 @@ from lib.z_min_max_defaults import z_min_max_defaults
 from lib.cm.modified_viridis import modified_viridis
 from lib.data_getters.get_data import get_data
 from lib.data_getters.get_local_dummy_data import get_local_dummy_data
-from lib.range_checkers import *
+from DataAnalysis.EchoOccurrence.lib.data_getters.range_checkers import *
 
 
 def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=None, gate_range=None, beam_range=None,
