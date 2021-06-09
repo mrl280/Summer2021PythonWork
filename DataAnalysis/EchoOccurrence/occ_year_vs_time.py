@@ -73,7 +73,7 @@ def occ_year_vs_ut(station, year_range, time_units='mlt', hour_range=None, gate_
     year_range = check_year_range(year_range)
     hour_range = check_hour_range(hour_range)
     month_range = (1, 12)
-    day_range = (1, 2)  # TODO: fix
+    day_range = (1, 31)  # TODO: fix
 
     if isinstance(station, str):
         hdw_info = pydarn.read_hdw_file(station)  # Get the hardware file, there is lots of good stuff in there
@@ -225,12 +225,12 @@ def occ_year_vs_ut(station, year_range, time_units='mlt', hour_range=None, gate_
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     station = "rkn"
     fig = occ_year_vs_ut(station=station, time_units='mlt', year_range=(2012, 2013),
                          gate_range=(20, 30), beam_range=(7, 7),
-                         parameter=None, local_testing=local_testing)
+                         parameter='v', local_testing=local_testing)
 
     if local_testing:
         plt.show()
