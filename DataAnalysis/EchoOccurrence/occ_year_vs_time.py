@@ -9,11 +9,12 @@ from matplotlib.ticker import MultipleLocator
 from pydarn import radar_fov, SuperDARNRadars
 from scipy import stats
 
+from DataAnalysis.EchoOccurrence.lib.add_mlt_to_df import add_mlt_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.z_min_max_defaults import z_min_max_defaults
 from lib.centroid import centroid
-from lib.build_date_epoch import build_date_epoch
+from lib.build_datetime_epoch import build_date_epoch
 from lib.data_getters.range_checkers import *
 
 
@@ -29,7 +30,7 @@ def occ_year_vs_ut(station, year_range, time_units='mlt', hour_range=None, gate_
         - Only considers 45 km data
         - Does not distinguish frequency
         - This program uses fitACF 3.0 data.  To change this, modify the source code.
-        - All times and dates are assumed UT
+        - year_range is assumed UT, hour_range is either MLT of UT depending on time_units
 
     :param station: str:
             The radar station to consider, a 3 character string (e.g. "rkn").
@@ -130,32 +131,9 @@ def occ_year_vs_ut(station, year_range, time_units='mlt', hour_range=None, gate_
             beam_corners_aacgm_lats, beam_corners_aacgm_lons = \
                 radar_fov(stid=radar_id, coords='aacgm', date=mid_datetime)
 
-            aacgm_lons = []
-            dates = []
-            for i in range(len(df_yy)):
-                date = datetime.datetime(year, df_yy['month'][i], df_yy['day'][i],
-                                         df_yy['hour'][i], df_yy['minute'][i], int(df_yy['second'][i]))
-                dates.append(date)
+            df = add_mlt_to_df(beam_corners_aacgm_lons=beam_corners_aacgm_lons,
+                               beam_corners_aacgm_lats=beam_corners_aacgm_lats, df=df)
 
-                # TODO: Figure out if you need to get beam_corners_aacgm_lons for every time
-                # beam_corners_aacgm_lats, beam_corners_aacgm_lons = \
-                #     radar_fov(stid=hdw_info.stid, coords='aacgm', date=date)
-
-                gate_corner = df_yy['slist'][i]
-                beam_corner = df_yy['bmnum'][i]
-
-                # estimate the cell with the centroid
-                cent_lon, cent_lat = centroid([(beam_corners_aacgm_lons[gate_corner, beam_corner],
-                                                beam_corners_aacgm_lats[gate_corner, beam_corner]),
-                                               (beam_corners_aacgm_lons[gate_corner + 1, beam_corner],
-                                                beam_corners_aacgm_lats[gate_corner + 1, beam_corner]),
-                                               (beam_corners_aacgm_lons[gate_corner, beam_corner + 1],
-                                                beam_corners_aacgm_lats[gate_corner, beam_corner + 1]),
-                                               (beam_corners_aacgm_lons[gate_corner + 1, beam_corner + 1],
-                                                beam_corners_aacgm_lats[gate_corner + 1, beam_corner + 1])])
-                aacgm_lons.append(cent_lon)
-
-            df_yy['mlt'] = aacgmv2.convert_mlt(arr=aacgm_lons, dtime=dates, m2a=False)
             df_yy = df_yy.loc[(df_yy['mlt'] >= hour_range[0]) & (df_yy['mlt'] <= hour_range[1])]
             df_yy['xdata'] = df_yy['mlt']
         else:
