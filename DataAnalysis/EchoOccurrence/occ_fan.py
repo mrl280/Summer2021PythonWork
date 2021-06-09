@@ -11,12 +11,10 @@ import cartopy.feature as cfeature
 from matplotlib import pyplot as plt
 from pydarn import SuperDARNRadars, radar_fov
 
+from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.z_min_max_defaults import z_min_max_defaults
 from lib.cm.modified_viridis import modified_viridis
-from lib.data_getters.get_data import get_data
-from lib.data_getters.get_local_dummy_data import get_local_dummy_data
-from DataAnalysis.EchoOccurrence.lib.data_getters.range_checkers import *
 
 
 def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=None, gate_range=None, beam_range=None,
@@ -73,6 +71,7 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
                           hour_range=hour_range, gate_range=gate_range, beam_range=beam_range,
                           local_testing=local_testing)
 
+    print("Getting some hardware info...")
     all_radars_info = SuperDARNRadars()
     this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
     hemisphere = this_radars_info.hemisphere
@@ -81,6 +80,7 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     radar_lat = this_radars_info.hardware_info.geographic.lat
     radar_id = this_radars_info.hardware_info.stid
 
+    print("Filtering data...")
     df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
 
     if not plot_ground_scat and parameter is not None:
@@ -88,14 +88,7 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
 
     df.reset_index(drop=True, inplace=True)
 
-    # Restrict to 45 km mode data, you need to modify the fan if you want to use data of a different spatial resolution
-    number_of_records_before_spatial_resolution_check = df.shape[0]
-    df = df.loc[(df['frang'] == 180) & (df['rsep'] == 45)]
-    df.reset_index(drop=True, inplace=True)
-    number_of_records_after_spatial_resolution_check = df.shape[0]
-    if number_of_records_before_spatial_resolution_check > number_of_records_after_spatial_resolution_check:
-        warnings.warn("Not all data within the specified range is 45 km resolution data.  "
-                      "All non-45 km data was discarded.", category=Warning)
+    df = only_keep_45km_res_data(df)
 
     print("Preparing the plot...")
     # Prepare the figure
@@ -209,7 +202,6 @@ if __name__ == '__main__':
     fig, scans = occ_fan(station=station, year_range=(2007, 2009), month_range=(2, 2), day_range=None,
                          gate_range=(0, 74), beam_range=(0, 15), plot_ground_scat=False, parameter='v',
                          local_testing=local_testing)
-
 
     if local_testing:
         plt.show()
