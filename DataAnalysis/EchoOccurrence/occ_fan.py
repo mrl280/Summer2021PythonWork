@@ -1,7 +1,6 @@
 import math
 import pathlib
 import statistics
-import warnings
 import pydarn
 
 import matplotlib.path as mpath
@@ -14,8 +13,8 @@ from pydarn import SuperDARNRadars, radar_fov
 
 from lib.z_min_max_defaults import z_min_max_defaults
 from lib.cm.modified_viridis import modified_viridis
-from lib.get_data import get_data
-from lib.get_local_dummy_data import get_local_dummy_data
+from lib.data_getters.get_data import get_data
+from lib.data_getters.get_local_dummy_data import get_local_dummy_data
 from lib.range_checkers import *
 
 

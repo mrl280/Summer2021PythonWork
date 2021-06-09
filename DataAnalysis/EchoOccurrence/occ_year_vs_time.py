@@ -1,5 +1,4 @@
 import pathlib
-import warnings
 
 import aacgmv2
 import numpy as np
@@ -14,8 +13,8 @@ from scipy import stats
 from lib.z_min_max_defaults import z_min_max_defaults
 from lib.centroid import centroid
 from lib.build_date_epoch import build_date_epoch
-from lib.get_data import get_data
-from lib.get_local_dummy_data import get_local_dummy_data
+from lib.data_getters.get_data import get_data
+from lib.data_getters.get_local_dummy_data import get_local_dummy_data
 from lib.range_checkers import *
 
 
