@@ -1,10 +1,16 @@
 import pathlib
-
 import pydarn
-from matplotlib import pyplot as plt
 
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import matplotlib.path as mpath
+import numpy as np
+import matplotlib.ticker as mticker
+
+from matplotlib import pyplot as plt
 from pydarn import SuperDARNRadars
 
+from DataAnalysis.EchoOccurrence.lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.z_min_max_defaults import z_min_max_defaults
 from lib.data_getters.range_checkers import check_year
@@ -75,12 +81,45 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
     radar_lat = this_radars_info.hardware_info.geographic.lat
     radar_id = this_radars_info.hardware_info.stid
 
+    print("Filtering data...")
     df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
 
     if not plot_ground_scat and parameter is not None:
         df = df.loc[(df[parameter] >= zmin) & (df[parameter] <= zmax)]
 
     df.reset_index(drop=True, inplace=True)
+    df = only_keep_45km_res_data(df)
+
+    print("Preparing the plot...")
+    fig = plt.figure(figsize=(5, 5), dpi=300)
+    if hemisphere.value == 1:
+        # Northern hemisphere
+        min_lat = 37  # deg
+        ax = fig.add_subplot(1, 1, 1, projection=ccrs.NorthPolarStereo())
+        ax.set_extent([-180, 180, 90, min_lat], crs=ccrs.PlateCarree())
+    elif hemisphere.value == -1:
+        # Southern hemisphere
+        max_lat = -34  # deg
+        ax = fig.add_subplot(1, 1, 1, projection=ccrs.SouthPolarStereo())
+        ax.set_extent([-180, 180, -90, max_lat], crs=ccrs.PlateCarree())
+    else:
+        raise Exception("Error: hemisphere not recognized")
+
+    # Compute a circle in axis coordinates which can be used as a boundary
+    theta = np.linspace(0, 2 * np.pi, 100)
+    center, radius = [0.5, 0.5], 0.5
+    vertices = np.vstack([np.sin(theta), np.cos(theta)]).T
+    circle = mpath.Path(vertices * radius + center)
+    ax.set_boundary(circle, transform=ax.transAxes)
+
+    # Add gridlines and mlt labels
+    text_offset_multiplier = 1.03
+    gl = ax.gridlines(draw_labels=False)
+    gl.xlocator = mticker.FixedLocator([-180, -135, -90, -45, 0, 45, 90, 135])
+    ax.text(0, text_offset_multiplier * ax.get_ylim()[1], "12", ha='center', va='bottom')
+    ax.text(0, text_offset_multiplier * ax.get_ylim()[0], "00", ha='center', va='top')
+    ax.text(text_offset_multiplier * ax.get_xlim()[1], 0, "06", ha='left', va='center')
+    ax.text(text_offset_multiplier * ax.get_xlim()[0], 0, "18", ha='right', va='center')
 
     print(this_radars_info)
 
