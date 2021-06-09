@@ -11,6 +11,7 @@ import cartopy.feature as cfeature
 from matplotlib import pyplot as plt
 from pydarn import SuperDARNRadars, radar_fov
 
+from lib.get_data_handler import get_data_handler
 from lib.z_min_max_defaults import z_min_max_defaults
 from lib.cm.modified_viridis import modified_viridis
 from lib.data_getters.get_data import get_data
@@ -67,37 +68,18 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     if parameter is not None:
         zmin, zmax = z_min_max_defaults(parameter)
 
-    year_range = check_year_range(year_range)
-    month_range = check_month_range(month_range)
-    day_range = check_day_range(day_range)
-    hour_range = check_hour_range(hour_range)
-
-    if isinstance(station, str):
-        hdw_info = pydarn.read_hdw_file(station)  # Get the hardware file, there is lots of good stuff in there
-    else:
-        raise Exception("Error: Please enter the station as a 3 character string.  e.g. 'rkn'")
-
-    beam_range = check_beam_range(beam_range, hdw_info)
-    gate_range = check_gate_range(gate_range, hdw_info)
-
-    radar_lon = hdw_info.geographic.lon
-    radar_lat = hdw_info.geographic.lat
-    radar_id = hdw_info.stid
+    print("Retrieving data...")
+    df = get_data_handler(station, year_range=year_range, month_range=month_range, day_range=day_range,
+                          hour_range=hour_range, gate_range=gate_range, beam_range=beam_range,
+                          local_testing=local_testing)
 
     all_radars_info = SuperDARNRadars()
-    additional_radar_info = all_radars_info.radars[radar_id]  # Grab some additional radar info
-    hemisphere = additional_radar_info.hemisphere
+    this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
+    hemisphere = this_radars_info.hemisphere
 
-    print("Retrieving data...")
-    if local_testing:
-        # Just read in some test data
-        warnings.warn("Running in local testing mode, just going to use local dummy data", category=Warning)
-        # df = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=23)
-        df = get_local_dummy_data(station=station, year=2014, month=3, day=3, start_hour_UT=0, end_hour_UT=12)
-        # print(df.keys())
-    else:
-        df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
-                      hour_range=hour_range, gate_range=gate_range, beam_range=beam_range)
+    radar_lon = this_radars_info.hardware_info.geographic.lon
+    radar_lat = this_radars_info.hardware_info.geographic.lat
+    radar_id = this_radars_info.hardware_info.stid
 
     df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
 
@@ -147,7 +129,7 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
 
     # Plot the radar as a red dot
     plt.plot([radar_lon, radar_lon], [radar_lat, radar_lat], 'ro', markersize=1, transform=ccrs.Geodetic(),
-             label=additional_radar_info.name)
+             label=this_radars_info.name)
 
     beam_corners_lats, beam_corners_lons = radar_fov(radar_id, coords='geo')  # Get the radar field of view
 
@@ -221,15 +203,19 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
 if __name__ == '__main__':
     """ Testing """
 
+    local_testing = True
     station = "rkn"
+
     fig, scans = occ_fan(station=station, year_range=(2007, 2009), month_range=(2, 2), day_range=None,
                          gate_range=(0, 74), beam_range=(0, 15), plot_ground_scat=False, parameter='v',
-                         local_testing=True)
+                         local_testing=local_testing)
 
-    loc_root = str((pathlib.Path().parent.absolute()))
-    out_dir = loc_root + "/out"
-    out_file = out_dir + "/occ_fan_" + station
-    print("Saving plot as " + out_file)
 
-    # fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
-    plt.show()
+    if local_testing:
+        plt.show()
+    else:
+        loc_root = str((pathlib.Path().parent.absolute()))
+        out_dir = loc_root + "/out"
+        out_file = out_dir + "/occ_fan_" + station
+        print("Saving plot as " + out_file)
+        fig.savefig(out_file + ".jpg", format='jpg', dpi=300)

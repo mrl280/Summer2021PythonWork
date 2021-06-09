@@ -1,16 +1,17 @@
-import warnings
-
 import pandas as pd
 import pydarn
 
-from data_getters.range_checkers import *
-from data_getters.get_data import get_data
-from data_getters.get_local_dummy_data import get_local_dummy_data
+# TODO: Fix these import links
+from DataAnalysis.EchoOccurrence.lib.data_getters.get_data import get_data
+from DataAnalysis.EchoOccurrence.lib.data_getters.get_local_dummy_data import get_local_dummy_data
+from DataAnalysis.EchoOccurrence.lib.data_getters.range_checkers import *
 
 
-def get_data_handler(station, year_range, month_range=None, day_range=None, hour_range=None,
+def get_data_handler(station, year_range=None, month_range=None, day_range=None, hour_range=None,
                      gate_range=None, beam_range=None, local_testing=False):
     """
+
+    Get the required data, put it into a dataframe, and then return the dataframe for plotting/analysis
 
     :param station: str:
             The radar station to consider, a 3 character string (e.g. "rkn").
@@ -32,33 +33,39 @@ def get_data_handler(station, year_range, month_range=None, day_range=None, hour
             Note that beams start at 0, so beams (0, 3) is 4 beams.
     :param local_testing: bool (optional):
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
+    :return: pandas.DataFrame: A dataframe with select fitACF parameters.
     """
+
+    if isinstance(station, str):
+        hdw_info = pydarn.read_hdw_file(station)  # Get the hardware file
+    else:
+        raise Exception("Error: Please enter the station as a 3 character string (e.g. 'rkn')")
+
+    gate_range = check_gate_range(gate_range, hdw_info)
+    beam_range = check_beam_range(beam_range, hdw_info)
 
     if local_testing:
         # Just read in some test data
         warnings.warn("Running in local testing mode, we are just going to use local dummy data from"
-                      " Nov 12, 2011, Sept 29, 2011, and Nov 10, 2015 all at RKN", category=Warning)
+                      " Nov 12, 2011, Sept 29, 2011, and Nov 10, 2015 all at RKN."
+                      " Gate and Beam filtering is still applied.", category=Warning)
+
         # df = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=23)
         df = get_local_dummy_data(station=station, year=2011, month=11, day=12, start_hour_UT=0, end_hour_UT=12)
         df_2 = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=24)
         df_3 = get_local_dummy_data(station=station, year=2012, month=10, day=15, start_hour_UT=0, end_hour_UT=24)
         df = pd.concat([df, df_2, df_3])
-        return df.loc[(df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
-                      (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1])]
+        df = df.loc[(df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
+                    (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1])]
+
     else:
-        # Assume are on maxwell.usask.ca, check the input parameters and use get_data()
+        # Assume are on maxwell.usask.ca, check the time parameters and use get_data()
         year_range = check_year_range(year_range)
         month_range = check_month_range(month_range)
         day_range = check_day_range(day_range)
         hour_range = check_hour_range(hour_range)
 
-        if isinstance(station, str):
-            hdw_info = pydarn.read_hdw_file(station)  # Get the hardware file, there is lots of good stuff in there
-        else:
-            raise Exception("Error: Please enter the station as a 3 character string (e.g. 'rkn')")
+        df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
+                      hour_range=hour_range, gate_range=gate_range, beam_range=beam_range)
 
-        gate_range = check_gate_range(gate_range, hdw_info)
-        beam_range = check_beam_range(beam_range, hdw_info)
-
-        return get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
-                        hour_range=hour_range, gate_range=gate_range, beam_range=beam_range)
+    return df
