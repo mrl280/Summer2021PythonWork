@@ -77,8 +77,8 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
     this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
     hemisphere = this_radars_info.hemisphere
 
-    radar_lon = this_radars_info.hardware_info.geographic.lon
-    radar_lat = this_radars_info.hardware_info.geographic.lat
+    radar_geo_lon = this_radars_info.hardware_info.geographic.lon
+    radar__geo_lat = this_radars_info.hardware_info.geographic.lat
     radar_id = this_radars_info.hardware_info.stid
 
     print("Filtering data...")
@@ -121,7 +121,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
     ax.text(text_offset_multiplier * ax.get_xlim()[1], 0, "06", ha='left', va='center')
     ax.text(text_offset_multiplier * ax.get_xlim()[0], 0, "18", ha='right', va='center')
 
-    print(this_radars_info)
+    # TODO: Add the data to the plot
 
     return None, None
 
