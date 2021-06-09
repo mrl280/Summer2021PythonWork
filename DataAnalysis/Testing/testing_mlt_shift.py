@@ -4,9 +4,11 @@ import datetime
 
 import numpy as np
 import cartopy.crs as ccrs
+import matplotlib.path as mpath
+import matplotlib.ticker as mticker
 
 from matplotlib import pyplot as plt
-from pydarn import SuperDARNRadars, radar_fov
+from pydarn import radar_fov
 
 if __name__ == "__main__":
     """
@@ -16,7 +18,7 @@ if __name__ == "__main__":
     """
 
     # Look at RKN to see if the mlt shift produces the same as computing mlt for each
-    station = "wal"
+    station = "han"
     beam_range = (0, 15)
     gate_range = (0, 74)
     date = datetime.datetime.now()
@@ -32,7 +34,7 @@ if __name__ == "__main__":
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.NorthPolarStereo())
     ax.set_extent([-180, 180, 90, min_lat], crs=ccrs.PlateCarree())
 
-    ax.gridlines()
+    # ax.gridlines()
     # ax.stock_img()
     # ax.add_feature(cfeature.COASTLINE)
     # ax.add_feature(cfeature.BORDERS, linestyle="-", linewidth=0.5)
@@ -78,9 +80,26 @@ if __name__ == "__main__":
                  beam_corners_aacgm_lats[range_, beam_range[0]:beam_range[1] + 2],
                  color='red', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
+    """ Format Plot """
+    # Compute a circle in axis coordinates which can be used as a boundary
+    theta = np.linspace(0, 2 * np.pi, 100)
+    center, radius = [0.5, 0.5], 0.5
+    vertices = np.vstack([np.sin(theta), np.cos(theta)]).T
+    circle = mpath.Path(vertices * radius + center)
+    ax.set_boundary(circle, transform=ax.transAxes)
+
+    # Add gridlines and mlt labels
+    text_offset_multiplier = 1.03
+    gl = ax.gridlines(draw_labels=False)
+    gl.xlocator = mticker.FixedLocator([-180, -135, -90, -45, 0, 45, 90, 135])
+    ax.text(0, text_offset_multiplier * ax.get_ylim()[1], "12", ha='center', va='bottom')
+    ax.text(0, text_offset_multiplier * ax.get_ylim()[0], "00", ha='center', va='top')
+    ax.text(text_offset_multiplier * ax.get_xlim()[1], 0, "06", ha='left', va='center')
+    ax.text(text_offset_multiplier * ax.get_xlim()[0], 0, "18", ha='right', va='center')
+
     """ Look at difference """
     difference = beam_corners_mlts_2 - beam_corners_mlts_1
     difference = np.ndarray.flatten(difference)
-    print(np.sort(difference))
+    # print(np.sort(difference))
 
     plt.show()
