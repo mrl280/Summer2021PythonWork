@@ -63,9 +63,6 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
             The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
-    if parameter is not None:
-        zmin, zmax = z_min_max_defaults(parameter)
-
     print("Retrieving data...")
     df = get_data_handler(station, year_range=year_range, month_range=month_range, day_range=day_range,
                           hour_range=hour_range, gate_range=gate_range, beam_range=beam_range,
@@ -83,10 +80,10 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     print("Filtering data...")
     df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
     if not plot_ground_scat and parameter is not None:
+        zmin, zmax = z_min_max_defaults(parameter)
         df = df.loc[(df[parameter] >= zmin) & (df[parameter] <= zmax)]
 
     df.reset_index(drop=True, inplace=True)
-
     df = only_keep_45km_res_data(df)
 
     print("Preparing the plot...")
@@ -106,9 +103,6 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
         raise Exception("Error: hemisphere not recognized")
 
     ax.gridlines()
-    # ax.stock_img()
-    # ax.add_feature(cfeature.COASTLINE)
-    # ax.add_feature(cfeature.BORDERS, linestyle="-", linewidth=0.5)
     ax.add_feature(cfeature.OCEAN)
     ax.add_feature(cfeature.LAND)
 
@@ -123,7 +117,7 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     plt.plot([radar_lon, radar_lon], [radar_lat, radar_lat], 'ro', markersize=1, transform=ccrs.Geodetic(),
              label=this_radars_info.name)
 
-    beam_corners_lats, beam_corners_lons = radar_fov(radar_id, coords='geo')  # Get the radar field of view
+    cell_corners_aacgm_lats, cell_corners_aacgm_lons = radar_fov(stid=radar_id, coords='geo')
 
     print("Computing scan...")
     num_gates = (gate_range[1] + 1) - gate_range[0]
@@ -147,16 +141,16 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
             else:
                 # Otherwise average the provided parameter
                 try:
-                    scans[gate_idx, beam_idx] = statistics.mean(cell_df.query('gflg == 0')[parameter])
+                    scans[gate_idx, beam_idx] = statistics.median(cell_df.query('gflg == 0')[parameter])
                 except statistics.StatisticsError:
                     # We can't take a median because there are no points
                     scans[gate_idx, beam_idx] = math.nan
 
     # Build reduced arrays containing only the cells in the specified gate/beam range
-    reduced_beam_corners_lons = beam_corners_lons[gate_range[0]: gate_range[1] + 2,
-                                                  beam_range[0]: beam_range[1] + 2]
-    reduced_beam_corners_lats = beam_corners_lats[gate_range[0]: gate_range[1] + 2,
-                                                  beam_range[0]: beam_range[1] + 2]
+    reduced_beam_corners_lons = cell_corners_aacgm_lons[gate_range[0]: gate_range[1] + 2,
+                                                        beam_range[0]: beam_range[1] + 2]
+    reduced_beam_corners_lats = cell_corners_aacgm_lats[gate_range[0]: gate_range[1] + 2,
+                                                        beam_range[0]: beam_range[1] + 2]
 
     print("Plotting Data...")
     if plot_ground_scat:
@@ -174,14 +168,14 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
 
     # plot all the beam boundary lines
     for beam_line in range(beam_range[0], beam_range[1] + 2):
-        plt.plot(beam_corners_lons[gate_range[0]:gate_range[1] + 2, beam_line],
-                 beam_corners_lats[gate_range[0]:gate_range[1] + 2, beam_line],
+        plt.plot(cell_corners_aacgm_lons[gate_range[0]:gate_range[1] + 2, beam_line],
+                 cell_corners_aacgm_lats[gate_range[0]:gate_range[1] + 2, beam_line],
                  color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
     # plot the arcs boundary lines
     for range_ in range(gate_range[0], gate_range[1] + 2):
-        plt.plot(beam_corners_lons[range_, beam_range[0]:beam_range[1] + 2],
-                 beam_corners_lats[range_, beam_range[0]:beam_range[1] + 2],
+        plt.plot(cell_corners_aacgm_lons[range_, beam_range[0]:beam_range[1] + 2],
+                 cell_corners_aacgm_lats[range_, beam_range[0]:beam_range[1] + 2],
                  color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
     print("Returning the figure and scan...")
