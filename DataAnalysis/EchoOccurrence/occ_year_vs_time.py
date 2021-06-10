@@ -17,8 +17,8 @@ from lib.build_datetime_epoch import build_datetime_epoch
 from lib.data_getters.input_checkers import *
 
 
-def occ_year_vs_ut(station, year_range, month_range=None, time_units='mlt', hour_range=None, gate_range=None, beam_range=None,
-                   parameter=None, local_testing=False):
+def occ_year_vs_ut(station, year_range, month_range=None, time_units='mlt', hour_range=None,
+                   gate_range=None, beam_range=None, parameter=None, local_testing=False):
     """
 
     Produce a contour plot with year on the y-axis and time along the x-axis.
@@ -63,7 +63,6 @@ def occ_year_vs_ut(station, year_range, month_range=None, time_units='mlt', hour
     hour_range = check_hour_range(hour_range)
 
     print("Retrieving data...")
-    # TODO: Decide what to do about month and day ranges
     df = get_data_handler(station, year_range=year_range, month_range=month_range, day_range=(1, 31),
                           hour_range=hour_range, gate_range=gate_range, beam_range=beam_range,
                           local_testing=local_testing)
