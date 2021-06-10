@@ -4,7 +4,7 @@ import pydarn
 # TODO: Fix these import links
 from DataAnalysis.EchoOccurrence.lib.data_getters.get_data import get_data
 from DataAnalysis.EchoOccurrence.lib.data_getters.get_local_dummy_data import get_local_dummy_data
-from DataAnalysis.EchoOccurrence.lib.data_getters.range_checkers import *
+from DataAnalysis.EchoOccurrence.lib.data_getters.input_checkers import *
 
 
 def get_data_handler(station, year_range=None, month_range=None, day_range=None, hour_range=None,
