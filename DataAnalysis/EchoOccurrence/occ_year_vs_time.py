@@ -8,8 +8,8 @@ from matplotlib.ticker import MultipleLocator
 from pydarn import radar_fov, SuperDARNRadars
 from scipy import stats
 
-from DataAnalysis.EchoOccurrence.lib.add_mlt_to_df import add_mlt_to_df
-from DataAnalysis.EchoOccurrence.lib.cm.modified_viridis import modified_viridis_2
+from lib.add_mlt_to_df import add_mlt_to_df
+from lib.cm.modified_viridis import modified_viridis_2
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.z_min_max_defaults import z_min_max_defaults
@@ -86,7 +86,7 @@ def occ_year_vs_ut(station, year_range, month_range=None, time_units='mlt', hour
             levels = 6
     else:
         cmap = modified_viridis_2()
-        levels = 6
+        levels = 12
 
     df.reset_index(drop=True, inplace=True)
     df = only_keep_45km_res_data(df)
@@ -99,7 +99,7 @@ def occ_year_vs_ut(station, year_range, month_range=None, time_units='mlt', hour
     # Apply common subplot formatting
     ax[n_rows - 1].set_xlabel("Time, " + time_units.upper(), fontsize=18)
     for row in reversed(range(n_rows)):
-        ax[row].set_ylim([0, 13])
+        ax[row].set_ylim([0, 12])
         ax[row].set_xlim(hour_range)
         ax[row].tick_params(axis='y', which='major', labelleft=False, direction='in')
         ax[row].tick_params(axis='x', which='major', direction='in')
@@ -147,8 +147,6 @@ def occ_year_vs_ut(station, year_range, month_range=None, time_units='mlt', hour
         # Compute decimal datetime to plot along y
         df_yy['ydata'] = (df_yy['month'] - 1) + (df_yy['day'] - 1) / 31 + df_yy['ut_time'] / 730
 
-        print(df_yy['ut_time'])
-
         if parameter is None:
             # We just want a simple echo count
             binned_counts, bin_xedges, bin_yedges, bin_numbers = stats.binned_statistic_2d(
@@ -185,7 +183,7 @@ if __name__ == '__main__':
     station = "rkn"
     fig = occ_year_vs_ut(station=station, time_units='mlt', year_range=(2011, 2012), month_range=(1, 12),
                          gate_range=(30, 74), beam_range=(7, 7),
-                         parameter=None, local_testing=local_testing)
+                         parameter='v', local_testing=local_testing)
 
     if local_testing:
         plt.show()
