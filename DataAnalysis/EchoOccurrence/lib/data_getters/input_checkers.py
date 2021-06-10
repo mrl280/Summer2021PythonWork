@@ -91,7 +91,7 @@ def check_hour_range(hour_range):
     """
     if hour_range is None:
         hour_range = (0, 24)  # Assume we want all hours
-        warnings.warn("No hour range was provided, it has defaulted to (1, 24).",
+        warnings.warn("No hour range was provided, it has defaulted to (0, 24).",
                       category=Warning)
     if hour_range[0] < 0:
         hour_range = (0, hour_range[1])
