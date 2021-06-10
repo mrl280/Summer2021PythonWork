@@ -1,18 +1,45 @@
 import datetime as datetime
+import numpy as np
 
 import aacgmv2
 
 
-def add_mlt_to_df(beam_corners_aacgm_lons, beam_corners_aacgm_lats, df):
+def add_mlt_to_df(cell_corners_aacgm_lons, cell_corners_aacgm_lats, df):
     """
 
-    Add magnetic local time ('mlt') and aacgm latitude ('lat') columns to a dataframe
+    Add magnetic local time ('mlt'), aacgm longitude ('lon'), and aacgm latitude ('lat') columns to a dataframe
 
-    :param beam_corners_aacgm_lats: numpy.ndarray: Longitudes in aacgm units
-    :param beam_corners_aacgm_lons: numpy.ndarray: Latitudes in aacgm units
+    The first date is used to compute the mlt shift, this shift is then applied to the whole dataframe.
+     While less accurate, this approach is much faster than computing mlt for each df row independently.
+
+    :param cell_corners_aacgm_lons: 2d numpy.ndarray: Longitudes of the cell corners in aacgm units
+    :param cell_corners_aacgm_lats: 2d  numpy.ndarray: Latitudes of the cell corners in aacgm units
     :param df: pandas.DataFrame: The dataframe to which you want to add mlt
-    :return: pandas.DataFrame: The input dataframe, except now with an 'mlt' column
+    :return: pandas.DataFrame: The input dataframe, except now with 'mlt', 'lon', and 'lat' columns
     """
+
+    if len(df) <= 0:
+        df['lon'], df['lat'], df['mlt'] = [], [], []
+        return df
+
+    fan_shape = cell_corners_aacgm_lons.shape
+
+    # Compute cell centroids
+    cell_centers_aacgm_lons = np.zeros(shape=(fan_shape[0], fan_shape[1]))
+    cell_centers_aacgm_lats = np.zeros(shape=(fan_shape[0], fan_shape[1]))
+
+    for gate_corner in range(fan_shape[0] - 1):
+        for beam_corner in range(fan_shape[1] - 1):
+            cent_lon, cent_lat = centroid([(cell_corners_aacgm_lons[gate_corner, beam_corner],
+                                            cell_corners_aacgm_lats[gate_corner, beam_corner]),
+                                           (cell_corners_aacgm_lons[gate_corner + 1, beam_corner],
+                                            cell_corners_aacgm_lats[gate_corner + 1, beam_corner]),
+                                           (cell_corners_aacgm_lons[gate_corner, beam_corner + 1],
+                                            cell_corners_aacgm_lats[gate_corner, beam_corner + 1]),
+                                           (cell_corners_aacgm_lons[gate_corner + 1, beam_corner + 1],
+                                            cell_corners_aacgm_lats[gate_corner + 1, beam_corner + 1])])
+            cell_centers_aacgm_lons[gate_corner, beam_corner] = cent_lon
+            cell_centers_aacgm_lats[gate_corner, beam_corner] = cent_lat
 
     aacgm_lons = []
     aacgm_lats = []
@@ -24,27 +51,15 @@ def add_mlt_to_df(beam_corners_aacgm_lons, beam_corners_aacgm_lats, df):
                                  df['hour'][i], df['minute'][i], int(df['second'][i]))
         dates.append(date)
 
-        # TODO: Figure out if you need to get beam_corners_aacgm_lons for every time
-        # beam_corners_aacgm_lats, beam_corners_aacgm_lons = \
-        #     radar_fov(stid=hdw_info.stid, coords='aacgm', date=date)
+        gate = df['slist'][i]
+        beam = df['bmnum'][i]
 
-        gate_corner = df['slist'][i]
-        beam_corner = df['bmnum'][i]
+        aacgm_lons.append(cell_centers_aacgm_lons[gate, beam])
+        aacgm_lats.append(cell_centers_aacgm_lats[gate, beam])
 
-        # estimate the cell with the centroid
-        cent_lon, cent_lat = centroid([(beam_corners_aacgm_lons[gate_corner, beam_corner],
-                                        beam_corners_aacgm_lats[gate_corner, beam_corner]),
-                                       (beam_corners_aacgm_lons[gate_corner + 1, beam_corner],
-                                        beam_corners_aacgm_lats[gate_corner + 1, beam_corner]),
-                                       (beam_corners_aacgm_lons[gate_corner, beam_corner + 1],
-                                        beam_corners_aacgm_lats[gate_corner, beam_corner + 1]),
-                                       (beam_corners_aacgm_lons[gate_corner + 1, beam_corner + 1],
-                                        beam_corners_aacgm_lats[gate_corner + 1, beam_corner + 1])])
-        aacgm_lons.append(cent_lon)
-        aacgm_lats.append(cent_lat)
-
-    df['mlt'] = aacgmv2.convert_mlt(arr=aacgm_lons, dtime=dates, m2a=False)
+    df['lon'] = aacgm_lons
     df['lat'] = aacgm_lats
+    df['mlt'] = aacgmv2.convert_mlt(arr=aacgm_lons, dtime=dates, m2a=False)
 
     return df
 

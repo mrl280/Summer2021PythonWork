@@ -131,13 +131,14 @@ def occ_year_vs_ut(station, year_range, month_range=None, time_units='mlt', hour
             # To compute mlt we need longitudes..
             # we will use the middle of the year and assume magnetic longitudes don't change much over the year
             mid_datetime = start_datetime + (end_datetime - start_datetime) / 2
-            beam_corners_aacgm_lats, beam_corners_aacgm_lons = \
+            cell_corners_aacgm_lats, cell_corners_aacgm_lons = \
                 radar_fov(stid=radar_id, coords='aacgm', date=mid_datetime)
 
-            df_yy = add_mlt_to_df(beam_corners_aacgm_lons=beam_corners_aacgm_lons,
-                                  beam_corners_aacgm_lats=beam_corners_aacgm_lats, df=df_yy)
+            df_yy = add_mlt_to_df(cell_corners_aacgm_lons=cell_corners_aacgm_lons,
+                                  cell_corners_aacgm_lats=cell_corners_aacgm_lats, df=df_yy)
 
             df_yy['xdata'] = df_yy['mlt']
+            print(df_yy['mlt'])
         else:
             df_yy['xdata'] = df_yy['ut_time']
 
@@ -186,6 +187,7 @@ if __name__ == '__main__':
                          parameter='v', local_testing=local_testing)
 
     if local_testing:
+        a = 1
         plt.show()
     else:
         loc_root = str((pathlib.Path().parent.absolute()))
