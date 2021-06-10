@@ -15,14 +15,14 @@ from lib.add_mlt_to_df import add_mlt_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.z_min_max_defaults import z_min_max_defaults
-from lib.data_getters.range_checkers import check_year
+from lib.data_getters.input_checkers import check_year
 
 
-def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=None, gate_range=None, beam_range=None,
+def occ_full_circle(station, year, time_units='mlt', month_range=None, day_range=None, hour_range=None, gate_range=None, beam_range=None,
                     local_testing=False, parameter=None, plot_ground_scat=False):
     """
 
-    Produce a full circle stereographic plot in mlt.
+    Produce a full circle stereographic plot in either ut or mlt.
     Can plot a simple echo count, ground scatter count, or average a fitACF parameter over the provided time range.
 
     Notes:
@@ -39,6 +39,8 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
     :param year: int:
             The year to consider.
+    :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
+            The time units to plot on the circle, 12 is always at the top.  Default is 'mlt'
     :param month_range: (<int>, <int>) (optional):
             Inclusive. The months of the year to consider.  If omitted (or None), then all days will be considered.
     :param day_range: (<int>, <int>) (optional):
@@ -64,9 +66,6 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
             It can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
-    if parameter is not None:
-        zmin, zmax = z_min_max_defaults(parameter)
-
     year = check_year(year)
 
     print("Retrieving data...")
@@ -78,15 +77,13 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
     all_radars_info = SuperDARNRadars()
     this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
     hemisphere = this_radars_info.hemisphere
-
-    radar_geo_lon = this_radars_info.hardware_info.geographic.lon
-    radar__geo_lat = this_radars_info.hardware_info.geographic.lat
     radar_id = this_radars_info.hardware_info.stid
 
     print("Filtering data...")
     df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
 
     if not plot_ground_scat and parameter is not None:
+        zmin, zmax = z_min_max_defaults(parameter)
         df = df.loc[(df[parameter] >= zmin) & (df[parameter] <= zmax)]
 
     df.reset_index(drop=True, inplace=True)
@@ -137,8 +134,8 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
 
     n_bins_x = 180  # 1 bin per every 2 degrees
     n_bins_y = 40  # About 1 bin per degree
+    # TODO: This depends on hemisphere, need to make compatible with southern hemisphere
     contour_range = [[0, 360], [37, 90]]
-    print(contour_range)
     if parameter is None:
         # We just want a simple echo count
         binned_counts, bin_xedges, bin_yedges, bin_numbers = stats.binned_statistic_2d(
@@ -149,6 +146,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
         binned_counts, bin_xedges, bin_yedges, bin_numbers = stats.binned_statistic_2d(
             df['mlt'], df['lat'], values=df[parameter],
             statistic='median', bins=[n_bins_x, n_bins_y], range=contour_range)
+        # TODO: Make so no data cells plot like nothing is there
         binned_counts = np.nan_to_num(binned_counts)
 
     # Compute bin centers
@@ -166,11 +164,11 @@ def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=
         else:
             cmap = modified_viridis_2()
         cont = ax.contourf(bin_xcenters, bin_ycenters, binned_counts.transpose(),
-                           levels=5, cmap=cmap, transform=ccrs.PlateCarree())
+                           levels=6, cmap=cmap, transform=ccrs.PlateCarree())
 
     # ax.plot([radar_geo_lon, radar_geo_lon], [radar__geo_lat, radar__geo_lat], 'ro', transform=ccrs.PlateCarree())
     # cont = ax.contourf(bin_xcenters, bin_ycenters, binned_counts.transpose(), 5, transform=ccrs.PlateCarree())
-    fig.colorbar(cont, ax=ax)
+    fig.colorbar(cont, fraction=0.046, orientation="horizontal", ax=ax)
 
     return fig
 
@@ -182,7 +180,7 @@ if __name__ == '__main__':
     station = "rkn"
 
     fig = occ_full_circle(station=station, year=2011, month_range=(2, 2), day_range=None,
-                          gate_range=(20, 30), beam_range=(7, 7),
+                          gate_range=(0, 74), beam_range=(0, 15),
                           plot_ground_scat=False, parameter=None, local_testing=local_testing)
 
     if local_testing:
