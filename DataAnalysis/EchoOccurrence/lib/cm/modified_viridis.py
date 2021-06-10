@@ -3,6 +3,8 @@ import matplotlib.cm as cm
 
 from matplotlib.colors import ListedColormap
 
+# TODO: Automatically pick colour bar based on how many contour there are
+
 
 def modified_viridis_1():
     """
@@ -18,6 +20,7 @@ def modified_viridis_1():
 
 def modified_viridis_2():
     """
+    For 6 level contours
     :return: A modified viridis colormap
     """
     jet = cm.get_cmap('viridis_r', 256)
