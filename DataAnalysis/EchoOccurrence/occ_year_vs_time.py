@@ -138,7 +138,6 @@ def occ_year_vs_ut(station, year_range, month_range=None, time_units='mlt', hour
                                   cell_corners_aacgm_lats=cell_corners_aacgm_lats, df=df_yy)
 
             df_yy['xdata'] = df_yy['mlt']
-            print(df_yy['mlt'])
         else:
             df_yy['xdata'] = df_yy['ut_time']
 
