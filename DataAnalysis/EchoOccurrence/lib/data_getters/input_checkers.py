@@ -146,3 +146,25 @@ def check_beam_range(beam_range, hdw_info):
                       " beams, so beam_range[1] has defaulted to " + str(beam_range[1]),
                       category=Warning)
     return beam_range
+
+
+def check_time_units(time_units):
+    """
+    :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time
+    :return: str: suitable time units
+    """
+
+    if time_units is None:
+        time_units = "mlt"
+        warnings.warn("No time_units provided, they have defaulted to mlt.",
+                      category=Warning)
+
+    time_units = time_units.lower()
+    if time_units != "mlt" and time_units != "ut":
+        warnings.warn("The provided time units were neither 'mlt' or 'ut', they have defaulted to mlt.",
+                      category=Warning)
+        time_units = "mlt"
+
+    return time_units
+
+
