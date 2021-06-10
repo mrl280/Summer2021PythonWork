@@ -22,6 +22,9 @@ def occ_full_circle(station, year, time_units='mlt', month_range=None, day_range
                     local_testing=False, parameter=None, plot_ground_scat=False):
     """
 
+    TODO: There are still concerns around what to do here.. not all cells cover the same area,
+      and the lower latitude regions are scanned much less often then an the higher lattitude points
+
     Produce a full circle stereographic plot in either ut or mlt.
     Can plot a simple echo count, ground scatter count, or average a fitACF parameter over the provided time range.
 
@@ -120,14 +123,15 @@ def occ_full_circle(station, year, time_units='mlt', month_range=None, day_range
     ax.text(text_offset_multiplier * ax.get_xlim()[1], 0, "06", ha='left', va='center')
     ax.text(text_offset_multiplier * ax.get_xlim()[0], 0, "18", ha='right', va='center')
 
+    # TODO: Only compute mlt if needed, make ut option
     print("Computing MLT...")
     # To compute mlt we need longitudes..
     # we will use the start of the year and assume magnetic longitudes don't change much over the observation period
     start_datetime, start_epoch = build_datetime_epoch(year=year, month=1, day=1, hour=0)
-    beam_corners_aacgm_lats, beam_corners_aacgm_lons = radar_fov(stid=radar_id, coords='aacgm', date=start_datetime)
+    cell_corners_aacgm_lats, cell_corners_aacgm_lons = radar_fov(stid=radar_id, coords='aacgm', date=start_datetime)
 
-    df = add_mlt_to_df(beam_corners_aacgm_lons=beam_corners_aacgm_lons,
-                       beam_corners_aacgm_lats=beam_corners_aacgm_lats, df=df)
+    df = add_mlt_to_df(cell_corners_aacgm_lons=cell_corners_aacgm_lons,
+                          cell_corners_aacgm_lats=cell_corners_aacgm_lats, df=df)
 
     # Right now MLT is in the range 0-24, we need to put it in the range 0-360 for circular plotting
     df['mlt'] = 15 * df['mlt']
