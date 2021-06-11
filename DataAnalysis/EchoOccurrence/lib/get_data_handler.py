@@ -58,7 +58,7 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
                                   occ_data=occ_data)
         df_2 = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=24,
                                     occ_data=occ_data)
-        df_3 = get_local_dummy_data(station=station, year=2012, month=10, day=15, start_hour_UT=0, end_hour_UT=24,
+        df_3 = get_local_dummy_data(station=station, year=2012, month=11, day=12, start_hour_UT=0, end_hour_UT=24,
                                     occ_data=occ_data)
         df = pd.concat([df, df_2, df_3])
         df = df.loc[(df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
