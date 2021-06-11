@@ -153,6 +153,6 @@ if __name__ == '__main__':
                 PickleFITACF_occ(station, in_dir[3:], (0, 16))
     else:
         station = "rkn"
-        date = "20121015"
+        date = "20121112"
         print("Occ Pickling " + station + date + "...")
         PickleFITACF_occ(station, date, (1, 3))
