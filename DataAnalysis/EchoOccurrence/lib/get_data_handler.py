@@ -2,6 +2,7 @@ import pandas as pd
 import pydarn
 
 from .data_getters.get_data import get_data
+from .data_getters.get_data_occ import get_data_occ
 from .data_getters.get_local_dummy_data import get_local_dummy_data
 from .data_getters.input_checkers import *
 
