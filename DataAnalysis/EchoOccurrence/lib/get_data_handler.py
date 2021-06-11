@@ -7,7 +7,7 @@ from .data_getters.input_checkers import *
 
 
 def get_data_handler(station, year_range=None, month_range=None, day_range=None, hour_range=None,
-                     gate_range=None, beam_range=None, local_testing=False):
+                     gate_range=None, beam_range=None, occ_data=False, local_testing=False):
     """
 
     Get the required data, put it into a dataframe, and then return the dataframe for plotting/analysis
@@ -30,6 +30,9 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
     :param beam_range: (<int>, <int>) (optional):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
+    :param occ_data: bool (optional):
+            Set this to true if you need echo occurrence data.
+            If False, you will get normal data (basically a reduced fitACF datafile),  Default if False.
     :param local_testing: bool (optional):
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
     :return: pandas.DataFrame: A dataframe with select fitACF parameters.
@@ -50,9 +53,12 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
                       " Gate and Beam filtering is still applied.", category=Warning)
 
         # df = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=23)
-        df = get_local_dummy_data(station=station, year=2011, month=11, day=12, start_hour_UT=0, end_hour_UT=24)
-        df_2 = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=24)
-        df_3 = get_local_dummy_data(station=station, year=2012, month=10, day=15, start_hour_UT=0, end_hour_UT=24)
+        df = get_local_dummy_data(station=station, year=2011, month=11, day=12, start_hour_UT=0, end_hour_UT=24,
+                                  occ_data=occ_data)
+        df_2 = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=24,
+                                    occ_data=occ_data)
+        df_3 = get_local_dummy_data(station=station, year=2012, month=10, day=15, start_hour_UT=0, end_hour_UT=24,
+                                    occ_data=occ_data)
         df = pd.concat([df, df_2, df_3])
         df = df.loc[(df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
                     (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1])]
@@ -64,7 +70,11 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
         day_range = check_day_range(day_range)
         hour_range = check_hour_range(hour_range)
 
-        df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
-                      hour_range=hour_range, gate_range=gate_range, beam_range=beam_range)
+        if occ_data:
+            df = get_data_occ(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
+                              hour_range=hour_range, gate_range=gate_range, beam_range=beam_range)
+        else:
+            df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
+                          hour_range=hour_range, gate_range=gate_range, beam_range=beam_range)
 
     return df
