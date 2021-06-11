@@ -24,6 +24,7 @@ def occ_full_circle(station, year, time_units='mlt', month_range=None, day_range
 
     TODO: There are still concerns around what to do here.. not all cells cover the same area,
       and the lower latitude regions are scanned much less often then an the higher lattitude points
+    TODO: Also the data is in aagmc but the plot and gridlines are in geographic coordinates - which doesn't make sense
 
     Produce a full circle stereographic plot in either ut or mlt.
     Can plot a simple echo count, ground scatter count, or average a fitACF parameter over the provided time range.
