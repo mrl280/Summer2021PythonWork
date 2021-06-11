@@ -73,7 +73,7 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
 
         if occ_data:
             df = get_data_occ(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
-                              hour_range=hour_range, gate_range=gate_range, beam_range=beam_range)
+                              gate_range=gate_range, beam_range=beam_range)
         else:
             df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
                           hour_range=hour_range, gate_range=gate_range, beam_range=beam_range)
