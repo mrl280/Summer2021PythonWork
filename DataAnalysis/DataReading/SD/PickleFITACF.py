@@ -43,6 +43,12 @@ def PickleFITACF(station, date):
             - Spectral width from lambda fit (w_l) 'w_l' with Error 'w_l_e'
             - Standard deviation of lambda fit 'sd_l' and phase fit 'sd_phi'
             - Elevation angle 'elv' with low 'elv_low' and high 'elv_high' estimates
+
+    :param station: str:
+            The radar station to consider, a 3 character string (e.g. "rkn").
+            For a complete listing of available stations, please see https://superdarn.ca/radar-info
+    :param date: str:
+            The date as a string of the form 'yyyymmdd'.  Single digit months and days need to be zero padded.
     """
 
     pattern = "%Y.%m.%d %H:%M:%S"  # This is the pattern we will use to convert time info to epoch
