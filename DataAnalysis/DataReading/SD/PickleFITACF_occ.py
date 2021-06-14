@@ -34,7 +34,7 @@ def PickleFITACF_occ(station, date, beam_range):
             - CLY 4-6       - SPS 3-5
     """
 
-    gate_range = (0, 74)
+    gate_range = (0, 74)  # TODO: Update this to read in gate range from hardware?
 
     epoch, date_time = [], []
     slist, beam = [], []
@@ -58,7 +58,6 @@ def PickleFITACF_occ(station, date, beam_range):
         # print("List of available parameters: " + str(fitacf_data[0].keys()))
 
         # Loop through every record in this file
-        # for record in range(25):
         for record in range(len(fitacf_data)):
             beam_here = fitacf_data[record]['bmnum']
             if beam_here < beam_range[0] or beam_here > beam_range[1]:
