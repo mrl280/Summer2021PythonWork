@@ -16,7 +16,7 @@ from lib.build_datetime_epoch import build_datetime_epoch
 from lib.data_getters.input_checkers import *
 
 
-def occ_gate_vs_time(station, year, month, hour_range=None, time_units='mlt',
+def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None, time_units='mlt',
                      gate_range=None, beam_range=None, local_testing=False):
     """
 
@@ -37,6 +37,8 @@ def occ_gate_vs_time(station, year, month, hour_range=None, time_units='mlt',
             The year to consider
     :param month: int:
             The month to consider
+    :param day_range: (<int>, <int>) (optional):
+            Inclusive. The days of the month to consider.  If omitted (or None), then all days will be considered.
     :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
             The time units to plot along x.  Default is 'mlt'
     :param hour_range: (<int>, <int>) (optional):
@@ -56,19 +58,21 @@ def occ_gate_vs_time(station, year, month, hour_range=None, time_units='mlt',
 
     time_units = check_time_units(time_units)
     year = check_year(year)
+    month = check_month(month)
     hour_range = check_hour_range(hour_range)
-
-    print("Retrieving data...")
-    df = get_data_handler(station, year_range=(year, year), month_range=(month, month), hour_range=hour_range,
-                          gate_range=gate_range, beam_range=beam_range, occ_data=True,
-                          local_testing=local_testing)
-    df = only_keep_45km_res_data(df)
 
     all_radars_info = SuperDARNRadars()
     this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
     radar_id = this_radars_info.hardware_info.stid
 
     gate_range = check_gate_range(gate_range, this_radars_info.hardware_info)
+    beam_range = check_beam_range(beam_range, this_radars_info.hardware_info)
+
+    print("Retrieving data...")
+    df = get_data_handler(station, year_range=(year, year), month_range=(month, month), hour_range=hour_range,
+                          day_range=day_range, gate_range=gate_range, beam_range=beam_range, occ_data=True,
+                          local_testing=local_testing)
+    df = only_keep_45km_res_data(df)
 
     # Get our raw x-data
     if time_units == "mlt":
@@ -83,8 +87,11 @@ def occ_gate_vs_time(station, year, month, hour_range=None, time_units='mlt',
                            cell_corners_aacgm_lats=cell_corners_aacgm_lats, df=df)
 
         df['xdata'] = df['mlt']
+
     else:
         print("Computing UTs for " + str(year) + " data...")
+
+        # I tried to speed this up by only recomputing when necessary
         ut_time = []
         datetime_save = df['datetime'].iat[0]
         ut_save = df['datetime'].iat[0].hour + df['datetime'].iat[0].minute / 60 + df['datetime'].iat[0].second / 3600
@@ -103,16 +110,18 @@ def occ_gate_vs_time(station, year, month, hour_range=None, time_units='mlt',
     df.reset_index(drop=True, inplace=True)
 
     print("Preparing the plot...")
-    fig, ax = plt.subplots(dpi=300)
+    fig, ax = plt.subplots(figsize=[8, 6], dpi=300)
     ax.set_ylim(gate_range)
     ax.set_xlim(hour_range)
     ax.xaxis.set_major_locator(MultipleLocator(4))
-    ax.tick_params(axis='y', which='major', direction='in', color='white')
-    ax.tick_params(axis='x', which='major', direction='in', color='white')
-    ax.grid(b=True, which='both', axis='x', linestyle='--', linewidth=0.5, zorder=4, color='white')
-    ax.set_ylabel("Range Gate")
-    ax.set_xlabel("Time, " + time_units.upper())
-    plt.title(calendar.month_name[month] + " " + str(year) + ", at " + station.upper())
+    ax.tick_params(axis='both', which='major', direction='in', color='white')
+    ax.grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5, zorder=4, color='white')
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    ax.set_ylabel("Range Gate", fontsize=16)
+    ax.set_xlabel("Time, " + time_units.upper(), fontsize=16)
+    plt.title(calendar.month_name[month] + " " + str(year) + " at " + station.upper() +
+              "; Beams " + str(beam_range[0]) + "-" + str(beam_range[1]), fontsize=18)
 
     # Compute hour_edges
     bins_per_hour = 4
@@ -157,10 +166,11 @@ def occ_gate_vs_time(station, year, month, hour_range=None, time_units='mlt',
 
     # Plot the data
     levels = 12
+    levels = np.linspace(start=0, stop=1, num=(levels + 1))
     cont = ax.contourf(bin_xcenters, bin_ycenters, contour_data.transpose(),
                        cmap='jet', levels=levels)
-    cbar = fig.colorbar(cont, ax=ax, shrink=0.75)
-    # cbar.ax.tick_params(labelsize=16)
+    cbar = fig.colorbar(cont, ax=ax, shrink=0.75, format='%.2f')
+    cbar.ax.tick_params(labelsize=14)
 
     print("Returning the figure...")
     return fig
@@ -171,16 +181,25 @@ if __name__ == '__main__':
 
     local_testing = True
 
-    station = "rkn"
-    fig = occ_gate_vs_time(station=station, year=2014, month=2, time_units='ut',
-                           gate_range=(0, 74), beam_range=None, local_testing=local_testing)
-
     if local_testing:
-        a = 1
+        station = "rkn"
+
+        fig = occ_gate_vs_time(station=station, year=2011, month=9, day_range=None, time_units='ut',
+                               gate_range=(0, 74), beam_range=None, local_testing=local_testing)
+
         plt.show()
+
+
     else:
+        station = "inv"
+        year = 2014
+        month = 2
+
+        fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=(1, 3), time_units='ut',
+                               gate_range=(0, 74), beam_range=(13, 15), local_testing=local_testing)
+
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
-        out_file = out_dir + "/occ_gate_vs_time_" + station
+        out_file = out_dir + "/occ_gate_vs_time_" + station + str(year) + str(month)
         print("Saving plot as " + out_file)
         fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
