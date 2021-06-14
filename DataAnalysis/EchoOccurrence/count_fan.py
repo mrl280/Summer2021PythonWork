@@ -200,6 +200,6 @@ if __name__ == '__main__':
     else:
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
-        out_file = out_dir + "/occ_fan_" + station
+        out_file = out_dir + "/count_fan_" + station
         print("Saving plot as " + out_file)
         fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
