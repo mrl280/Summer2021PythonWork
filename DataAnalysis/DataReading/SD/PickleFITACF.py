@@ -1,9 +1,7 @@
-import calendar
 import pydarn
 import bz2
 import pandas as pd
 import numpy as np
-import time
 import glob
 import os
 
@@ -125,7 +123,6 @@ def PickleFITACF(station, date):
 
                 # Build up scalar data, it is faster to have this in this inner loop
                 epoch.append(epoch_here)
-                date_time.append(date_time_here)
                 date_time.append(date_time_here)
                 year.append(fitacf_data[record]['time.yr'])
                 month.append(fitacf_data[record]['time.mo'])
