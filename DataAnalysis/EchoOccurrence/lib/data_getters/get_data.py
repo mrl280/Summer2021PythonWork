@@ -44,8 +44,6 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
 
     # Create empty arrays for scalar parameters
     epoch, date_time = [], []
-    year, month, day = [], [], []
-    hour, minute, second = [], [], []
     bmnum = []
     tfreq = []
     frang, rsep = [], []
@@ -104,12 +102,6 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                                     # Build up scalar parameters
                                     epoch.extend([epoch_here] * num_gates_reporting)
                                     date_time.extend([date_time_here] * num_gates_reporting)
-                                    year.extend([fitacf_data[scan]['time.yr']] * num_gates_reporting)
-                                    month.extend([fitacf_data[scan]['time.mo']] * num_gates_reporting)
-                                    day.extend([fitacf_data[scan]['time.dy']] * num_gates_reporting)
-                                    hour.extend([fitacf_data[scan]['time.hr']] * num_gates_reporting)
-                                    minute.extend([fitacf_data[scan]['time.mt']] * num_gates_reporting)
-                                    second.extend([fitacf_data[scan]['time.sc']] * num_gates_reporting)
                                     bmnum.extend([fitacf_data[scan]['bmnum']] * num_gates_reporting)
                                     tfreq.extend([fitacf_data[scan]['tfreq']] * num_gates_reporting)
                                     frang.extend([fitacf_data[scan]['frang']] * num_gates_reporting)
@@ -143,8 +135,6 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
 
     df = pd.DataFrame({'epoch': epoch,      'datetime': date_time,
                        'bmnum': bmnum,
-                       'year': year,        'month': month,             'day': day,
-                       'hour': hour,        'minute': minute,           'second': second,
                        'tfreq': tfreq,
                        'frang': frang,      'rsep': rsep,
 
@@ -155,7 +145,7 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                        })
 
     # Filter the data for the needed time, beam, and gate ranges
-    df = df.loc[(df['hour'] >= hour_range[0]) & (df['hour'] < hour_range[1]) &
+    df = df.loc[(df['datetime'].hour >= hour_range[0]) & (df['datetime'].hour < hour_range[1]) &
                 (df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
                 (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1])]
 
