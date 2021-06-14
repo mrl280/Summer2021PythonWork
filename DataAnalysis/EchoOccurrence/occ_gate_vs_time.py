@@ -1,24 +1,23 @@
+import math
 import pathlib
 import pydarn
+import calendar
 
 import numpy as np
 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from pydarn import radar_fov, SuperDARNRadars
-from scipy import stats
 
 from lib.add_mlt_to_df import add_mlt_to_df
-from lib.cm.modified_viridis import modified_viridis_2
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
-from lib.z_min_max_defaults import z_min_max_defaults
 from lib.build_datetime_epoch import build_datetime_epoch
 from lib.data_getters.input_checkers import *
 
 
-def occ_year_vs_ut(station, year, month, hour_range=None, time_units='mlt',
-                   gate_range=None, beam_range=None, local_testing=False):
+def occ_gate_vs_time(station, year, month, hour_range=None, time_units='mlt',
+                     gate_range=None, beam_range=None, local_testing=False):
     """
 
     Produce a contour plot with gate on the y-axis and time along the x-axis.
@@ -63,6 +62,7 @@ def occ_year_vs_ut(station, year, month, hour_range=None, time_units='mlt',
     df = get_data_handler(station, year_range=(year, year), month_range=(month, month), hour_range=hour_range,
                           gate_range=gate_range, beam_range=beam_range, occ_data=True,
                           local_testing=local_testing)
+    df = only_keep_45km_res_data(df)
 
     all_radars_info = SuperDARNRadars()
     this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
@@ -70,29 +70,99 @@ def occ_year_vs_ut(station, year, month, hour_range=None, time_units='mlt',
 
     gate_range = check_gate_range(gate_range, this_radars_info.hardware_info)
 
+    # Get our raw x-data
+    if time_units == "mlt":
+        print("Computing MLTs for " + str(year) + " data...")
+
+        # To compute mlt we need longitudes.. use the middle of the month as magnetic field estimate
+        date_time_est, _ = build_datetime_epoch(year, month, 15, 0)
+        cell_corners_aacgm_lats, cell_corners_aacgm_lons = \
+            radar_fov(stid=radar_id, coords='aacgm', date=date_time_est)
+
+        df = add_mlt_to_df(cell_corners_aacgm_lons=cell_corners_aacgm_lons,
+                           cell_corners_aacgm_lats=cell_corners_aacgm_lats, df=df)
+
+        df['xdata'] = df['mlt']
+    else:
+        print("Computing UTs for " + str(year) + " data...")
+        ut_time = []
+        datetime_save = df['datetime'].iat[0]
+        ut_save = df['datetime'].iat[0].hour + df['datetime'].iat[0].minute / 60 + df['datetime'].iat[0].second / 3600
+        for i in range(len(df)):
+            if df['datetime'].iat[i] == datetime_save:
+                ut_time.append(ut_save)
+            else:
+                datetime_save = df['datetime'].iat[i]
+                ut_save = df['datetime'].iat[i].hour + df['datetime'].iat[i].minute / 60 + df['datetime'].iat[
+                    i].second / 3600
+                ut_time.append(ut_save)
+
+        df['xdata'] = ut_time
+
+    df = df.loc[(df['xdata'] >= hour_range[0]) & (df['xdata'] <= hour_range[1])]
+    df.reset_index(drop=True, inplace=True)
+
     print("Preparing the plot...")
     fig, ax = plt.subplots(dpi=300)
-
     ax.set_ylim(gate_range)
     ax.set_xlim(hour_range)
-    print(hour_range)
-
     ax.xaxis.set_major_locator(MultipleLocator(4))
-    ax.tick_params(axis='y', which='major', direction='in')
-    ax.tick_params(axis='x', which='major', direction='in')
-    ax.grid(b=True, which='both', axis='x', linestyle='--', linewidth=0.5, zorder=4)
+    ax.tick_params(axis='y', which='major', direction='in', color='white')
+    ax.tick_params(axis='x', which='major', direction='in', color='white')
+    ax.grid(b=True, which='both', axis='x', linestyle='--', linewidth=0.5, zorder=4, color='white')
     ax.set_ylabel("Range Gate")
     ax.set_xlabel("Time, " + time_units.upper())
+    plt.title(calendar.month_name[month] + " " + str(year) + ", at " + station.upper())
 
+    # Compute hour_edges
+    bins_per_hour = 4
+    n_bins_x = (hour_range[1] - hour_range[0]) * bins_per_hour  # quarter hour bins
+    delta_hour = (hour_range[1] - hour_range[0]) / n_bins_x
+    hour_edges = np.linspace(hour_range[0], hour_range[1], num=(n_bins_x + 1))
 
-    n_bins_y = (gate_range[1] - gate_range[0])  # Single gate bins
-    n_bins_x = (hour_range[1] - hour_range[0]) * 2  # half hour bins
-    contour_range = [ax.get_xlim(), ax.get_ylim()]
+    # Compute gate_edges
+    n_bins_y = ((gate_range[1] + 1) - gate_range[0])  # Single gate bins
+    gate_edges = np.linspace(gate_range[0], gate_range[1] + 1, num=(n_bins_y + 1), dtype=int)
 
-    # TODO: Add title to plot
-    # TODO: Bin occurrence data and add to plot
-    print(df.head())
+    print("Computing binned occ rates...")
+    contour_data = np.empty(shape=(n_bins_x, n_bins_y))
+    contour_data[:] = math.nan
 
+    for hour_idx, hour_start in enumerate(hour_edges):
+        if hour_start == hour_edges[-1]:
+            continue  # The last edge is not a starting hour
+        hour_end = hour_start + delta_hour
+        df_hh = df[(df['xdata'] >= hour_start) & (df['xdata'] >= hour_end)]
+
+        for gate in gate_edges:
+            if gate == gate_edges[-1]:
+                continue  # The last edge is not a starting gate
+            df_hh_gg = df_hh[df_hh['slist'] == gate]
+
+            try:
+                contour_data[hour_idx][gate] = sum(df_hh_gg['good_echo']) / len(df_hh_gg)
+            except ZeroDivisionError:
+                # There are no point in this interval
+                contour_data[hour_idx, gate] = math.nan
+            except BaseException as e:
+                print("Hour index: " + str(hour_idx))
+                print("Gate: " + str(gate))
+                raise e
+
+    # Compute bin centers
+    bin_xwidth = (hour_edges[1] - hour_edges[0])
+    bin_ywidth = (gate_edges[1] - gate_edges[0])
+    bin_xcenters = hour_edges[1:] - bin_xwidth / 2
+    bin_ycenters = gate_edges[1:] - bin_ywidth / 2
+
+    # Plot the data
+    levels = 12
+    cont = ax.contourf(bin_xcenters, bin_ycenters, contour_data.transpose(),
+                       cmap='jet', levels=levels)
+    cbar = fig.colorbar(cont, ax=ax, shrink=0.75)
+    # cbar.ax.tick_params(labelsize=16)
+
+    print("Returning the figure...")
     return fig
 
 
@@ -102,8 +172,8 @@ if __name__ == '__main__':
     local_testing = True
 
     station = "rkn"
-    fig = occ_year_vs_ut(station=station, year=2014, month=2, time_units='ut',
-                         gate_range=(0, 74), beam_range=None, local_testing=local_testing)
+    fig = occ_gate_vs_time(station=station, year=2014, month=2, time_units='ut',
+                           gate_range=(0, 74), beam_range=None, local_testing=local_testing)
 
     if local_testing:
         a = 1
@@ -111,6 +181,6 @@ if __name__ == '__main__':
     else:
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
-        out_file = out_dir + "/occ_year_vs_time_" + station
+        out_file = out_dir + "/occ_gate_vs_time_" + station
         print("Saving plot as " + out_file)
         fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
