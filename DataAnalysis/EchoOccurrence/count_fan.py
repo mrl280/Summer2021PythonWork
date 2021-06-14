@@ -117,7 +117,7 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     plt.plot([radar_lon, radar_lon], [radar_lat, radar_lat], 'ro', markersize=1, transform=ccrs.Geodetic(),
              label=this_radars_info.name)
 
-    cell_corners_aacgm_lats, cell_corners_aacgm_lons = radar_fov(stid=radar_id, coords='geo')
+    cell_corners_lats, cell_corners_lons = radar_fov(stid=radar_id, coords='geo')
 
     print("Computing scan...")
     num_gates = (gate_range[1] + 1) - gate_range[0]
@@ -147,9 +147,9 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
                     scans[gate_idx, beam_idx] = math.nan
 
     # Build reduced arrays containing only the cells in the specified gate/beam range
-    reduced_beam_corners_lons = cell_corners_aacgm_lons[gate_range[0]: gate_range[1] + 2,
+    reduced_beam_corners_lons = cell_corners_lons[gate_range[0]: gate_range[1] + 2,
                                                         beam_range[0]: beam_range[1] + 2]
-    reduced_beam_corners_lats = cell_corners_aacgm_lats[gate_range[0]: gate_range[1] + 2,
+    reduced_beam_corners_lats = cell_corners_lats[gate_range[0]: gate_range[1] + 2,
                                                         beam_range[0]: beam_range[1] + 2]
 
     print("Plotting Data...")
@@ -168,14 +168,14 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
 
     # plot all the beam boundary lines
     for beam_line in range(beam_range[0], beam_range[1] + 2):
-        plt.plot(cell_corners_aacgm_lons[gate_range[0]:gate_range[1] + 2, beam_line],
-                 cell_corners_aacgm_lats[gate_range[0]:gate_range[1] + 2, beam_line],
+        plt.plot(cell_corners_lons[gate_range[0]:gate_range[1] + 2, beam_line],
+                 cell_corners_lats[gate_range[0]:gate_range[1] + 2, beam_line],
                  color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
     # plot the arcs boundary lines
     for range_ in range(gate_range[0], gate_range[1] + 2):
-        plt.plot(cell_corners_aacgm_lons[range_, beam_range[0]:beam_range[1] + 2],
-                 cell_corners_aacgm_lats[range_, beam_range[0]:beam_range[1] + 2],
+        plt.plot(cell_corners_lons[range_, beam_range[0]:beam_range[1] + 2],
+                 cell_corners_lats[range_, beam_range[0]:beam_range[1] + 2],
                  color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
     print("Returning the figure and scan...")
