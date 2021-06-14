@@ -7,6 +7,7 @@ import time
 import pydarn
 
 import pandas as pd
+import datetime as datetime
 
 
 def get_data(station, year_range, month_range, day_range, hour_range, gate_range, beam_range):
@@ -43,7 +44,7 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
     pattern = "%Y.%m.%d %H:%M:%S"
 
     # Create empty arrays for scalar parameters
-    epoch = []
+    epoch, date_time = [], []
     year, month, day = [], [], []
     hour, minute, second = [], [], []
     bmnum = []
@@ -86,13 +87,15 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                             for scan in range(len(fitacf_data)):
 
                                 # Compress all time information into epoch
-                                date_time_here = str(fitacf_data[scan]['time.yr']) + "." + \
+                                datetime_here_str = str(fitacf_data[scan]['time.yr']) + "." + \
                                                  str(fitacf_data[scan]['time.mo']) + "." + \
                                                  str(fitacf_data[scan]['time.dy']) + " " + \
                                                  str(fitacf_data[scan]['time.hr']) + ":" + \
                                                  str(fitacf_data[scan]['time.mt']) + ":" + \
                                                  str(fitacf_data[scan]['time.sc'])
-                                epoch_here = calendar.timegm(time.strptime(date_time_here, pattern))
+                                date_time_struct = time.strptime(datetime_here_str, pattern)
+                                epoch_here = calendar.timegm(date_time_struct)
+                                date_time_here = datetime.datetime.fromtimestamp(time.mktime(date_time_struct))
 
                                 try:
                                     num_gates_reporting = len(fitacf_data[scan]['slist'])
@@ -104,6 +107,7 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                                 if num_gates_reporting > 0:
                                     # Build up scalar parameters
                                     epoch.extend([epoch_here] * num_gates_reporting)
+                                    date_time.extend([date_time_here] * num_gates_reporting)
                                     year.extend([fitacf_data[scan]['time.yr']] * num_gates_reporting)
                                     month.extend([fitacf_data[scan]['time.mo']] * num_gates_reporting)
                                     day.extend([fitacf_data[scan]['time.dy']] * num_gates_reporting)
@@ -141,17 +145,17 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
         # We have found no data, panic
         raise Exception("get_data() found no data matching the provided criteria.")
 
-    df = pd.DataFrame({'epoch': epoch,
+    df = pd.DataFrame({'epoch': epoch,      'datetime': date_time,
                        'bmnum': bmnum,
-                       'year': year,    'month': month,     'day': day,
-                       'hour': hour,   'minute': minute,   'second': second,
+                       'year': year,        'month': month,             'day': day,
+                       'hour': hour,        'minute': minute,           'second': second,
                        'tfreq': tfreq,
-                       'frang': frang,  'rsep': rsep,
+                       'frang': frang,      'rsep': rsep,
 
                        'slist': slist,
-                       'qflg': qflg,    'gflg': gflg,
-                       'v': v,          'p_l': p_l,         'w_l': w_l,
-                       'phi0': phi0,    'elv': elv
+                       'qflg': qflg,        'gflg': gflg,
+                       'v': v,              'p_l': p_l,                 'w_l': w_l,
+                       'phi0': phi0,        'elv': elv
                        })
 
     # Filter the data for the needed time, beam, and gate ranges
