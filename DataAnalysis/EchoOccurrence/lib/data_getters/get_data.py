@@ -2,12 +2,11 @@ import bz2
 import glob
 import math
 import os
-import calendar
-import time
 import pydarn
 
 import pandas as pd
-import datetime as datetime
+
+from DataAnalysis.DataReading.SD.PickleFITACF_occ import build_datetime_epoch
 
 
 def get_data(station, year_range, month_range, day_range, hour_range, gate_range, beam_range):
@@ -86,16 +85,13 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                             # As far as I know, list extensions are the fastest way to do this
                             for scan in range(len(fitacf_data)):
 
-                                # Compress all time information into epoch
-                                datetime_here_str = str(fitacf_data[scan]['time.yr']) + "." + \
-                                                 str(fitacf_data[scan]['time.mo']) + "." + \
-                                                 str(fitacf_data[scan]['time.dy']) + " " + \
-                                                 str(fitacf_data[scan]['time.hr']) + ":" + \
-                                                 str(fitacf_data[scan]['time.mt']) + ":" + \
-                                                 str(fitacf_data[scan]['time.sc'])
-                                date_time_struct = time.strptime(datetime_here_str, pattern)
-                                epoch_here = calendar.timegm(date_time_struct)
-                                date_time_here = datetime.datetime.fromtimestamp(time.mktime(date_time_struct))
+                                date_time_here, epoch_here = build_datetime_epoch(
+                                    year=fitacf_data[scan]['time.yr'],
+                                    month=fitacf_data[scan]['time.mo'],
+                                    day=fitacf_data[scan]['time.dy'],
+                                    hour=fitacf_data[scan]['time.hr'],
+                                    minute=fitacf_data[scan]['time.mt'],
+                                    second=fitacf_data[scan]['time.sc'])
 
                                 try:
                                     num_gates_reporting = len(fitacf_data[scan]['slist'])
