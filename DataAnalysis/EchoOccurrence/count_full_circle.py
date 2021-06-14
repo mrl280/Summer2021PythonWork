@@ -10,7 +10,7 @@ from pydarn import SuperDARNRadars, radar_fov
 from scipy import stats
 
 from lib.build_datetime_epoch import build_datetime_epoch
-from lib.cm.modified_viridis import *
+from lib.cm.modified_viridis import modified_viridis
 from lib.add_mlt_to_df import add_mlt_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
@@ -167,7 +167,7 @@ def occ_full_circle(station, year, time_units='mlt', month_range=None, day_range
         if parameter == 'v':
             cmap = 'seismic_r'
         else:
-            cmap = modified_viridis_2()
+            cmap = modified_viridis()
         cont = ax.contourf(bin_xcenters, bin_ycenters, binned_counts.transpose(),
                            levels=6, cmap=cmap, transform=ccrs.PlateCarree())
 

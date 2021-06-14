@@ -9,7 +9,7 @@ from pydarn import radar_fov, SuperDARNRadars
 from scipy import stats
 
 from lib.add_mlt_to_df import add_mlt_to_df
-from lib.cm.modified_viridis import modified_viridis_2
+from lib.cm.modified_viridis import modified_viridis
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.z_min_max_defaults import z_min_max_defaults
@@ -81,11 +81,11 @@ def occ_year_vs_ut(station, year_range, month_range=None, time_units='mlt', hour
             cmap = 'seismic_r'
             levels = np.linspace(zmin, zmax, 13, endpoint=True)
         else:
-            cmap = modified_viridis_2()
             levels = 6
+            cmap = modified_viridis(levels=levels)
     else:
-        cmap = modified_viridis_2()
         levels = 12
+        cmap = modified_viridis(levels=levels)
 
     df.reset_index(drop=True, inplace=True)
     df = only_keep_45km_res_data(df)
