@@ -51,8 +51,6 @@ def PickleFITACF(station, date):
             The date as a string of the form 'yyyymmdd'.  Single digit months and days need to be zero padded.
     """
 
-    pattern = "%Y.%m.%d %H:%M:%S"  # This is the pattern we will use to convert time info to epoch
-
     # Create empty arrays for scalar parameters
     epoch, date_time = [], []
     year, month, day = [], [], []

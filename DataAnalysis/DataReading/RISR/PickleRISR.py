@@ -78,7 +78,6 @@ def PickleRISR(station, date):
         df['MIN'] = df['MIN'].astype(int)
         df['SEC'] = df['SEC'].astype(int)
 
-        pattern = '%Y-%m-%d %H:%M:%S'
         year = [int(df['YEAR'][0])] * len(df['YEAR'])  # The years near the bottom of the file can get messed up
         epoch = []
         wdBmnum = []
