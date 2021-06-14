@@ -64,6 +64,26 @@ def check_month_range(month_range):
     return month_range
 
 
+def check_month(month):
+    """
+    :param month: int or None: The month to check
+    :return: int: A suitable year
+    """
+    now = datetime.datetime.now()
+    if month is None:
+        month = now.month
+        warnings.warn("No month was provided, it has defaulted to " + str(month) + ".",
+                      category=Warning)
+    if month < 1:
+        month = 1
+        warnings.warn("The first month of the year is 1, month has defaulted to 1.",
+                      category=Warning)
+    if month > 12:
+        month = 12
+        warnings.warn("The last month of the year is 12, month has defaulted to 12",
+                      category=Warning)
+    return month
+
 def check_day_range(day_range):
     """
     :param day_range: (<int>, <int>) or None: The day range to check
