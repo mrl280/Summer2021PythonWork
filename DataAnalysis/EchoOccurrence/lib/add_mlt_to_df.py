@@ -1,4 +1,3 @@
-import datetime as datetime
 import numpy as np
 
 import aacgmv2
@@ -47,15 +46,14 @@ def add_mlt_to_df(cell_corners_aacgm_lons, cell_corners_aacgm_lats, df):
 
     #  Loop through the dataframe, and build up aacgm_lons and dates
     for i in range(len(df)):
-        date = datetime.datetime(df['year'][i], df['month'][i], df['day'][i],
-                                 df['hour'][i], df['minute'][i], int(df['second'][i]))
-        dates.append(date)
 
         gate = df['slist'][i]
         beam = df['bmnum'][i]
+        date = df['datetime'][i]
 
         aacgm_lons.append(cell_centers_aacgm_lons[gate, beam])
         aacgm_lats.append(cell_centers_aacgm_lats[gate, beam])
+        dates.append(date)
 
     df['lon'] = aacgm_lons
     df['lat'] = aacgm_lats
