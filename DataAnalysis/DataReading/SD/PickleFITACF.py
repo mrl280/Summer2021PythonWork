@@ -7,6 +7,8 @@ import time
 import glob
 import os
 
+from DataAnalysis.DataReading.SD.PickleFITACF_occ import build_datetime_epoch
+
 
 def PickleFITACF(station, date):
     """
@@ -54,7 +56,7 @@ def PickleFITACF(station, date):
     pattern = "%Y.%m.%d %H:%M:%S"  # This is the pattern we will use to convert time info to epoch
 
     # Create empty arrays for scalar parameters
-    epoch = []
+    epoch, date_time = [], []
     year, month, day = [], [], []
     hour, minute, second = [], [], []
     date_time = []
@@ -89,12 +91,12 @@ def PickleFITACF(station, date):
         # Loop through every record in this file and add to the parallel arrays
         for record in range(len(fitacf_data)):
 
-            # Convert date and time to epoch
-            date_time_here = str(fitacf_data[record]['time.yr']) + "." + str(fitacf_data[record]['time.mo']) + "." \
-                        + str(fitacf_data[record]['time.dy']) + " " + str(fitacf_data[record]['time.hr']) + ":" \
-                        + str(fitacf_data[record]['time.mt']) + ":" + str(fitacf_data[record]['time.sc'])
-            epoch_here = calendar.timegm(time.strptime(date_time_here, pattern))  # Doesn't keep microseconds
-
+            date_time_here, epoch_here = build_datetime_epoch(year=fitacf_data[record]['time.yr'],
+                                                              month=fitacf_data[record]['time.mo'],
+                                                              day=fitacf_data[record]['time.dy'],
+                                                              hour=fitacf_data[record]['time.hr'],
+                                                              minute=fitacf_data[record]['time.mt'],
+                                                              second=fitacf_data[record]['time.sc'])
             try:
                 num_gates_reporting = len(fitacf_data[record]['slist'])
             except:
@@ -124,6 +126,7 @@ def PickleFITACF(station, date):
                 # Build up scalar data, it is faster to have this in this inner loop
                 epoch.append(epoch_here)
                 date_time.append(date_time_here)
+                date_time.append(date_time_here)
                 year.append(fitacf_data[record]['time.yr'])
                 month.append(fitacf_data[record]['time.mo'])
                 day.append(fitacf_data[record]['time.dy'])
@@ -142,7 +145,7 @@ def PickleFITACF(station, date):
     # Put the data into a dataframe
     print("     Building the data frame...")
     df = pd.DataFrame({'stationId': [station] * len(epoch),
-                       'dateTime': date_time,
+                       'datetime': date_time,
                        'epoch': epoch,
                        'decimalTime': np.asarray(hour) + np.asarray(minute) / 60.0 + np.asarray(second) / 3600.0,
                        'year': year,    'month': month,     'day': day,
@@ -176,7 +179,7 @@ if __name__ == '__main__':
     """
     Handler to call PickleFITACF on SuperDARN data files
     """
-    PICKLE_ALL = False  # To prevent accidentally pickling all data
+    PICKLE_ALL = True  # To prevent accidentally pickling all data
 
     if PICKLE_ALL:
         print("Pickling all downloaded SuperDARN data...")
