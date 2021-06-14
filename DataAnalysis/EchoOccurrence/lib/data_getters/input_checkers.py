@@ -84,6 +84,7 @@ def check_month(month):
                       category=Warning)
     return month
 
+
 def check_day_range(day_range):
     """
     :param day_range: (<int>, <int>) or None: The day range to check
