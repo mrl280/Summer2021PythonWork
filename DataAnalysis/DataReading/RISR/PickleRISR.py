@@ -1,12 +1,11 @@
-import calendar
 import os
-import time
 import glob
 
 import pandas as pd
 import numpy as np
 
 from DataAnalysis.DataReading.RISR_HDF5.wd_beam_num import wd_beam_num
+from DataAnalysis.DataReading.SD.PickleFITACF_occ import build_datetime_epoch
 
 
 def PickleRISR(station, date):
@@ -88,14 +87,16 @@ def PickleRISR(station, date):
         for row in range(len(year)):
             wdBmnum.append(wd_beam_num(df['BEAMID'][row]))
 
-            date_time_here = str(year[row]) + "-" + str(df['MONTH'][row]) + "-" + str(df['DAY'][row]) + " " + \
-                             str(df['HOUR'][row]) + ":" + str(df['MIN'][row]) + ":" + str(df['SEC'][row])
+            date_time_here, epoch_here = build_datetime_epoch(year=year[row], month=df['MONTH'][row],
+                                                              day=df['DAY'][row], hour=df['HOUR'][row],
+                                                              minute=df['MIN'][row], second=df['SEC'][row])
+
             date_time.append(date_time_here)
-            epoch.append(calendar.timegm(time.strptime(date_time_here, pattern)))
+            epoch.append(epoch_here)
 
         adjusted_df = pd.DataFrame(
             {'stationId': [station] * len(epoch),
-             'dateTime': date_time,
+             'datetime': date_time,
              'epoch': epoch,
              'decimalTime': np.asarray(df['HOUR']) + np.asarray(df['MIN']) / 60.0 + np.asarray(df['SEC']) / 3600.0,
              'year': year, 'month': df['MONTH'], 'day': df['DAY'],
