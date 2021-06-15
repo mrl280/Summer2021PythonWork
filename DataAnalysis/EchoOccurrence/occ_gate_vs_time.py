@@ -16,8 +16,9 @@ from lib.build_datetime_epoch import build_datetime_epoch
 from lib.data_getters.input_checkers import *
 
 
-def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None, time_units='mlt',
-                     gate_range=None, beam_range=None, local_testing=False):
+def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
+                     gate_range=None, beam_range=None, time_units='mlt', plot_type='contour',
+                     local_testing=False):
     """
 
     Produce a contour plot with gate on the y-axis and time along the x-axis.
@@ -50,6 +51,8 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None, time
     :param beam_range: (<int>, <int>) (optional):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
+    :param plot_type: str (optional):
+            The type of plot, either 'contour' or 'pixel', default is 'contour'
     :param local_testing: bool (optional):
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
     :return: matplotlib.pyplot.figure
@@ -93,18 +96,19 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None, time
 
         # I tried to speed this up by only recomputing when necessary
         ut_time = []
-        datetime_save = df['datetime'].iat[0]
-        ut_save = df['datetime'].iat[0].hour + df['datetime'].iat[0].minute / 60 + df['datetime'].iat[0].second / 3600
         for i in range(len(df)):
-            if df['datetime'].iat[i] == datetime_save:
-                ut_time.append(ut_save)
-            else:
-                datetime_save = df['datetime'].iat[i]
-                ut_save = df['datetime'].iat[i].hour + df['datetime'].iat[i].minute / 60 + df['datetime'].iat[
-                    i].second / 3600
-                ut_time.append(ut_save)
+            # TODO: Take out the -7 for the local time convertion
+            ut_time_here = df['datetime'].iat[i].hour + df['datetime'].iat[i].minute / 60 + \
+                           df['datetime'].iat[i].second / 3600
 
-        df['xdata'] = ut_time
+            if ut_time_here > 24:
+                ut_time_here = ut_time_here - 24
+            elif ut_time_here < 0:
+                ut_time_here = ut_time_here + 24
+
+            ut_time.append(ut_time_here)
+
+        df['xdata'] = np.asarray(ut_time)
 
     df = df.loc[(df['xdata'] >= hour_range[0]) & (df['xdata'] <= hour_range[1])]
     df.reset_index(drop=True, inplace=True)
@@ -167,13 +171,22 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None, time
     # Plot the data
     levels = 12
     levels = np.linspace(start=0, stop=1, num=(levels + 1))
-    cont = ax.contourf(bin_xcenters, bin_ycenters, contour_data.transpose(),
-                       cmap='jet', levels=levels)
-    cbar = fig.colorbar(cont, ax=ax, shrink=0.75, format='%.2f')
+
+    if plot_type == "contour":
+        plot = ax.contourf(bin_xcenters, bin_ycenters, contour_data.transpose(), cmap='jet', levels=levels)
+
+    elif plot_type == "pixel":
+        plot = ax.imshow(np.flip(contour_data.transpose(), axis=0), aspect='auto', cmap="jet",
+                         extent=(hour_range[0], hour_range[1], gate_range[0], gate_range[1]))
+
+    else:
+        raise Exception("plot_type not recognized")
+
+    cbar = fig.colorbar(plot, ax=ax, shrink=0.75, format='%.2f')
     cbar.ax.tick_params(labelsize=14)
 
-    print("Returning the figure...")
-    return fig
+    print("Returning the figure and the dataframe...")
+    return df, fig
 
 
 if __name__ == '__main__':
@@ -184,8 +197,9 @@ if __name__ == '__main__':
     if local_testing:
         station = "rkn"
 
-        fig = occ_gate_vs_time(station=station, year=2011, month=9, day_range=None, time_units='ut',
-                               gate_range=(0, 74), beam_range=None, local_testing=local_testing)
+        df, fig = occ_gate_vs_time(station=station, year=2011, month=9, day_range=None, time_units='ut',
+                                   gate_range=(0, 74), beam_range=None, plot_type='contour',
+                                   local_testing=local_testing)
 
         plt.show()
 
@@ -195,11 +209,17 @@ if __name__ == '__main__':
         year = 2014
         month = 2
 
-        fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=(1, 3), time_units='ut',
-                               gate_range=(0, 74), beam_range=(13, 15), local_testing=local_testing)
+        df, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None, time_units='ut',
+                                   gate_range=(0, 74), beam_range=(13, 15), plot_type='contour',
+                                   local_testing=local_testing)
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
         out_file = out_dir + "/occ_gate_vs_time_" + station + str(year) + str(month)
         print("Saving plot as " + out_file)
         fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
+
+        out_dir = loc_root + "/data"
+        out_file = out_dir + "/occ_gate_vs_time_df_" + station + str(year) + str(month) + ".pkl"
+        print("Pickling df as " + out_file)
+        df.to_pickle(out_file)
