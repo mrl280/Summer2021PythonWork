@@ -3,10 +3,10 @@ import glob
 import math
 import os
 import pydarn
+import time
+import calendar
 
 import pandas as pd
-
-from DataAnalysis.DataReading.SD.PickleFITACF_occ import build_datetime_epoch
 
 
 def get_data(station, year_range, month_range, day_range, hour_range, gate_range, beam_range):
@@ -83,7 +83,7 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                             # As far as I know, list extensions are the fastest way to do this
                             for scan in range(len(fitacf_data)):
 
-                                date_time_here, epoch_here = build_datetime_epoch(
+                                date_time_here, epoch_here = build_datetime_epoch_local(
                                     year=fitacf_data[scan]['time.yr'],
                                     month=fitacf_data[scan]['time.mo'],
                                     day=fitacf_data[scan]['time.dy'],
@@ -156,6 +156,28 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
     df.reset_index(drop=True, inplace=True)
 
     return df
+
+
+def build_datetime_epoch_local(year, month, day, hour, minute, second):
+    """
+    Build a datetime struct and compute epoch from raw date/time data.
+    :param year: int: Y
+    :param month: int: m
+    :param day: d
+    :param hour: H
+    :param minute: M
+    :param second: S
+    :return: time.struct_time, int: The datetime and epoch
+    """
+    pattern = "%Y.%m.%d %H:%M:%S"  # This is the pattern we will use to convert time info to epoch
+    datetime_here_str = str(year) + "." + str(month) + "." + str(day) + " " + \
+                        str(hour) + ":" + str(minute) + ":" + str(second)
+
+    date_time_struct = time.strptime(datetime_here_str, pattern)
+    epoch = calendar.timegm(date_time_struct)
+    date_time = datetime.datetime.fromtimestamp(time.mktime(date_time_struct))
+
+    return date_time, epoch
 
 
 if __name__ == '__main__':
