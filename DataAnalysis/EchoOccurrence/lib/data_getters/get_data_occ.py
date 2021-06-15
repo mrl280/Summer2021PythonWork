@@ -77,7 +77,7 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
                                 if beam_here < beam_range[0] or beam_here > beam_range[1]:
                                     continue  # We are not interested in records for this beam
 
-                                date_time_here, epoch_here = build_datetime_epoch(
+                                date_time_here, epoch_here = build_datetime_epoch_local(
                                     year=fitacf_data[record]['time.yr'],
                                     month=fitacf_data[record]['time.mo'],
                                     day=fitacf_data[record]['time.dy'],
@@ -129,7 +129,7 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
     return df
 
 
-def build_datetime_epoch(year, month, day, hour, minute, second):
+def build_datetime_epoch_local(year, month, day, hour, minute, second):
     """
     Build a datetime struct and compute epoch from raw date/time data.
     :param year: int: Y
