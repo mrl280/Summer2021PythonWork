@@ -4,6 +4,7 @@ import pydarn
 import cartopy.crs as ccrs
 import matplotlib.path as mpath
 import matplotlib.ticker as mticker
+import numpy as np
 
 from matplotlib import pyplot as plt
 from pydarn import SuperDARNRadars, radar_fov
