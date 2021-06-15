@@ -20,7 +20,7 @@ from pydarn import radar_fov, SuperDARNRadars
 from DataAnalysis.EchoOccurrence.lib.data_getters.get_local_dummy_data import get_local_dummy_data
 from DataAnalysis.EchoOccurrence.lib.only_keep_45km_res_data import only_keep_45km_res_data
 
-station = "dce"
+station = "rkn"
 
 # Get radar specific hardware information
 all_radars_info = SuperDARNRadars()
@@ -102,5 +102,33 @@ ax.text(0, text_offset_multiplier * ax.get_ylim()[0], "00", ha='center', va='top
 ax.text(text_offset_multiplier * ax.get_xlim()[1], 0, "06", ha='left', va='center')
 ax.text(text_offset_multiplier * ax.get_xlim()[0], 0, "18", ha='right', va='center')
 
+beam_range = (0, 15)
+gate_range = (0, 74)
+
+cell_corners_lats, cell_corners_lons = radar_fov(stid=radar_id, coords='geo', date=date)
+
+# plot all the beam boundary lines
+for beam_line in range(beam_range[0], beam_range[1] + 2):
+    plt.plot(cell_corners_lons[gate_range[0]:gate_range[1] + 2, beam_line],
+             cell_corners_lats[gate_range[0]:gate_range[1] + 2, beam_line],
+             color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
+
+# plot the arcs boundary lines
+for range_ in range(gate_range[0], gate_range[1] + 2):
+    plt.plot(cell_corners_lons[range_, beam_range[0]:beam_range[1] + 2],
+             cell_corners_lats[range_, beam_range[0]:beam_range[1] + 2],
+             color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
+
 plt.show()
+
+loc_root = str((pathlib.Path().parent.absolute()))
+out_dir = loc_root + "/out"
+out_file = out_dir + "/" + station + "_geometry_w_aacgm"
+fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
+
+# # Convert aacgm lats to geo for plotting
+# heights = np.asarray([250] * len(df['lon']))  # TODO: Figure out what to do about heights
+# in_lon = df['lon']
+# in_lat = df['lat']
+# out_lats, _, _ = convert_latlon_arr(in_lat, in_lon, heights, date_time_est, method_code="A2G")
 
