@@ -94,10 +94,8 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
     else:
         print("Computing UTs for " + str(year) + " data...")
 
-        # I tried to speed this up by only recomputing when necessary
         ut_time = []
         for i in range(len(df)):
-            # TODO: Take out the -7 for the local time convertion
             ut_time_here = df['datetime'].iat[i].hour + df['datetime'].iat[i].minute / 60 + \
                            df['datetime'].iat[i].second / 3600
 
@@ -145,7 +143,7 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
         if hour_start == hour_edges[-1]:
             continue  # The last edge is not a starting hour
         hour_end = hour_start + delta_hour
-        df_hh = df[(df['xdata'] >= hour_start) & (df['xdata'] >= hour_end)]
+        df_hh = df[(df['xdata'] >= hour_start) & (df['xdata'] <= hour_end)]
 
         for gate in gate_edges:
             if gate == gate_edges[-1]:
@@ -192,7 +190,7 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
@@ -210,7 +208,7 @@ if __name__ == '__main__':
         month = 2
 
         df, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None, time_units='ut',
-                                   gate_range=(0, 74), beam_range=(13, 15), plot_type='contour',
+                                   gate_range=(0, 74), beam_range=(13, 15), plot_type='pixel',
                                    local_testing=local_testing)
 
         loc_root = str((pathlib.Path().parent.absolute()))
