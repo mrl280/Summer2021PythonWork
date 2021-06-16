@@ -153,7 +153,7 @@ if __name__ == '__main__':
     """
     Handler to call PickleFITACF on SuperDARN data files
     """
-    PICKLE_ALL = False  # To prevent accidentally pickling all data
+    PICKLE_ALL = True  # To prevent accidentally pickling all data
 
     if PICKLE_ALL:
         print("Occ Pickling all downloaded SuperDARN data...")
@@ -162,7 +162,7 @@ if __name__ == '__main__':
                 print("\nStarting " + in_dir)
                 PickleFITACF_occ(station, in_dir[3:], (0, 16))
     else:
-        station = "rkn"
-        date = "20121112"
+        station = "inv"
+        date = "20111112"
         print("Occ Pickling " + station + date + "...")
-        PickleFITACF_occ(station, date, (1, 3))
+        PickleFITACF_occ(station, date, (0, 16))
