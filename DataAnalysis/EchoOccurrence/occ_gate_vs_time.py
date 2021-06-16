@@ -1,3 +1,4 @@
+import datetime
 import math
 import pathlib
 import pydarn
@@ -23,6 +24,7 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
     """
 
     Produce a contour plot with gate on the y-axis and time along the x-axis.
+    There are 2 subplots, one for ionospheric scatter and one for ground scatter
     Plots echo occurrence rate
 
     Notes:
@@ -119,18 +121,27 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
     df.reset_index(drop=True, inplace=True)
 
     print("Preparing the plot...")
-    fig, ax = plt.subplots(figsize=[8, 6], dpi=300)
-    ax.set_ylim(gate_range)
-    ax.set_xlim(hour_range)
-    ax.xaxis.set_major_locator(MultipleLocator(4))
-    ax.tick_params(axis='both', which='major', direction='in', color='white')
-    ax.grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5, zorder=4, color='white')
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
-    ax.set_ylabel("Range Gate", fontsize=16)
-    ax.set_xlabel("Time, " + time_units.upper(), fontsize=16)
-    plt.title(calendar.month_name[month] + " " + str(year) + " at " + station.upper() +
-              "; Beams " + str(beam_range[0]) + "-" + str(beam_range[1]) + "; " + echo_type.upper(), fontsize=18)
+
+    # Setup the plot
+    fig, ax = plt.subplots(figsize=[10, 8], dpi=300, nrows=2, ncols=1)
+    plt.subplots_adjust(hspace=0.3, left=0.1, right=1)
+    fig.suptitle(calendar.month_name[month] + " " + str(year) + " at " + station.upper() +
+                 "; Beams " + str(beam_range[0]) + "-" + str(beam_range[1]) +
+                 "; Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz", fontsize=18)
+    ax[0].set_title("Ionospheric Scatter", fontsize=16)
+    ax[1].set_title("Ground Scatter", fontsize=16)
+
+    # Apply common subplot formatting
+    for i in range(ax.size):
+        ax[i].set_ylim(gate_range)
+        ax[i].set_xlim(hour_range)
+        ax[i].xaxis.set_major_locator(MultipleLocator(4))
+        ax[i].tick_params(axis='both', which='major', direction='in', color='white')
+        ax[i].grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5, zorder=4, color='white')
+        plt.xticks(fontsize=14)
+        plt.yticks(fontsize=14)
+        ax[i].set_ylabel("Range Gate", fontsize=16)
+        ax[i].set_xlabel("Time, " + time_units.upper(), fontsize=16)
 
     # Compute hour_edges
     bins_per_hour = 4
@@ -143,8 +154,11 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
     gate_edges = np.linspace(gate_range[0], gate_range[1] + 1, num=(n_bins_y + 1), dtype=int)
 
     print("Computing binned occ rates...")
-    contour_data = np.empty(shape=(n_bins_x, n_bins_y))
-    contour_data[:] = math.nan
+    contour_data_is = np.empty(shape=(n_bins_x, n_bins_y))
+    contour_data_is[:] = math.nan
+
+    contour_data_gs = np.empty(shape=(n_bins_x, n_bins_y))
+    contour_data_gs[:] = math.nan
 
     for hour_idx, hour_start in enumerate(hour_edges):
         if hour_start == hour_edges[-1]:
@@ -158,13 +172,12 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
             df_hh_gg = df_hh[df_hh['slist'] == gate]
 
             try:
-                if echo_type == 'ionospheric':
-                    contour_data[hour_idx][gate] = sum(df_hh_gg['good_iono_echo']) / len(df_hh_gg)
-                else:
-                    contour_data[hour_idx][gate] = sum(df_hh_gg['good_grndscat_echo']) / len(df_hh_gg)
+                contour_data_is[hour_idx][gate] = sum(df_hh_gg['good_iono_echo']) / len(df_hh_gg)
+                contour_data_gs[hour_idx][gate] = sum(df_hh_gg['good_grndscat_echo']) / len(df_hh_gg)
             except ZeroDivisionError:
                 # There are no points in this interval
-                contour_data[hour_idx, gate] = math.nan
+                contour_data_is[hour_idx, gate] = math.nan
+                contour_data_gs[hour_idx, gate] = math.nan
             except BaseException as e:
                 print("Hour index: " + str(hour_idx))
                 print("Gate: " + str(gate))
@@ -181,19 +194,24 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
     levels = np.linspace(start=0, stop=1, num=(levels + 1))
 
     if plot_type == "contour":
-        plot = ax.contourf(bin_xcenters, bin_ycenters, contour_data.transpose(), cmap='jet', levels=levels)
+        plot0 = ax[0].contourf(bin_xcenters, bin_ycenters, contour_data_is.transpose(), cmap='jet', levels=levels)
+        plot1 = ax[1].contourf(bin_xcenters, bin_ycenters, contour_data_gs.transpose(), cmap='jet', levels=levels)
 
     elif plot_type == "pixel":
-        plot = ax.imshow(np.flip(contour_data.transpose(), axis=0), aspect='auto', cmap="jet",
-                         extent=(hour_range[0], hour_range[1], gate_range[0], gate_range[1] + 1), vmin=0, vmax=1)
-
+        plot0 = ax[0].imshow(np.flip(contour_data_is.transpose(), axis=0), aspect='auto', cmap="jet",
+                             extent=(hour_range[0], hour_range[1], gate_range[0], gate_range[1] + 1), vmin=0, vmax=1)
+        plot1 = ax[1].imshow(np.flip(contour_data_gs.transpose(), axis=0), aspect='auto', cmap="jet",
+                             extent=(hour_range[0], hour_range[1], gate_range[0], gate_range[1] + 1), vmin=0, vmax=1)
     else:
         raise Exception("plot_type not recognized")
 
-    cbar = fig.colorbar(plot, ax=ax, shrink=0.75, orientation='horizontal', format='%.2f')
-    cbar.ax.tick_params(labelsize=14)
+    cbar0 = fig.colorbar(plot0, ax=ax[0], shrink=0.75, format='%.2f')
+    cbar0.ax.tick_params(labelsize=14)
 
-    print("Returning the figure and the dataframe...")
+    cbar1 = fig.colorbar(plot1, ax=ax[1], shrink=0.75, format='%.2f')
+    cbar1.ax.tick_params(labelsize=14)
+
+    print("Returning the is and gs figures...")
     return df, fig
 
 
@@ -205,8 +223,9 @@ if __name__ == '__main__':
     if local_testing:
         station = "rkn"
 
-        df, fig = occ_gate_vs_time(station=station, year=2011, month=9, day_range=None,
-                                   gate_range=(0, 74), beam_range=None,
+        # Note: year, month, and day don't matter for local testing
+        df, fig = occ_gate_vs_time(station=station, year=2011, month=11, day_range=(12, 12),
+                                   gate_range=(0, 74), beam_range=None, freq_range=(11, 13),
                                    time_units='ut', plot_type='contour', echo_type='is',
                                    local_testing=local_testing)
 
@@ -214,17 +233,24 @@ if __name__ == '__main__':
 
 
     else:
-        station = "inv"
-        year = 2014
-        month = 2
-
-        df, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None, time_units='ut',
-                                   gate_range=(0, 74), beam_range=(13, 15), plot_type='pixel',
-                                   local_testing=local_testing)
-
+        station = "dcn"
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
-        out_file = out_dir + "/occ_gate_vs_time_" + station + str(year) + str(month)
+
+        for year in range(2019, 2021, 1):
+            for month in range(1, 12, 1):
+                if year == 2019 and month == 1:
+                    # There is no data for January 2019
+                    continue
+
+                freq_range = (8, 10)
+                df, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None,
+                                           gate_range=(0, 74), beam_range=(6, 8), freq_range=(8, 10),
+                                           time_units='ut', plot_type='pixel', echo_type='is',
+                                           local_testing=local_testing)
+
+                out_file = out_dir + "/occ_gate_vs_time_" + station + "-" + str(year) + "-" + str(month) + "_" + str(
+                    freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
         print("Saving plot as " + out_file)
         fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
 
