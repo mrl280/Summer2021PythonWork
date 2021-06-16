@@ -13,7 +13,7 @@ import matplotlib.path as mpath
 import matplotlib.ticker as mticker
 import numpy as np
 
-from DataAnalysis.EchoOccurrence.lib.cm.modified_jet import modified_jet
+from lib.cm.modified_jet import modified_jet
 from lib.add_mlt_to_df import add_mlt_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
@@ -270,8 +270,9 @@ if __name__ == '__main__':
     if local_testing:
         station = "rkn"
 
-        _, fig = occ_full_circle(station=station, year=2011, month_range=None, day_range=None, time_units='mlt',
-                                 gate_range=(0, 74), beam_range=None, plot_type='contour',
+        _, fig = occ_full_circle(station=station, year=2011, month_range=None, day_range=None,
+                                 gate_range=(0, 74), beam_range=None, freq_range=None,
+                                 plot_type='contour', time_units='mlt',
                                  local_testing=local_testing)
 
         plt.show()
@@ -281,18 +282,18 @@ if __name__ == '__main__':
         station = "rkn"
         year = 2011
         month = 2
+        freq_range = (9.5, 12.5)
 
-        _, fig = occ_full_circle(station=station, year=year, month_range=None, day_range=None, time_units='mlt',
-                                 gate_range=(0, 74), beam_range=(13, 15), plot_type='contour',
+        _, fig = occ_full_circle(station=station, year=year, month_range=(month, month), day_range=None,
+                                 gate_range=(0, 74), beam_range=(6, 8), freq_range=freq_range,
+                                 plot_type='pixel', time_units='mlt',
                                  local_testing=local_testing)
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
-        out_file = out_dir + "/occ_full_circle" + station + str(year) + str(month)
-        print("Saving plot as " + out_file)
-        fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
 
-        out_dir = loc_root + "/data"
-        out_file = out_dir + "/occ_full_circle_df_" + station + str(year) + str(month) + ".pkl"
-        print("Pickling df as " + out_file)
-        df.to_pickle(out_file)
+        out_fig = out_dir + "/occ_full_circle_" + station + "-" + str(year) + "-" + str(month) + "_" + \
+                  str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
+
+        print("Saving plot as " + out_fig)
+        fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
