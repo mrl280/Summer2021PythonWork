@@ -16,8 +16,8 @@ from lib.build_datetime_epoch import build_datetime_epoch
 from lib.data_getters.input_checkers import *
 
 
-def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
-                     gate_range=None, beam_range=None, time_units='mlt', plot_type='contour',
+def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None, gate_range=None, beam_range=None,
+                     time_units='mlt', plot_type='contour', echo_type='is',
                      local_testing=False):
     """
 
@@ -40,8 +40,6 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
             The month to consider
     :param day_range: (<int>, <int>) (optional):
             Inclusive. The days of the month to consider.  If omitted (or None), then all days will be considered.
-    :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
-            The time units to plot along x.  Default is 'mlt'
     :param hour_range: (<int>, <int>) (optional):
             The hour range to consider.  If omitted (or None), then all hours will be considered.
             Not quite inclusive: if you pass in (0, 5) you will get from 0:00-4:59 UT
@@ -51,15 +49,20 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
     :param beam_range: (<int>, <int>) (optional):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
-    :param plot_type: str (optional):
-            The type of plot, either 'contour' or 'pixel', default is 'contour'
-    :param local_testing: bool (optional):
+    :param plot_type: str (optional): default is 'contour'.
+            The type of plot, either 'contour' or 'pixel'.
+    :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
+            The time units to plot along x.
+    :param echo_type: str (optional): default is 'is'
+            The type of echoes to consider, either ionospheric scatter: 'is' or ground scatter: 'gs'.
+    :param local_testing: bool (optional): default is False.
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
     :return: matplotlib.pyplot.figure
             The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
     time_units = check_time_units(time_units)
+    echo_type = check_echo_type(echo_type)
     year = check_year(year)
     month = check_month(month)
     hour_range = check_hour_range(hour_range)
@@ -123,7 +126,7 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
     ax.set_ylabel("Range Gate", fontsize=16)
     ax.set_xlabel("Time, " + time_units.upper(), fontsize=16)
     plt.title(calendar.month_name[month] + " " + str(year) + " at " + station.upper() +
-              "; Beams " + str(beam_range[0]) + "-" + str(beam_range[1]), fontsize=18)
+              "; Beams " + str(beam_range[0]) + "-" + str(beam_range[1]) + "; " + echo_type.upper(), fontsize=18)
 
     # Compute hour_edges
     bins_per_hour = 4
@@ -151,9 +154,12 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
             df_hh_gg = df_hh[df_hh['slist'] == gate]
 
             try:
-                contour_data[hour_idx][gate] = sum(df_hh_gg['good_echo']) / len(df_hh_gg)
+                if echo_type == 'ionospheric':
+                    contour_data[hour_idx][gate] = sum(df_hh_gg['good_iono_echo']) / len(df_hh_gg)
+                else:
+                    contour_data[hour_idx][gate] = sum(df_hh_gg['good_grndscat_echo']) / len(df_hh_gg)
             except ZeroDivisionError:
-                # There are no point in this interval
+                # There are no points in this interval
                 contour_data[hour_idx, gate] = math.nan
             except BaseException as e:
                 print("Hour index: " + str(hour_idx))
@@ -175,12 +181,12 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
 
     elif plot_type == "pixel":
         plot = ax.imshow(np.flip(contour_data.transpose(), axis=0), aspect='auto', cmap="jet",
-                         extent=(hour_range[0], hour_range[1], gate_range[0], gate_range[1]))
+                         extent=(hour_range[0], hour_range[1], gate_range[0], gate_range[1] + 1), vmin=0, vmax=1)
 
     else:
         raise Exception("plot_type not recognized")
 
-    cbar = fig.colorbar(plot, ax=ax, shrink=0.75, format='%.2f')
+    cbar = fig.colorbar(plot, ax=ax, shrink=0.75, orientation='horizontal', format='%.2f')
     cbar.ax.tick_params(labelsize=14)
 
     print("Returning the figure and the dataframe...")
@@ -190,13 +196,14 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "rkn"
 
-        df, fig = occ_gate_vs_time(station=station, year=2011, month=9, day_range=None, time_units='ut',
-                                   gate_range=(0, 74), beam_range=None, plot_type='contour',
+        df, fig = occ_gate_vs_time(station=station, year=2011, month=9, day_range=None,
+                                   gate_range=(0, 74), beam_range=None,
+                                   time_units='ut', plot_type='contour', echo_type='is',
                                    local_testing=local_testing)
 
         plt.show()

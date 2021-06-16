@@ -189,3 +189,23 @@ def check_time_units(time_units):
     return time_units
 
 
+def check_echo_type(echo_type):
+    """
+
+    :param echo_type: str: 'is' for ionospheric scatter or 'gs' for ground scatter
+    :return: str: suitable time units
+    """
+
+    if echo_type is None:
+        echo_type = 'is'
+        warnings.warn("No echo_type was specified, it has defaulted to 'is' (ionospheric scatter).",
+                      category=Warning)
+
+    echo_type = echo_type.lower()
+
+    if echo_type != 'is' and echo_type != 'gs':
+        echo_type = 'is'
+        warnings.warn("The provided echo_type was neither 'is' or 'gs', "
+                      "it has defaulted to 'is' (ionospheric scatter).", category=Warning)
+
+    return echo_type
