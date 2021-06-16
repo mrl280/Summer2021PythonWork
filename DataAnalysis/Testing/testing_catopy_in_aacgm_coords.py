@@ -20,7 +20,7 @@ from pydarn import radar_fov, SuperDARNRadars
 from DataAnalysis.EchoOccurrence.lib.data_getters.get_local_dummy_data import get_local_dummy_data
 from DataAnalysis.EchoOccurrence.lib.only_keep_45km_res_data import only_keep_45km_res_data
 
-station = "dcn"
+station = "inv"
 
 # Get radar specific hardware information
 all_radars_info = SuperDARNRadars()
