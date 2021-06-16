@@ -4,6 +4,7 @@ import pathlib
 import pydarn
 
 from aacgmv2 import convert_latlon_arr, convert_latlon, get_aacgm_coord
+from cartopy.util import add_cyclic_point
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from pydarn import radar_fov, SuperDARNRadars
@@ -232,18 +233,23 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
     bin_xcenters = mlt_edges[1:] - bin_xwidth / 2
     bin_ycenters = lat_edges[1:] - bin_ywidth / 2
 
+    # Adding a cyclic points is required to complete the circle
+    # Without adding in this point, there will be one pie-shaped piece missing from the circle
+    contour_data_is, bin_xcenters_cyclic = add_cyclic_point(contour_data_is.transpose(), coord=bin_xcenters)
+    contour_data_gs, bin_xcenters_cyclic = add_cyclic_point(contour_data_gs.transpose(), coord=bin_xcenters)
+
     levels = 12
     levels = np.linspace(start=0, stop=1, num=(levels + 1))
     if plot_type == "contour":
-        plot0 = ax[0].contourf(bin_xcenters, bin_ycenters, contour_data_is.transpose(),
+        plot0 = ax[0].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is,
                             cmap='jet', levels=levels, transform=ccrs.PlateCarree())
-        plot1 = ax[1].contourf(bin_xcenters, bin_ycenters, contour_data_gs.transpose(),
+        plot1 = ax[1].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs,
                             cmap='jet', levels=levels, transform=ccrs.PlateCarree())
 
     elif plot_type == "pixel":
-        plot0 = ax[0].imshow(np.flip(contour_data_is.transpose(), axis=0), aspect='auto',
+        plot0 = ax[0].imshow(np.flip(contour_data_is, axis=0), aspect='auto',
                          cmap="jet", transform=ccrs.PlateCarree(), vmin=0, vmax=1)
-        plot1 = ax[1].imshow(np.flip(contour_data_is.transpose(), axis=0), aspect='auto',
+        plot1 = ax[1].imshow(np.flip(contour_data_gs, axis=0), aspect='auto',
                              cmap="jet", transform=ccrs.PlateCarree(), vmin=0, vmax=1)
 
     else:
