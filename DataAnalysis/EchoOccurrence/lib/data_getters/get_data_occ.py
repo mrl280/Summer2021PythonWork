@@ -3,6 +3,7 @@ import glob
 import os
 import calendar
 import time
+import warnings
 import pydarn
 
 import datetime as datetime
@@ -40,8 +41,8 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
     :return: pandas.DataFrame: A dataframe with select fitACF parameters.
     """
 
-    loc_root = "/data/fitacf_30"  # fitACF 3.0
-    # loc_root = "/data/fitacf_25"  # fitACF 2.5
+    # loc_root = "/data/fitacf_30"  # fitACF 3.0
+    loc_root = "/data/fitacf_25"  # fitACF 2.5
 
     # Create empty arrays for the parameters we need
     epoch, date_time = [], []
@@ -131,9 +132,9 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
 
     if len(epoch) == 0:
         # We have found no data, panic
-        raise Exception("get_data_occ() found no data matching the provided criteria.  "
+        warnings.warn("get_data_occ() found no data matching the provided criteria.  "
                         "year_range: " + str(year_range) + ", month_range:" + str(month_range) +
-                        ", day_range" + str(day_range))
+                        ", day_range" + str(day_range), category=Warning)
 
     # Put the data into a dataframe
     print("     Building the data frame...")
@@ -178,6 +179,6 @@ def build_datetime_epoch_local(year, month, day, hour, minute, second):
 if __name__ == '__main__':
     """ Testing """
     df = get_data_occ("sas", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1),
-                      gate_range=(0, 99), beam_range=(6, 7))
+                      gate_range=(0, 99), beam_range=(6, 7), freq_range=(5, 25))
 
     print(df.head())
