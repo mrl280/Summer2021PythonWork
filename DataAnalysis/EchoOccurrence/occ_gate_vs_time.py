@@ -1,4 +1,3 @@
-import datetime
 import math
 import pathlib
 import pydarn
@@ -19,7 +18,7 @@ from lib.data_getters.input_checkers import *
 
 def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
                      gate_range=None, beam_range=None, freq_range=None,
-                     time_units='mlt', plot_type='contour', echo_type='is',
+                     time_units='mlt', plot_type='contour',
                      local_testing=False):
     """
 
@@ -59,8 +58,6 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
             The type of plot, either 'contour' or 'pixel'.
     :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
             The time units to plot along x.
-    :param echo_type: str (optional): default is 'is'
-            The type of echoes to consider, either ionospheric scatter: 'is' or ground scatter: 'gs'.
     :param local_testing: bool (optional): default is False.
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
     :return: matplotlib.pyplot.figure
@@ -68,7 +65,6 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
     """
 
     time_units = check_time_units(time_units)
-    echo_type = check_echo_type(echo_type)
     year = check_year(year)
     month = check_month(month)
     hour_range = check_hour_range(hour_range)
@@ -226,7 +222,7 @@ if __name__ == '__main__':
         # Note: year, month, and day don't matter for local testing
         df, fig = occ_gate_vs_time(station=station, year=2011, month=11, day_range=(12, 12),
                                    gate_range=(0, 74), beam_range=None, freq_range=(11, 13),
-                                   time_units='ut', plot_type='contour', echo_type='is',
+                                   time_units='ut', plot_type='contour',
                                    local_testing=local_testing)
 
         plt.show()
@@ -246,7 +242,7 @@ if __name__ == '__main__':
                 freq_range = (8, 10)
                 df, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None,
                                            gate_range=(0, 74), beam_range=(6, 8), freq_range=(8, 10),
-                                           time_units='ut', plot_type='pixel', echo_type='is',
+                                           time_units='ut', plot_type='pixel',
                                            local_testing=local_testing)
 
                 out_file = out_dir + "/occ_gate_vs_time_" + station + "-" + str(year) + "-" + str(month) + "_" + str(
