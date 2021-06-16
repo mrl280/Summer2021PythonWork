@@ -44,7 +44,7 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
     epoch, date_time = [], []
     slist, beam = [], []
     frang, rsep, tfreq = [], [], []
-    good_echo = []
+    good_iono_echo, good_grndscat_echo = [], []
 
     # Data on maxwell.usask.ca is stored in a file structure that looks like this:
     # /data/fitacf_30/<year>/<month>/<year><month><day>.<start-time>.<radar-site>.fitacf.bz2
@@ -104,26 +104,40 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
                                     try:
                                         gate_index = gates_reporting.index(gate)
                                         if fitacf_data[record]['qflg'][gate_index] == 1 and \
-                                                fitacf_data[record]['p_l'][gate_index] >= 3 and \
-                                                fitacf_data[record]['gflg'][gate_index] == 0:
-                                            good_echo.append(True)
+                                                fitacf_data[record]['p_l'][gate_index] >= 3:
+                                            # We have a good echo
+                                            if fitacf_data[record]['gflg'][gate_index] == 0:
+                                                # We have a good ionospheric echo
+                                                good_iono_echo.append(True)
+                                                good_grndscat_echo.append(False)
+                                            else:
+                                                # We have a good ground scatter echo
+                                                good_grndscat_echo.append(True)
+                                                good_iono_echo.append(False)
+
                                         else:
-                                            good_echo.append(False)
+                                            # Bad echo
+                                            good_iono_echo.append(False)
+                                            good_grndscat_echo.append(False)
                                     except ValueError:
-                                        good_echo.append(False)  # The gate is not in the list of reporting gates
+                                        # The gate is not in the list of reporting gates
+                                        good_iono_echo.append(False)
+                                        good_grndscat_echo.append(False)
                                     except BaseException as e:
                                         print(e)
 
     if len(epoch) == 0:
         # We have found no data, panic
-        raise Exception("get_data_occ() found no data matching the provided criteria.")
+        raise Exception("get_data_occ() found no data matching the provided criteria.  "
+                        "year_range: " + str(year_range) + ", month_range:" + str(month_range) +
+                        ", day_range" + str(day_range))
 
     # Put the data into a dataframe
     print("     Building the data frame...")
     df = pd.DataFrame({'epoch': epoch, 'datetime': date_time,
                        'slist': slist, 'bmnum': beam,
                        'frang': frang, 'rsep': rsep, 'tfreq': tfreq,
-                       'good_echo': good_echo
+                       'good_iono_echo': good_iono_echo,            'good_grndscat_echo': good_grndscat_echo
                        })
 
     return df

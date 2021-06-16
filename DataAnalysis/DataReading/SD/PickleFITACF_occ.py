@@ -39,7 +39,7 @@ def PickleFITACF_occ(station, date, beam_range):
     epoch, date_time = [], []
     slist, beam = [], []
     frang, rsep, tfreq = [], [], []
-    good_echo = []
+    good_iono_echo, good_grndscat_echo = [], []
 
     # Loop through all the files for this station/date
     in_dir = "data/" + station + "/" + station + date
@@ -87,14 +87,25 @@ def PickleFITACF_occ(station, date, beam_range):
 
                 try:
                     gate_index = gates_reporting.index(gate)
-                    if fitacf_data[record]['qflg'][gate_index] == 1 and fitacf_data[record]['p_l'][gate_index] >= 3 and \
-                            fitacf_data[record]['gflg'][gate_index] == 0:
-                        good_echo.append(True)
+                    if fitacf_data[record]['qflg'][gate_index] == 1 and fitacf_data[record]['p_l'][gate_index] >= 3:
+                        # We have a good echo
+                        if fitacf_data[record]['gflg'][gate_index] == 0:
+                            # We have a good ionospheric echo
+                            good_iono_echo.append(True)
+                            good_grndscat_echo.append(False)
+                        else:
+                            # We have a good ground scatter echo
+                            good_grndscat_echo.append(True)
+                            good_iono_echo.append(False)
+
                     else:
-                        good_echo.append(False)
+                        # Bad echo
+                        good_iono_echo.append(False)
+                        good_grndscat_echo.append(False)
                 except ValueError:
                     # The gate is not in the list of reporting gates
-                    good_echo.append(False)
+                    good_iono_echo.append(False)
+                    good_grndscat_echo.append(False)
                 except BaseException as e:
                     print(e)
 
@@ -107,7 +118,7 @@ def PickleFITACF_occ(station, date, beam_range):
     df = pd.DataFrame({'epoch': epoch,      'datetime': date_time,
                        'slist': slist,      'bmnum': beam,
                        'frang': frang,      'rsep': rsep,           'tfreq': tfreq,
-                       'good_echo': good_echo
+                       'good_iono_echo': good_iono_echo,            'good_grndscat_echo': good_grndscat_echo
                        })
 
     # Save to file
