@@ -3,12 +3,10 @@ import math
 import pathlib
 import pydarn
 
-from aacgmv2 import convert_latlon_arr, convert_latlon, get_aacgm_coord
+from aacgmv2 import get_aacgm_coord
 from cartopy.util import add_cyclic_point
 from matplotlib import pyplot as plt
-from matplotlib.ticker import MultipleLocator
 from pydarn import radar_fov, SuperDARNRadars
-from scipy import stats
 
 import cartopy.crs as ccrs
 import matplotlib.path as mpath
@@ -151,12 +149,11 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
 
     # Apply common subplot formatting
     for i in range(ax.size):
-
         ax[i].set_extent([-180, 180, hemisphere.value * 90, lat_extreme], crs=ccrs.PlateCarree())
         ax[i].set_boundary(circle, transform=ax[i].transAxes)
 
-        # Add gridlines
-        gl = ax[i].gridlines(draw_labels=True, linestyle='--', zorder=5)  # Note: Labels wont draw on a circular axis
+        # Add gridlines   # Note: Labels wont draw on a circular axis
+        gl = ax[i].gridlines(draw_labels=True, linestyle='--', linewidth=0.5, zorder=5)
         gl.xlocator = mticker.FixedLocator([-180, -135, -90, -45, 0, 45, 90, 135])
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
@@ -172,7 +169,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
                    time_units.upper(), ha='left', va='bottom')
 
         # Plot radar track
-        ax[i].plot(radar_mlts, radar_lats_aacgm, color='k', linewidth=0.5, linestyle="--", transform=ccrs.Geodetic())
+        ax[i].plot(radar_mlts, radar_lats_aacgm, color='k', linewidth=1, linestyle="--", transform=ccrs.Geodetic())
 
     # Print out echo types
     ax[0].text(ax[0].get_xlim()[0], ax[0].get_ylim()[1],
@@ -238,17 +235,18 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
     contour_data_is, bin_xcenters_cyclic = add_cyclic_point(contour_data_is.transpose(), coord=bin_xcenters)
     contour_data_gs, bin_xcenters_cyclic = add_cyclic_point(contour_data_gs.transpose(), coord=bin_xcenters)
 
-    levels = 12
-    levels = np.linspace(start=0, stop=1, num=(levels + 1))
     if plot_type == "contour":
+        levels = 12
+        levels = np.linspace(start=0, stop=1, num=(levels + 1))
+
         plot0 = ax[0].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is,
-                            cmap='jet', levels=levels, transform=ccrs.PlateCarree())
+                               cmap=modified_jet(levels=len(levels) - 1), levels=levels, transform=ccrs.PlateCarree())
         plot1 = ax[1].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs,
-                            cmap='jet', levels=levels, transform=ccrs.PlateCarree())
+                               cmap=modified_jet(levels=len(levels) - 1), levels=levels, transform=ccrs.PlateCarree())
 
     elif plot_type == "pixel":
         plot0 = ax[0].imshow(np.flip(contour_data_is, axis=0), aspect='auto',
-                         cmap="jet", transform=ccrs.PlateCarree(), vmin=0, vmax=1)
+                             cmap="jet", transform=ccrs.PlateCarree(), vmin=0, vmax=1)
         plot1 = ax[1].imshow(np.flip(contour_data_gs, axis=0), aspect='auto',
                              cmap="jet", transform=ccrs.PlateCarree(), vmin=0, vmax=1)
 
