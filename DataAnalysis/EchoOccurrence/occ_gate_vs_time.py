@@ -214,7 +214,7 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
@@ -230,27 +230,40 @@ if __name__ == '__main__':
 
     else:
         station = "dcn"
+        datetime_now = datetime.datetime.now()
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        for year in range(2019, 2021, 1):
-            for month in range(1, 12, 1):
+        for year in range(2019, 2022, 1):
+            for month in range(1, 13, 1):
                 if year == 2019 and month == 1:
                     # There is no data for January 2019
                     continue
+                if year >= datetime_now.year and month > datetime_now.month:
+                    # No data here yet
+                    continue
 
+                # We will break it up into 2 frequency ranges
                 freq_range = (8, 10)
-                df, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None,
-                                           gate_range=(0, 74), beam_range=(6, 8), freq_range=(8, 10),
+                _, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None,
+                                           gate_range=(0, 74), beam_range=(6, 8), freq_range=freq_range,
                                            time_units='ut', plot_type='pixel',
                                            local_testing=local_testing)
 
-                out_file = out_dir + "/occ_gate_vs_time_" + station + "-" + str(year) + "-" + str(month) + "_" + str(
-                    freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
-        print("Saving plot as " + out_file)
-        fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
+                out_fig = out_dir + "/occ_gateVtime_" + station + "-" + str(year) + "-" + str(month) + "_" + \
+                          str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
 
-        out_dir = loc_root + "/data"
-        out_file = out_dir + "/occ_gate_vs_time_df_" + station + str(year) + str(month) + ".pkl"
-        print("Pickling df as " + out_file)
-        df.to_pickle(out_file)
+                print("Saving plot as " + out_fig)
+                fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+
+                freq_range = (10, 12)
+                _, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None,
+                                           gate_range=(0, 74), beam_range=(6, 8), freq_range=freq_range,
+                                           time_units='ut', plot_type='pixel',
+                                           local_testing=local_testing)
+
+                out_fig = out_dir + "/occ_gateVtime_" + station + "-" + str(year) + "-" + str(month) + "_" + \
+                          str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
+
+                print("Saving plot as " + out_fig)
+                fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
