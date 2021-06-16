@@ -58,6 +58,7 @@ def add_mlt_to_df(cell_corners_aacgm_lons, cell_corners_aacgm_lats, df):
     df['lon'] = aacgm_lons
     df['lat'] = aacgm_lats
     df['mlt'] = aacgmv2.convert_mlt(arr=aacgm_lons, dtime=dates, m2a=False)
+    # m2a : (bool) Convert MLT to AACGM-v2 longitude (True) or magnetic longitude to MLT (False).  (default=False)
 
     return df
 
