@@ -169,6 +169,29 @@ def check_beam_range(beam_range, hdw_info):
     return beam_range
 
 
+def check_freq_range(freq_range):
+    """
+    Note: freq_range should be in MHz.
+    :param freq_range: (<float>, <float>) or None: The freq range to check
+    :return:  (<float>, <float>): A suitable beam range
+    """
+
+    if freq_range is None:
+        freq_range = (5.0, 25.0)  # All SuperDARN data should be in this range
+
+    if freq_range[0] < 0:
+        freq_range = (0, freq_range[1])
+        warnings.warn("freq_range[0] has defaulted to 0 MHz.",
+                      category=Warning)
+
+    if freq_range[1] > 25.0:
+        freq_range = (freq_range[0], 25.0)
+        warnings.warn("freq_range[1] has defaulted to 25 MHz.  "
+                      "All SuperDARN operational frequencies are less than 25 MHz.", category=Warning)
+
+    return freq_range
+
+
 def check_time_units(time_units):
     """
     :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time

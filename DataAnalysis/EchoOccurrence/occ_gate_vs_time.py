@@ -16,7 +16,8 @@ from lib.build_datetime_epoch import build_datetime_epoch
 from lib.data_getters.input_checkers import *
 
 
-def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None, gate_range=None, beam_range=None,
+def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
+                     gate_range=None, beam_range=None, freq_range=None,
                      time_units='mlt', plot_type='contour', echo_type='is',
                      local_testing=False):
     """
@@ -49,6 +50,9 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None, gate
     :param beam_range: (<int>, <int>) (optional):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
+    :param freq_range: (<float>, <float>) (optional):
+            Inclusive.  The frequency range to consider in MHz.
+            If omitted (or None), then all frequencies are considered.
     :param plot_type: str (optional): default is 'contour'.
             The type of plot, either 'contour' or 'pixel'.
     :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
@@ -76,8 +80,8 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None, gate
 
     print("Retrieving data...")
     df = get_data_handler(station, year_range=(year, year), month_range=(month, month), hour_range=hour_range,
-                          day_range=day_range, gate_range=gate_range, beam_range=beam_range, occ_data=True,
-                          local_testing=local_testing)
+                          day_range=day_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+                          occ_data=True, local_testing=local_testing)
     df = only_keep_45km_res_data(df)
 
     # Get our raw x-data

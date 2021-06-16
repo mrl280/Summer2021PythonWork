@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 
 
-def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_range):
+def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_range, freq_range):
     """
     Take a fitACF file and for each possible echo, record whether or not there was a good echo there
     Note: occurrence rate is not actually computed here, but all the data required to compute it is put into the df
@@ -34,6 +34,9 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
     :param beam_range: (<int>, <int>) (optional):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
+    :param freq_range: (<float>, <float>) (optional):
+            Inclusive.  The frequency range to consider in MHz.
+            If omitted (or None), then all frequencies are considered.
     :return: pandas.DataFrame: A dataframe with select fitACF parameters.
     """
 
@@ -139,6 +142,13 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
                        'frang': frang, 'rsep': rsep, 'tfreq': tfreq,
                        'good_iono_echo': good_iono_echo,            'good_grndscat_echo': good_grndscat_echo
                        })
+
+    # Filter the data for the needed beam, gate, and freq ranges
+    df = df.loc[(df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
+                (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1]) &
+
+                # Note: freq_range is in MHz while data in 'tfreq' is in kHz
+                (df['tfreq'] >= freq_range[0] * 1000) & (df['tfreq'] <= freq_range[1] * 1000)]
 
     return df
 

@@ -9,7 +9,7 @@ import calendar
 import pandas as pd
 
 
-def get_data(station, year_range, month_range, day_range, hour_range, gate_range, beam_range):
+def get_data(station, year_range, month_range, day_range, hour_range, gate_range, beam_range, freq_range):
     """
     Get all of the SuperDARN data within the desired range/time, put it into a dataframe,
     and then return the dataframe for plotting/analysis
@@ -35,6 +35,9 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
     :param beam_range: (<int>, <int>) (optional):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
+    :param freq_range: (<float>, <float>) (optional):
+            Inclusive.  The frequency range to consider in MHz.
+            If omitted (or None), then all frequencies are considered.
     :return: pandas.DataFrame: A dataframe with select fitACF parameters.
     """
 
@@ -144,10 +147,13 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                        'phi0': phi0,        'elv': elv
                        })
 
-    # Filter the data for the needed time, beam, and gate ranges
+    # Filter the data for the needed time, beam, gate, and freq ranges
     df = df.loc[(df['datetime'].hour >= hour_range[0]) & (df['datetime'].hour < hour_range[1]) &
                 (df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
-                (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1])]
+                (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1]) &
+
+                # Note: freq_range is in MHz while data in 'tfreq' is in kHz
+                (df['tfreq'] >= freq_range[0] * 1000) & (df['tfreq'] <= freq_range[1] * 1000)]
 
     # Until I have an application that requires bad quality points, I will assume they always need to be filtered out
     df = df.loc[(df['qflg'] == 1)]

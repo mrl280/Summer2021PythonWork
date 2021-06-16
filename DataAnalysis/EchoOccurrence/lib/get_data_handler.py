@@ -8,7 +8,7 @@ from .data_getters.input_checkers import *
 
 
 def get_data_handler(station, year_range=None, month_range=None, day_range=None, hour_range=None,
-                     gate_range=None, beam_range=None, occ_data=False, local_testing=False):
+                     gate_range=None, beam_range=None, freq_range=None, occ_data=False, local_testing=False):
     """
 
     Get the required data, put it into a dataframe, and then return the dataframe for plotting/analysis
@@ -31,6 +31,9 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
     :param beam_range: (<int>, <int>) (optional):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
+    :param freq_range: (<float>, <float>) (optional):
+            Inclusive.  The frequency range to consider in MHz.
+            If omitted (or None), then all frequencies are considered.
     :param occ_data: bool (optional):
             Set this to true if you need echo occurrence data.
             If False, you will get normal data (basically a reduced fitACF datafile),  Default if False.
@@ -46,6 +49,7 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
 
     gate_range = check_gate_range(gate_range, hdw_info)
     beam_range = check_beam_range(beam_range, hdw_info)
+    freq_range = check_freq_range(freq_range)
 
     if local_testing:
         # Just read in some test data
@@ -62,7 +66,10 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
         #                             occ_data=occ_data)
         # df = pd.concat([df, df_2, df_3])
         df = df.loc[(df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
-                    (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1])]
+                    (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1]) &
+
+                    # Note: freq_range is in MHz while data in 'tfreq' is in kHz
+                    (df['tfreq'] >= freq_range[0] * 1000) & (df['tfreq'] <= freq_range[1] * 1000)]
 
     else:
         # Assume are on maxwell.usask.ca, check the time parameters and use get_data()
@@ -73,9 +80,9 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
 
         if occ_data:
             df = get_data_occ(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
-                              gate_range=gate_range, beam_range=beam_range)
+                              gate_range=gate_range, beam_range=beam_range, freq_range=freq_range)
         else:
             df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
-                          hour_range=hour_range, gate_range=gate_range, beam_range=beam_range)
+                          hour_range=hour_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range)
 
     return df
