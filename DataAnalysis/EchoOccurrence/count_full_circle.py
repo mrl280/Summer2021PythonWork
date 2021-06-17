@@ -22,10 +22,12 @@ from lib.data_getters.input_checkers import check_year
 def occ_full_circle(station, year, time_units='mlt', month_range=None, day_range=None, hour_range=None, gate_range=None, beam_range=None,
                     local_testing=False, parameter=None, plot_ground_scat=False):
     """
+    TODO: Note: this function is not complete
 
     TODO: There are still concerns around what to do here.. not all cells cover the same area,
       and the lower latitude regions are scanned much less often then an the higher lattitude points
     TODO: Also the data is in aagmc but the plot and gridlines are in geographic coordinates - which doesn't make sense
+      See occ_full_circle for a working full circle plot
 
     Produce a full circle stereographic plot in either ut or mlt.
     Can plot a simple echo count, ground scatter count, or average a fitACF parameter over the provided time range.
