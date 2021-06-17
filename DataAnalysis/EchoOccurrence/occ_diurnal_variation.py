@@ -22,7 +22,7 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
                           time_units='mlt', local_testing=False):
     """
 
-    Produce a series of occurrence plots that showcase diurnal variation
+    Produce a series of occurrence plots that showcase diurnal variation.
 
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
@@ -68,6 +68,8 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
     all_radars_info = SuperDARNRadars()
     this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
     radar_id = this_radars_info.hardware_info.stid
+
+    # TODO: Update seasonal printouts based on hemisphere
     hemisphere = this_radars_info.hemisphere
 
     gate_range = check_gate_range(gate_range, this_radars_info.hardware_info)
@@ -79,7 +81,6 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
 
     print("Preparing the figure...")
     fig = plt.figure(figsize=[10, 12], constrained_layout=True, dpi=300)
-
     gs = fig.add_gridspec(8, 6)
 
     # Build all of the spring time axes
@@ -202,8 +203,6 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
     df = df.loc[(df['xdata'] >= hour_range[0]) & (df['xdata'] <= hour_range[1])]
     df.reset_index(drop=True, inplace=True)
 
-    print(df['xdata'].unique())
-
     # Compute month, we will need it to filter the data
     month = []
     for i in range(len(df)):
@@ -213,8 +212,8 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
     # Compute hour_edges
     bins_per_hour = 4
     n_bins_x = (hour_range[1] - hour_range[0]) * bins_per_hour  # quarter hour bins
-    delta_hour = (hour_range[1] - hour_range[0]) / n_bins_x
     hour_edges = np.linspace(hour_range[0], hour_range[1], num=(n_bins_x + 1))
+    delta_hour = hour_edges[1] - hour_edges[0]
 
     # Compute bin centers
     bin_xwidth = (hour_edges[1] - hour_edges[0])
@@ -267,8 +266,8 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
                 raise e
 
         # Plot the data
-        ax.plot(bin_xcenters, occurrence_data_is, color="blue", marker='x', linestyle='-', label='IS')
-        ax.plot(bin_xcenters, occurrence_data_gs, color="blue", marker='x', linestyle='--', label='GS')
+        ax.plot(bin_xcenters, occurrence_data_is, color="blue", linestyle='-', label='IS')
+        ax.plot(bin_xcenters, occurrence_data_gs, color="red", linestyle='-', label='GS')
 
     print("Returning the dataframe and figure...")
     return df, fig
@@ -276,7 +275,7 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
 
 def add_month_data_to_plot(df, month_axes, month_offset, hour_edges, bin_xcenters):
     """
-    Fill in all of the monthly subplots
+    Fill in all of the monthly subplots.
 
     :param df: pandas.DataFrame:
     :param month_axes: numpy.array of matplotlib.axes: All of the individual month axes
@@ -322,14 +321,14 @@ def add_month_data_to_plot(df, month_axes, month_offset, hour_edges, bin_xcenter
                 raise e
 
         # Plot the data
-        ax.plot(bin_xcenters, occurrence_data_is, color="blue", marker='x', linestyle='-', label='IS')
-        ax.plot(bin_xcenters, occurrence_data_gs, color="blue", marker='x', linestyle='--', label='GS')
+        ax.plot(bin_xcenters, occurrence_data_is, color="blue", linestyle='-', linewidth=0.5, label='IS')
+        ax.plot(bin_xcenters, occurrence_data_gs, color="red", linestyle='-', linewidth=0.5, label='GS')
 
 
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
@@ -339,7 +338,7 @@ if __name__ == '__main__':
                                         gate_range=(10, 30), beam_range=(6, 8), freq_range=(11, 13),
                                         time_units='ut', local_testing=local_testing)
 
-        # plt.show()
+        plt.show()
 
 
     else:
