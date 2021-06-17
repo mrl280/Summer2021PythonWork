@@ -132,10 +132,9 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
         ax[i].set_ylim(gate_range)
         ax[i].set_xlim(hour_range)
         ax[i].xaxis.set_major_locator(MultipleLocator(4))
-        ax[i].tick_params(axis='both', which='major', direction='in', color='white')
+        ax[i].yaxis.set_major_locator(MultipleLocator(10))
+        ax[i].tick_params(axis='both', which='major', direction='in', color='white', labelsize=14)
         ax[i].grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5, zorder=4, color='white')
-        plt.xticks(fontsize=14)
-        plt.yticks(fontsize=14)
         ax[i].set_ylabel("Range Gate", fontsize=16)
         ax[i].set_xlabel("Time, " + time_units.upper(), fontsize=16)
 
@@ -246,9 +245,9 @@ if __name__ == '__main__':
                 # We will break it up into 2 frequency ranges
                 freq_range = (8, 10)
                 _, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None,
-                                           gate_range=(0, 74), beam_range=(6, 8), freq_range=freq_range,
-                                           time_units='ut', plot_type='pixel',
-                                           local_testing=local_testing)
+                                          gate_range=(0, 74), beam_range=(6, 8), freq_range=freq_range,
+                                          time_units='ut', plot_type='pixel',
+                                          local_testing=local_testing)
 
                 out_fig = out_dir + "/occ_gateVtime_" + station + "-" + str(year) + "-" + str(month) + "_" + \
                           str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
@@ -256,14 +255,15 @@ if __name__ == '__main__':
                 print("Saving plot as " + out_fig)
                 fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
 
-                freq_range = (10, 12)
-                _, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None,
-                                           gate_range=(0, 74), beam_range=(6, 8), freq_range=freq_range,
-                                           time_units='ut', plot_type='pixel',
-                                           local_testing=local_testing)
-
-                out_fig = out_dir + "/occ_gateVtime_" + station + "-" + str(year) + "-" + str(month) + "_" + \
-                          str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
-
-                print("Saving plot as " + out_fig)
-                fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+                # Turns out there isn't much outside of the 8 to 10 MHz frequency range
+                # freq_range = (10, 12)
+                # _, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None,
+                #                            gate_range=(0, 74), beam_range=(6, 8), freq_range=freq_range,
+                #                            time_units='ut', plot_type='pixel',
+                #                            local_testing=local_testing)
+                #
+                # out_fig = out_dir + "/occ_gateVtime_" + station + "-" + str(year) + "-" + str(month) + "_" + \
+                #           str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
+                #
+                # print("Saving plot as " + out_fig)
+                # fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
