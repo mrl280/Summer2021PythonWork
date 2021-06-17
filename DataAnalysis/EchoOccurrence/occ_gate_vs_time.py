@@ -60,7 +60,8 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
             The time units to plot along x.
     :param local_testing: bool (optional): default is False.
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
-    :return: matplotlib.pyplot.figure
+    :return: pandas.DataFrame, matplotlib.pyplot.figure
+            The dataframe used and the figure created.
             The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
