@@ -11,14 +11,16 @@ import cartopy.feature as cfeature
 from matplotlib import pyplot as plt
 from pydarn import SuperDARNRadars, radar_fov
 
+from lib.data_getters.input_checkers import *
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.z_min_max_defaults import z_min_max_defaults
 from lib.cm.modified_viridis import modified_viridis
 
 
-def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=None, gate_range=None, beam_range=None,
-            local_testing=False, parameter=None, plot_ground_scat=False):
+def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=None,
+            gate_range=None, beam_range=None, freq_range=None, echo_type='is', parameter=None,
+            local_testing=False):
     """
 
     Produce a fan plot.  Can plot a simple echo count, ground scatter count, or average a fitACF parameter over the
@@ -51,35 +53,43 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     :param beam_range: (<int>, <int>) (optional):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
+    :param freq_range: (<float>, <float>) (optional):
+            Inclusive.  The frequency range to consider in MHz.
+            If omitted (or None), then all frequencies are considered.
+    :param echo_type: str (optional): Default is 'is' (ionospheric scatter)
+            The type of echo to consider.  Either ionospheric scatter 'is' or ground scatter 'gs'.
     :param local_testing: bool (optional):
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
     :param parameter: str (optional):
             Parameter to be averaged (e.g. 'v' or 'p_l')
             If omitted, then a simple echo count will be plotted.
-    :param plot_ground_scat: bool (optional)
-            Set this to true if you would like to plot ground scatter counts.  Default is False
-            If plot_ground_scat is set to True, then :param parameter is ignored.
-    :return: matplotlib.pyplot.figure, 2d np.array: The figure and the scan data plotted.
+
+    :return: pandas.DataFrame, matplotlib.pyplot.figure: The dataframe used, and the figure produced.
             The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
+    echo_type = check_echo_type(echo_type)
+
     print("Retrieving data...")
     df = get_data_handler(station, year_range=year_range, month_range=month_range, day_range=day_range,
-                          hour_range=hour_range, gate_range=gate_range, beam_range=beam_range,
+                          hour_range=hour_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
                           local_testing=local_testing)
 
     print("Getting some hardware info...")
     all_radars_info = SuperDARNRadars()
     this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
     hemisphere = this_radars_info.hemisphere
-
     radar_lon = this_radars_info.hardware_info.geographic.lon
     radar_lat = this_radars_info.hardware_info.geographic.lat
     radar_id = this_radars_info.hardware_info.stid
 
+    gate_range = check_gate_range(gate_range, this_radars_info.hardware_info)
+    beam_range = check_beam_range(beam_range, this_radars_info.hardware_info)
+
     print("Filtering data...")
     df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
-    if not plot_ground_scat and parameter is not None:
+    if echo_type == 'is' and parameter is not None:
+        # Then we are plotting a parameter, like v or p_l
         zmin, zmax = z_min_max_defaults(parameter)
         df = df.loc[(df[parameter] >= zmin) & (df[parameter] <= zmax)]
 
@@ -147,22 +157,22 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
                     scans[gate_idx, beam_idx] = math.nan
 
     # Build reduced arrays containing only the cells in the specified gate/beam range
-    reduced_beam_corners_lons = cell_corners_lons[gate_range[0]: gate_range[1] + 2,
-                                                        beam_range[0]: beam_range[1] + 2]
-    reduced_beam_corners_lats = cell_corners_lats[gate_range[0]: gate_range[1] + 2,
-                                                        beam_range[0]: beam_range[1] + 2]
+    reduced_cell_corners_lons = cell_corners_lons[gate_range[0]: gate_range[1] + 2,
+                                beam_range[0]: beam_range[1] + 2]
+    reduced_cell_corners_lats = cell_corners_lats[gate_range[0]: gate_range[1] + 2,
+                                beam_range[0]: beam_range[1] + 2]
 
     print("Plotting Data...")
-    if plot_ground_scat:
+    if echo_type == 'gs':
         cmap = modified_viridis()
-        data = ax.pcolormesh(reduced_beam_corners_lons, reduced_beam_corners_lats, grndsct_scans,
+        data = ax.pcolormesh(reduced_cell_corners_lons, reduced_cell_corners_lats, grndsct_scans,
                              transform=ccrs.PlateCarree(), cmap=cmap, zorder=3)
     else:
         if parameter == 'v':
             cmap = 'seismic_r'
         else:
             cmap = modified_viridis()
-        data = ax.pcolormesh(reduced_beam_corners_lons, reduced_beam_corners_lats, scans,
+        data = ax.pcolormesh(reduced_cell_corners_lons, reduced_cell_corners_lats, scans,
                              transform=ccrs.PlateCarree(), cmap=cmap, zorder=3)
     fig.colorbar(data, ax=ax)
 
@@ -178,28 +188,34 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
                  cell_corners_lats[range_, beam_range[0]:beam_range[1] + 2],
                  color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
-    print("Returning the figure and scan...")
-    if plot_ground_scat:
-        return fig, grndsct_scans
-    else:
-        return fig, scans
+    print("Returning the figure...")
+    return df, fig
 
 
 if __name__ == '__main__':
     """ Testing """
 
     local_testing = True
-    station = "rkn"
-
-    fig, scans = occ_fan(station=station, year_range=(2007, 2009), month_range=(2, 2), day_range=None,
-                         gate_range=(0, 74), beam_range=(0, 15), plot_ground_scat=False, parameter='v',
-                         local_testing=local_testing)
 
     if local_testing:
+        station = "rkn"
+
+        df, fig = occ_fan(station=station, year_range=(2011, 2011), month_range=(11, 11), day_range=None,
+                          gate_range=(0, 74), beam_range=None, freq_range=None, echo_type='is', parameter='v',
+                          local_testing=local_testing)
         plt.show()
+
+
     else:
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
-        out_file = out_dir + "/count_fan_" + station
-        print("Saving plot as " + out_file)
-        fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
+
+        station = "rkn"
+
+        df, fig = occ_fan(station=station, year_range=(2007, 2009), month_range=(2, 2), day_range=None,
+                          gate_range=(0, 74), beam_range=(0, 15), freq_range=None, echo_type='is', parameter='v',
+                          local_testing=local_testing)
+
+        out_fig = out_dir + "/count_fan_" + station
+        print("Saving plot as " + out_fig)
+        fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
