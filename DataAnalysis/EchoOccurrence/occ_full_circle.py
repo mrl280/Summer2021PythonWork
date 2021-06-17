@@ -29,6 +29,9 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
     Produce a full circle stereographic plot in either ut or mlt (12 at the top).
     Can plot a simple echo count, ground scatter count, or average a fitACF parameter over the provided time range.
 
+    # TODO: Figure out how to fill in the center of the circle Cyclic point is not working (adds in a 95 deg point),
+       and setting the last point to 90 deg is not working
+
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
             occurrence investigations often require chewing large amounts of data.
@@ -142,7 +145,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
 
     print("Preparing the plot...")
     fig, ax = plt.subplots(figsize=[10, 6], dpi=300, nrows=1, ncols=2, subplot_kw={'projection': projection})
-    plt.subplots_adjust(left=0, right=1, bottom=0, top=0.85, wspace=0)
+    # plt.subplots_adjust(left=0, right=1, bottom=0, top=0.85)
     fig.suptitle(month_string + " " + str(year) + " at " + station.upper() +
                  "; Beams " + str(beam_range[0]) + "-" + str(beam_range[1]) +
                  "; Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz", fontsize=18)
@@ -166,16 +169,16 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
 
         # Print out the time units
         ax[i].text(ax[i].get_xlim()[1], ax[i].get_ylim()[1],
-                   time_units.upper(), ha='left', va='bottom')
+                   time_units.upper(), ha='right', va='top')
 
         # Plot radar track
         ax[i].plot(radar_mlts, radar_lats_aacgm, color='k', linewidth=1, linestyle="--", transform=ccrs.Geodetic())
 
     # Print out echo types
     ax[0].text(ax[0].get_xlim()[0], ax[0].get_ylim()[1],
-               "IS", ha='left', va='bottom')
+               "IS", ha='left', va='top')
     ax[1].text(ax[1].get_xlim()[0], ax[1].get_ylim()[1],
-               "GS", ha='left', va='bottom')
+               "GS", ha='left', va='top')
 
     print("Computing binned occ rates...")
 
@@ -238,11 +241,13 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
     if plot_type == "contour":
         levels = 12
         levels = np.linspace(start=0, stop=1, num=(levels + 1))
+        cmap = 'jet'
+        # cmap = modified_jet(levels=len(levels) - 1)
 
         plot0 = ax[0].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is,
-                               cmap=modified_jet(levels=len(levels) - 1), levels=levels, transform=ccrs.PlateCarree())
+                               cmap=cmap, levels=levels, transform=ccrs.PlateCarree())
         plot1 = ax[1].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs,
-                               cmap=modified_jet(levels=len(levels) - 1), levels=levels, transform=ccrs.PlateCarree())
+                               cmap=cmap, levels=levels, transform=ccrs.PlateCarree())
 
     elif plot_type == "pixel":
         plot0 = ax[0].imshow(np.flip(contour_data_is, axis=0), aspect='auto',
@@ -268,10 +273,10 @@ if __name__ == '__main__':
     local_testing = False
 
     if local_testing:
-        station = "inv"
+        station = "rkn"
 
         _, fig = occ_full_circle(station=station, year=2011, month_range=(11, 11), day_range=None,
-                                 gate_range=(0, 74), beam_range=None, freq_range=None,
+                                 gate_range=(0, 74), beam_range=(6, 7), freq_range=None,
                                  plot_type='contour', time_units='mlt',
                                  local_testing=local_testing)
 
@@ -281,20 +286,31 @@ if __name__ == '__main__':
     else:
         station = "rkn"
         year = 2016
-        month_range = (4, 6)
+        month_range = (5, 5)
         freq_range = (9.5, 12.5)
-
-        _, fig = occ_full_circle(station=station, year=year, month_range=month_range, day_range=None,
-                                 gate_range=(0, 74), beam_range=(0, 16), freq_range=freq_range,
-                                 plot_type='pixel', time_units='mlt',
-                                 local_testing=local_testing)
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        out_fig = out_dir + "/occ_full_circle_" + station + "-" + str(year) + "-" + \
-                  str(month_range[0]) + "to" + str(month_range[1]) + "_" + \
-                  str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
+        # First make a contour plot
+        _, fig = occ_full_circle(station=station, year=year, month_range=month_range, day_range=None,
+                                 gate_range=(0, 74), beam_range=None, freq_range=freq_range,
+                                 plot_type='contour', time_units='mlt',
+                                 local_testing=local_testing)
 
+        out_fig = out_dir + "/occ_full_circle_" + station + "-" + str(year) + "-" + \
+                  str(month_range[0]) + "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_contour"
         print("Saving plot as " + out_fig)
         fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+
+        # Then make a pixel plot
+        _, fig = occ_full_circle(station=station, year=year, month_range=month_range, day_range=None,
+                                 gate_range=(0, 74), beam_range=None, freq_range=freq_range,
+                                 plot_type='pixel', time_units='mlt',
+                                 local_testing=local_testing)
+
+        out_fig = out_dir + "/occ_full_circle_" + station + "-" + str(year) + "-" + \
+                  str(month_range[0]) + "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_pixel"
+        print("Saving plot as " + out_fig)
+        fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+
