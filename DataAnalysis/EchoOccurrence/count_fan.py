@@ -29,10 +29,9 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
             occurrence investigations often require chewing large amounts of data.
-        - Does not distinguish frequency
         - Only considers 45 km data.
             (a warning will be printed if other spatial resolution data is stripped from the dataset)
-        - This program uses fitACF 3.0 data.  To change this, modify the source code.
+        - To check which fitACF program is being used, refer to the data readers in lib.data_getters
         - All times and dates are assumed UT
 
     :param station: str:

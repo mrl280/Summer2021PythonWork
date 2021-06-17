@@ -30,8 +30,7 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
             occurrence investigations often require chewing large amounts of data.
         - Only considers 45 km data
-        - Does not distinguish frequency
-        - This program uses fitACF 3.0 data.  To change this, modify the source code.
+        - To check which fitACF program is being used, refer to the data readers in lib.data_getters
 
     :param station: str:
             The radar station to consider, a 3 character string (e.g. "rkn").
