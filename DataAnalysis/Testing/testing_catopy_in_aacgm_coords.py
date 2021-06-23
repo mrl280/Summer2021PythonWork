@@ -124,28 +124,35 @@ ax.plot([0, 0], [40, 90], 'g-', transform=ccrs.Geodetic())
 ax.plot([6 * 15, 6 * 15], [40, 90], 'm-', transform=ccrs.Geodetic())
 
 # Plot the zero degree of aacgm lon line
-# Find the geodetic coordinates for the geomagnetic pole, and plot it as a black dot
-zero_deg_aacgm_lat1, zero_deg_aacgm_lon1, _ = aacgmv2.convert_latlon(hemisphere.value * 40, 0, 0,
-                                                                     date, method_code="A2G")
+lats_aagcm = np.linspace(40, 90, num=100)
+lons_aagcm = np.asarray([0] * len(lats_aagcm))  # The zero degree line in aacgm
+heights = np.asarray([250] * len(lats_aagcm))
+out_lats, out_lons, out_rs = convert_latlon_arr(lats_aagcm, lons_aagcm, heights, date, method_code="A2G")
 
-zero_deg_aacgm_lat2, zero_deg_aacgm_lon2, _ = aacgmv2.convert_latlon(hemisphere.value * 80, 0, 0,
-                                                                     date, method_code="A2G")
+ax.plot(out_lons, out_lats, 'k-', transform=ccrs.Geodetic())
 
-ax.plot([zero_deg_aacgm_lon1, zero_deg_aacgm_lon2], [zero_deg_aacgm_lat1, zero_deg_aacgm_lat2],
-        'k-', transform=ccrs.Geodetic())
+# Plot the 90 degree of aacgm lon line
+lons_aagcm = np.asarray([90] * len(lats_aagcm))  # The zero degree line in aacgm
+out_lats, out_lons, out_rs = convert_latlon_arr(lats_aagcm, lons_aagcm, heights, date, method_code="A2G")
 
-print(zero_deg_aacgm_lon1)
+ax.plot(out_lons, out_lats, 'k-', linewidth=0.5, transform=ccrs.Geodetic())
 
 plt.show()
+
 
 loc_root = str((pathlib.Path().parent.absolute()))
 out_dir = loc_root + "/out"
 out_file = out_dir + "/" + station + "_geometry_w_aacgm"
 # fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
+plt.close(fig)
+
 
 # # Convert aacgm lats to geo for plotting
 # heights = np.asarray([250] * len(df['lon']))  # TODO: Figure out what to do about heights
 # in_lon = df['lon']
 # in_lat = df['lat']
 # out_lats, _, _ = convert_latlon_arr(in_lat, in_lon, heights, date_time_est, method_code="A2G")
+
+
+
 
