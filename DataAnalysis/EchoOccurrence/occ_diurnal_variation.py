@@ -343,7 +343,7 @@ def add_month_data_to_plot(df, month_axes, month_offset, hour_edges, bin_xcenter
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
