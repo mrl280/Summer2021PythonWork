@@ -20,7 +20,7 @@ from pydarn import radar_fov, SuperDARNRadars
 from DataAnalysis.EchoOccurrence.lib.data_getters.get_local_dummy_data import get_local_dummy_data
 from DataAnalysis.EchoOccurrence.lib.only_keep_45km_res_data import only_keep_45km_res_data
 
-station = "inv"
+station = "rkn"
 
 # Get radar specific hardware information
 all_radars_info = SuperDARNRadars()
@@ -80,8 +80,6 @@ plt.plot([-90, -90], [90, 90], 'bo', markersize=3, transform=ccrs.Geodetic(),
          label="North Pole")
 
 
-
-
 # Plot the radar as a red dot
 plt.plot([radar_lon, radar_lon], [radar_lat, radar_lat], 'ro', markersize=3, transform=ccrs.Geodetic(),
          label=this_radars_info.name)
@@ -119,12 +117,31 @@ for range_ in range(gate_range[0], gate_range[1] + 2):
              cell_corners_lats[range_, beam_range[0]:beam_range[1] + 2],
              color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
+# Plot the midnight line
+ax.plot([0, 0], [40, 90], 'g-', transform=ccrs.Geodetic())
+
+# Plot the 6 o-clock line
+ax.plot([6 * 15, 6 * 15], [40, 90], 'm-', transform=ccrs.Geodetic())
+
+# Plot the zero degree of aacgm lon line
+# Find the geodetic coordinates for the geomagnetic pole, and plot it as a black dot
+zero_deg_aacgm_lat1, zero_deg_aacgm_lon1, _ = aacgmv2.convert_latlon(hemisphere.value * 40, 0, 0,
+                                                                     date, method_code="A2G")
+
+zero_deg_aacgm_lat2, zero_deg_aacgm_lon2, _ = aacgmv2.convert_latlon(hemisphere.value * 80, 0, 0,
+                                                                     date, method_code="A2G")
+
+ax.plot([zero_deg_aacgm_lon1, zero_deg_aacgm_lon2], [zero_deg_aacgm_lat1, zero_deg_aacgm_lat2],
+        'k-', transform=ccrs.Geodetic())
+
+print(zero_deg_aacgm_lon1)
+
 plt.show()
 
 loc_root = str((pathlib.Path().parent.absolute()))
 out_dir = loc_root + "/out"
 out_file = out_dir + "/" + station + "_geometry_w_aacgm"
-fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
+# fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
 
 # # Convert aacgm lats to geo for plotting
 # heights = np.asarray([250] * len(df['lon']))  # TODO: Figure out what to do about heights

@@ -32,6 +32,10 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
     # TODO: Figure out how to fill in the center of the circle Cyclic point is not working (adds in a 95 deg point),
        and setting the last point to 90 deg is not working
 
+    # TODO: Probably need to rotate everything by ~80 deg CCW to align the 0 deg aacgm line with the prime meridian
+    # TODO: you need to produce a regular plot Range gate -UT for March, rectangular coordinates.
+       We then can tell if your lot is correct and how to adjust it.
+
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
             occurrence investigations often require chewing large amounts of data.
@@ -269,7 +273,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "rkn"
