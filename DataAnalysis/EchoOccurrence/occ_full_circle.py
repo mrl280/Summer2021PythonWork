@@ -129,7 +129,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
 
     # Compute a circle in axis coordinates which can be used as a boundary
     theta = np.linspace(0, 2 * np.pi, 100)
-    center, radius = [0.5, 0.5], 0.5
+    center, radius = [0.5, 0.5], 0.5  # 0.5 means middle of the circle
     vertices = np.vstack([np.sin(theta), np.cos(theta)]).T
     circle = mpath.Path(vertices * radius + center)
 
@@ -229,33 +229,36 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
                 print("LAT index: " + str(lat_idx))
                 raise e
 
-    # Compute bin centers
-    bin_xwidth = (mlt_edges[1] - mlt_edges[0])
-    bin_ywidth = (lat_edges[1] - lat_edges[0])
-    bin_xcenters = mlt_edges[1:] - bin_xwidth / 2
-    bin_ycenters = lat_edges[1:] - bin_ywidth / 2
-
-    # Adding a cyclic points is required to complete the circle
-    # Without adding in this point, there will be one pie-shaped piece missing from the circle
-    contour_data_is, bin_xcenters_cyclic = add_cyclic_point(contour_data_is.transpose(), coord=bin_xcenters)
-    contour_data_gs, bin_xcenters_cyclic = add_cyclic_point(contour_data_gs.transpose(), coord=bin_xcenters)
-
     if plot_type == "contour":
+
+        # Compute bin centers
+        bin_xwidth = (mlt_edges[1] - mlt_edges[0])
+        bin_ywidth = (lat_edges[1] - lat_edges[0])
+        bin_xcenters = mlt_edges[1:] - bin_xwidth / 2
+        bin_ycenters = lat_edges[1:] - bin_ywidth / 2
+
+        # Adding a cyclic points is required to complete the circle
+        # Without adding in this point, there will be one pie-shaped piece missing from the circle
+        contour_data_is_cyclic, bin_xcenters_cyclic = add_cyclic_point(contour_data_is.transpose(), coord=bin_xcenters)
+        contour_data_gs_cyclic, bin_xcenters_cyclic = add_cyclic_point(contour_data_gs.transpose(), coord=bin_xcenters)
+
         levels = 12
         levels = np.linspace(start=0, stop=1, num=(levels + 1))
         cmap = 'jet'
         # cmap = modified_jet(levels=len(levels) - 1)
 
-        plot0 = ax[0].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is,
+        plot0 = ax[0].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is_cyclic,
                                cmap=cmap, levels=levels, transform=ccrs.PlateCarree())
-        plot1 = ax[1].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs,
+        plot1 = ax[1].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs_cyclic,
                                cmap=cmap, levels=levels, transform=ccrs.PlateCarree())
 
     elif plot_type == "pixel":
-        plot0 = ax[0].imshow(np.flip(contour_data_is, axis=0), aspect='auto',
-                             cmap="jet", transform=ccrs.PlateCarree(), vmin=0, vmax=1)
-        plot1 = ax[1].imshow(np.flip(contour_data_gs, axis=0), aspect='auto',
-                             cmap="jet", transform=ccrs.PlateCarree(), vmin=0, vmax=1)
+
+        cmap = 'jet'
+        plot0 = ax[0].pcolormesh(mlt_edges, lat_edges, contour_data_is.transpose(),
+                                 transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=1)
+        plot1 = ax[1].pcolormesh(mlt_edges, lat_edges, contour_data_gs.transpose(),
+                                 transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=1)
 
     else:
         raise Exception("plot_type not recognized")
@@ -279,7 +282,7 @@ if __name__ == '__main__':
 
         _, fig = occ_full_circle(station=station, year=2011, month_range=(11, 11), day_range=None,
                                  gate_range=(0, 74), beam_range=(6, 7), freq_range=None,
-                                 plot_type='contour', time_units='mlt',
+                                 plot_type='pixel', time_units='mlt',
                                  local_testing=local_testing)
 
         plt.show()
@@ -320,4 +323,3 @@ if __name__ == '__main__':
         #           str(month_range[0]) + "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_pixel"
         # print("Saving plot as " + out_fig)
         # fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
-
