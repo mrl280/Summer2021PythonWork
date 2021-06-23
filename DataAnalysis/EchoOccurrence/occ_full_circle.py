@@ -3,7 +3,7 @@ import math
 import pathlib
 import pydarn
 
-from aacgmv2 import get_aacgm_coord
+from aacgmv2 import get_aacgm_coord, convert_latlon_arr
 from cartopy.util import add_cyclic_point
 from matplotlib import pyplot as plt
 from pydarn import radar_fov, SuperDARNRadars
@@ -182,10 +182,29 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
     ax[0].text(ax[0].get_xlim()[0], ax[0].get_ylim()[1], "IS", ha='left', va='top')
     ax[1].text(ax[1].get_xlim()[0], ax[1].get_ylim()[1], "GS", ha='left', va='top')
 
-    print("     Computing binned occ rates...")
+    print("     Applying correctional rotation...")
 
     # Right now xdata is in the range 0-24, we need to put it in the range 0-360 for circular plotting
     df['xdata'] = 15 * df['xdata']
+
+    # The 0 degree aacgm line does not line up with the 0 degree geo line, so we need to rotate everything
+    zero_degree_lons_aacgm = np.asarray([0] * len(df['lat']))
+    heights = np.asarray([250] * len(df['lat']))  # TODO: Figure out what to do about heights
+    zero_degree_lons_geo, _, _ = convert_latlon_arr(in_lat=df['lat'], in_lon=zero_degree_lons_aacgm, height=heights,
+                                                    dtime=date_time_est, method_code="A2G")
+
+    # And rotate, keeping everything in the 0-360 range
+    for i in range(len(df)):
+        adjusted_value_here = df['xdata'].iat[i] + zero_degree_lons_geo[i]
+
+        if adjusted_value_here > 360:
+            adjusted_value_here = adjusted_value_here - 360
+        elif adjusted_value_here < 0:
+            adjusted_value_here = adjusted_value_here + 360
+
+        df['xdata'].iat[i] = adjusted_value_here
+
+    print("     Computing binned occ rates...")
 
     # Compute mlt edges
     deg_mlt_per_bin = 2
@@ -275,7 +294,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
@@ -296,22 +315,23 @@ if __name__ == '__main__':
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        for year in range(2011, 2016, 1):
-            for month in range(1, 13, 1):
-                if year >= datetime_now.year and month > datetime_now.month:
-                    # No data here yet
-                    continue
+        year = 2016
 
-                # Make contour plot
-                _, fig = occ_full_circle(station=station, year=year, month_range=(month, month), day_range=None,
-                                         gate_range=(0, 74), beam_range=None, freq_range=freq_range,
-                                         plot_type='contour', time_units='mlt',
-                                         local_testing=local_testing)
+        for month in range(1, 13, 1):
+            if year >= datetime_now.year and month > datetime_now.month:
+                # No data here yet
+                continue
 
-                out_fig = out_dir + "/occ_full_circle_" + station + "-" + str(year) + "-" + \
-                          str(month) + "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_contour"
-                print("Saving plot as " + out_fig)
-                fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+            # Make contour plot
+            _, fig = occ_full_circle(station=station, year=year, month_range=(month, month), day_range=None,
+                                     gate_range=(0, 74), beam_range=None, freq_range=freq_range,
+                                     plot_type='contour', time_units='mlt',
+                                     local_testing=local_testing)
+
+            out_fig = out_dir + "/occ_full_circle_" + station + "-" + str(year) + "-" + \
+                      str(month) + "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_contour"
+            print("Saving plot as " + out_fig)
+            fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
 
         # # Then make a pixel plot
         # _, fig = occ_full_circle(station=station, year=year, month_range=month_range, day_range=None,
