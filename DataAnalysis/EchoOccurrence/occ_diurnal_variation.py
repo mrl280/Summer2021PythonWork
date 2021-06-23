@@ -68,8 +68,6 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
     all_radars_info = SuperDARNRadars()
     this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
     radar_id = this_radars_info.hardware_info.stid
-
-    # TODO: Update seasonal printouts based on hemisphere
     hemisphere = this_radars_info.hemisphere
 
     gate_range = check_gate_range(gate_range, this_radars_info.hardware_info)
@@ -147,15 +145,29 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
         ax.text(ax.get_xlim()[0] + 0.1 * (ax.get_xlim()[1] - ax.get_xlim()[0]), 0.9 * ax.get_ylim()[1],
                 calendar.month_name[month_num], ha='left', va='top')
 
+    if hemisphere.value == 1:
+        spring_string = "Spring"
+        summer_string = "Summer"
+        fall_string = "Autumn"
+        winter_string = "Winter"
+    elif hemisphere.value == -1:
+        # The seasons are reversed in the southern hemisphere
+        spring_string = "Autumn"
+        summer_string = "Winter"
+        fall_string = "	Spring"
+        winter_string = "Summer"
+    else:
+        raise Exception("Error: Season not recognized.")
+
     season_txt_fontsize = 16
     spring_axis.text(spring_axis.get_xlim()[0] + 0.05 * (spring_axis.get_xlim()[1] - spring_axis.get_xlim()[0]),
-                     0.9 * spring_axis.get_ylim()[1], "Spring", ha='left', va='center', fontsize=season_txt_fontsize)
+                     0.9 * spring_axis.get_ylim()[1], spring_string, ha='left', va='center', fontsize=season_txt_fontsize)
     summer_axis.text(summer_axis.get_xlim()[0] + 0.05 * (summer_axis.get_xlim()[1] - summer_axis.get_xlim()[0]),
-                     0.9 * summer_axis.get_ylim()[1], "Summer", ha='left', va='center', fontsize=season_txt_fontsize)
+                     0.9 * summer_axis.get_ylim()[1], summer_string, ha='left', va='center', fontsize=season_txt_fontsize)
     fall_axis.text(fall_axis.get_xlim()[0] + 0.05 * (fall_axis.get_xlim()[1] - fall_axis.get_xlim()[0]),
-                   0.9 * fall_axis.get_ylim()[1], "Fall", ha='left', va='center', fontsize=season_txt_fontsize)
+                   0.9 * fall_axis.get_ylim()[1], fall_string, ha='left', va='center', fontsize=season_txt_fontsize)
     winter_axis.text(winter_axis.get_xlim()[0] + 0.05 * (winter_axis.get_xlim()[1] - winter_axis.get_xlim()[0]),
-                     0.9 * winter_axis.get_ylim()[1], "Winter", ha='left', va='center', fontsize=season_txt_fontsize)
+                     0.9 * winter_axis.get_ylim()[1], winter_string, ha='left', va='center', fontsize=season_txt_fontsize)
 
     fig.suptitle(str(year) + " at " + station.upper() + "; " + gate_string +
                  "\n" + beam_string + "; " + freq_string, fontsize=18)
@@ -234,11 +246,14 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
         elif ax == winter_axis:
             # We want Dec, Jan, and Feb
             # Addition and subtraction of 1 are because month filter is inclusive
-            month_rest_range = (fall_month_range[1] + 1, spring_month_range[0] - 1)
+            month_rest_range = (fall_month_range[1] + 1, spring_month_range[0] - 1)  # usually (12, 2)
         else:
             raise Exception("Season not recognized")
 
-        df_season = df[(df['month'] >= month_rest_range[0]) & (df['month'] <= month_rest_range[1])]
+        if ax == winter_axis:
+            df_season = df[(df['month'] >= month_rest_range[0]) | (df['month'] <= month_rest_range[1])]
+        else:
+            df_season = df[(df['month'] >= month_rest_range[0]) & (df['month'] <= month_rest_range[1])]
 
         print("Computing occurrence data for season number " + str(i))
 
@@ -328,7 +343,7 @@ def add_month_data_to_plot(df, month_axes, month_offset, hour_edges, bin_xcenter
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "rkn"
@@ -361,5 +376,5 @@ if __name__ == '__main__':
             print("Saving plot as " + out_fig)
             fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
 
-            print("Saving df as " + out_fig)
-            df.to_pickle(out_fig + ".pkl")
+            # print("Saving df as " + out_fig)
+            # df.to_pickle(out_fig + ".pkl")
