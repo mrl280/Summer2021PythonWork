@@ -31,7 +31,7 @@ def add_data_to_plot(ax, time_restricted_df, freq_x, freq_y, data_match_type,
     """
 
     count_min = 4  # Only used for median matched data
-    height_max = 200  # km  All points from heights above this are not considered
+    height_max = 180  # km  All points from heights above this are not considered
 
     similar_ratio_c = "black"
     ylarger_ratio_c = "blue"
@@ -101,35 +101,37 @@ def add_data_to_plot(ax, time_restricted_df, freq_x, freq_y, data_match_type,
         warnings.warn("Point count not supported for this combination of flags.", category=Warning)
 
 
-if __name__ == '__main__':
+def plottingVelRatios(station, year, month, day, gate_range, data_match_type, start_hour, end_hour,
+                      plot_similar_heights, plot_y_larger_than_x, plot_x_larger_than_y,
+                      testing=False):
     """
+
     Produces two types of plots:
         Velocity vs Velocity scatter
         Velocity ratio vs time
-    
+
+    :param station: str: The radar station as a three character string (e.g. 'rkn')
+    :param year: str: The year to consider 'yyyy'
+    :param month: str: The zero-padded month to consider 'mm'
+    :param day: str: The zero-padded day to consider 'dd'
+    :param gate_range: (int, int)
+        Inclusive. The gate range to consider.  Gates start at 0.
+    :param data_match_type: "Median" or "Raw" matched data
+    :param start_hour: int: The starting hour in UT time
+    :param end_hour: int: The ending hour in UT time
+    :param plot_x_larger_than_y: bool:
+        If True, velocity scatter where x heights are larger than y heights is added to the plot
+    :param plot_y_larger_than_x: bool:
+        If True, velocity scatter where y heights are larger than x heights is added to the plot
+    :param plot_similar_heights: bool:
+        If True, velocity scatter where both frequencies see about the same heights is added to the plot
+    :param testing: bool: (optional - default: False)
+        Set this to true if you are testing.
+        If True, then instead of saving all time periods to file, the first time period will be shown
     """
 
-    SAVE_PLOTS = False
-    SHOW_PLOTS = True
-
-    year = "2016"  # yyyy
-    month = "09"  # mm
-    day = "26"  # dd
-
-    station = "rkn"
-    gates = [10, 30]
-    data_match_type = "Raw"  # "Median" or "Raw"
-
-    start_hour = 0
-    end_hour = 4
-
-    # Whether or not to plot the coloured points that represent measurements from different virtual heights
-    plot_similar_heights = True  # Black dots
-    plot_y_larger_than_x = False  # Blue dots
-    plot_x_larger_than_y = False  # Red dots
-
     mnemonic = station.upper()
-    gate_label = "gg: " + str(gates[0]) + "-" + str(gates[1])
+    gate_label = "gg: " + str(gate_range[0]) + "-" + str(gate_range[1])
 
     if data_match_type == "Median":
         second_resolution = 60
@@ -146,12 +148,12 @@ if __name__ == '__main__':
     df = pd.read_pickle(in_file)
 
     # Filter the data based on the expected gate range of the region of interest
-    df = df.loc[(df['gate'] >= gates[0]) & (df['gate'] <= gates[1])]
+    df = df.loc[(df['gate'] >= gate_range[0]) & (df['gate'] <= gate_range[1])]
     df.reset_index(drop=True, inplace=True)
 
     out_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/out/"
 
-    if SHOW_PLOTS:
+    if testing:
         time_chunks = 1
     else:
         time_chunks = (end_hour - start_hour) * 2  # Half hour periods
@@ -160,7 +162,7 @@ if __name__ == '__main__':
         start_time = start_hour + time_chunk * 0.5
         end_time = (start_hour + 0.5) + time_chunk * 0.5
 
-        print("Plotting from: " + str(start_time) + " till " + str(end_time) + " UT")
+        print("     Plotting from: " + str(start_time) + " till " + str(end_time) + " UT")
         time_restricted_df = df[(df['decimalTime'] >= start_time) & (df['decimalTime'] < end_time)]
 
         # We will have 2 plots, one for vel v vel ratios and one for ratios v time
@@ -174,7 +176,7 @@ if __name__ == '__main__':
         fig1.suptitle("Velocity Frequency Dependence: Vel vs Vel Scatter"
                       + "\n" + mnemonic + " " + year + "." + month + "." + day
                       + "; " + gate_label + "; " + data_match_type + " Matched Data"
-                      + "; " + str(start_time) + "-" + str(end_time) + " UT"
+                      + "; " + str(start_time) + "-" + str(end_time) + " UT; Max Height: 180 km"
                       + "\n Produced by " + str(os.path.basename(__file__)),
                       fontsize=13)
 
@@ -286,10 +288,9 @@ if __name__ == '__main__':
         # # Plot 14 to 10 Comparison data in ROW: 2, COL: 1
         # ax2[2][1].scatter(df_14_10['decimalTime'], df_14_10['14over10'], s=4, color='k', marker='.')
 
-        if SHOW_PLOTS:
+        if testing:
             plt.show()
-
-        if SAVE_PLOTS:
+        else:
             # Save the files as a temp file
             fig1.savefig(out_dir + "/" + mnemonic + "_vel_comp_" + year + month + day
                          + "_" + chr(ord('a') + time_chunk) + " " + str(start_time) + "-" + str(end_time) + "UT"
@@ -297,8 +298,19 @@ if __name__ == '__main__':
             # fig2.savefig(out_dir + "/" + mnemonic + "_vel_comp_" + year + month + day
             #              + "_" + chr(ord('a') + time_chunk) + " " + str(start_time) + "-" + str(end_time) + "UT"
             #              + "_temp2.pdf", format='pdf', dpi=300)
+            plt.close(fig1)
 
-    if SAVE_PLOTS:
+    if plot_similar_heights and not plot_y_larger_than_x and not plot_x_larger_than_y:
+        color_str = "_similarHeightsOnly"
+    elif not plot_similar_heights and plot_y_larger_than_x and not plot_x_larger_than_y:
+        color_str = "_YLargerThanXOnly"
+    elif not plot_similar_heights and not plot_y_larger_than_x and plot_x_larger_than_y:
+        color_str = "_XLargerThanYOnly"
+    else:
+        warnings.warn("No colour string added to outfile", category=Warning)
+        color_str = ""
+
+    if not testing:
         # Merge all the temp pdf files
         merger = PdfFileMerger()
         for pdf in glob.iglob("out/*_temp1.pdf"):
@@ -306,10 +318,55 @@ if __name__ == '__main__':
         for pdf in glob.iglob("out/*_temp2.pdf"):
             merger.append(pdf)
         with open(out_dir + "/" + mnemonic + "_vel_comp_" + year + month + day
-                  + "_gg" + str(gates[0]) + "-" + str(gates[1]) + "_" + data_match_type + ".pdf",
+                  + "_gg" + str(gate_range[0]) + "-" + str(gate_range[1]) + "_" + data_match_type + color_str + ".pdf",
                   "wb") as fout:
             merger.write(fout)
         merger.close()
 
         for file in glob.iglob("out/*_temp*.pdf"):
             os.remove(file)
+
+
+if __name__ == '__main__':
+    """ Testing and running """
+
+    testing = False
+
+    year = "2017"  # yyyy
+    month = "10"  # mm
+    day = "23"  # dd
+
+    station = "rkn"
+    gate_range = [10, 30]
+    data_match_type = "Raw"  # "Median" or "Raw"
+
+    start_hour = 4
+    end_hour = 8
+
+    print("Running for just similar heights - just black dots")
+    plottingVelRatios(station=station, year=year, month=month, day=day, gate_range=gate_range,
+                      data_match_type=data_match_type, start_hour=start_hour, end_hour=end_hour,
+                      plot_similar_heights=True, plot_y_larger_than_x=False,
+                      plot_x_larger_than_y=False,
+                      testing=testing)
+
+    print("Running for just y larger than x - just blue dots")
+    plottingVelRatios(station=station, year=year, month=month, day=day, gate_range=gate_range,
+                      data_match_type=data_match_type, start_hour=start_hour, end_hour=end_hour,
+                      plot_similar_heights=False, plot_y_larger_than_x=True,
+                      plot_x_larger_than_y=False,
+                      testing=testing)
+
+    print("Running for just x larger than y - just red dots")
+    plottingVelRatios(station=station, year=year, month=month, day=day, gate_range=gate_range,
+                      data_match_type=data_match_type, start_hour=start_hour, end_hour=end_hour,
+                      plot_similar_heights=False, plot_y_larger_than_x=False,
+                      plot_x_larger_than_y=True,
+                      testing=testing)
+
+    print("Running for all points - all colours of dots")
+    plottingVelRatios(station=station, year=year, month=month, day=day, gate_range=gate_range,
+                      data_match_type=data_match_type, start_hour=start_hour, end_hour=end_hour,
+                      plot_similar_heights=True, plot_y_larger_than_x=True,
+                      plot_x_larger_than_y=True,
+                      testing=testing)
