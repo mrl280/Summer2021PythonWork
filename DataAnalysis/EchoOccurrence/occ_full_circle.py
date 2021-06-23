@@ -86,7 +86,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
     gate_range = check_gate_range(gate_range, this_radars_info.hardware_info)
     beam_range = check_beam_range(beam_range, this_radars_info.hardware_info)
 
-    print("Retrieving data...")
+    print("     Retrieving data...")
     df = get_data_handler(station, year_range=(year, year), month_range=month_range, day_range=day_range,
                           gate_range=gate_range, beam_range=beam_range, freq_range=freq_range, occ_data=True,
                           local_testing=local_testing)
@@ -94,12 +94,13 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
 
     if month_range[0] == month_range[1]:
         month_string = calendar.month_name[month_range[0]]
-        date_time_est, _ = build_datetime_epoch(year, month_range[0], 15, 0)
+        date_time_est, _ = build_datetime_epoch(year=year, month=month_range[0], day=15, hour=0)
     else:
         month_string = calendar.month_name[month_range[0]] + " to " + calendar.month_name[month_range[1]]
-        date_time_est, _ = build_datetime_epoch(year, 6, 15, 0)  # Use the middle of the year as an estimate
+        # Use the middle of the year as an estimate
+        date_time_est, _ = build_datetime_epoch(year=year, month=6, day=15, hour=0)
 
-    print("Computing MLTs for " + str(year) + " data...")
+    print("     Computing MLTs for " + str(year) + " data...")
     cell_corners_aacgm_lats, cell_corners_aacgm_lons = radar_fov(stid=radar_id, coords='aacgm', date=date_time_est)
 
     df = add_mlt_to_df(cell_corners_aacgm_lons=cell_corners_aacgm_lons,
@@ -110,7 +111,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
         df['xdata'] = df['mlt']
 
     else:
-        print("Computing UTs for " + str(year) + " data...")
+        print("     Computing UTs for " + str(year) + " data...")
 
         ut_time = []
         for i in range(len(df)):
@@ -137,16 +138,16 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
     radar_mlts = np.arange(0, 360, 1)
     radar_lats_aacgm = np.asarray([radar_lat_aacgm] * len(radar_mlts))
 
-    lat_extreme = 40 * hemisphere.value  # deg
-    text_offset_multiplier = 1.03
     if hemisphere.value == 1:
         projection = ccrs.NorthPolarStereo()
+        lat_extreme = int(radar_lat_aacgm - 3)
     elif hemisphere.value == -1:
         projection = ccrs.SouthPolarStereo()
+        lat_extreme = int(radar_lat_aacgm + 3)
     else:
         raise Exception("hemisphere not recognized")
 
-    print("Preparing the plot...")
+    print("     Preparing the plot...")
     fig, ax = plt.subplots(figsize=[10, 6], dpi=300, nrows=1, ncols=2, subplot_kw={'projection': projection})
     # plt.subplots_adjust(left=0, right=1, bottom=0, top=0.85)
     fig.suptitle(month_string + " " + str(year) + " at " + station.upper() +
@@ -165,25 +166,23 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
         gl.yformatter = LATITUDE_FORMATTER
 
         # Print clock numbers
+        text_offset_multiplier = 1.03
         ax[i].text(0, text_offset_multiplier * ax[i].get_ylim()[1], "12", ha='center', va='bottom')
         ax[i].text(0, text_offset_multiplier * ax[i].get_ylim()[0], "00", ha='center', va='top')
         ax[i].text(text_offset_multiplier * ax[i].get_xlim()[1], 0, "06", ha='left', va='center')
         ax[i].text(text_offset_multiplier * ax[i].get_xlim()[0], 0, "18", ha='right', va='center')
 
         # Print out the time units
-        ax[i].text(ax[i].get_xlim()[1], ax[i].get_ylim()[1],
-                   time_units.upper(), ha='right', va='top')
+        ax[i].text(ax[i].get_xlim()[1], ax[i].get_ylim()[1], time_units.upper(), ha='right', va='top')
 
         # Plot radar track
         ax[i].plot(radar_mlts, radar_lats_aacgm, color='k', linewidth=1, linestyle="--", transform=ccrs.Geodetic())
 
     # Print out echo types
-    ax[0].text(ax[0].get_xlim()[0], ax[0].get_ylim()[1],
-               "IS", ha='left', va='top')
-    ax[1].text(ax[1].get_xlim()[0], ax[1].get_ylim()[1],
-               "GS", ha='left', va='top')
+    ax[0].text(ax[0].get_xlim()[0], ax[0].get_ylim()[1], "IS", ha='left', va='top')
+    ax[1].text(ax[1].get_xlim()[0], ax[1].get_ylim()[1], "GS", ha='left', va='top')
 
-    print("Computing binned occ rates...")
+    print("     Computing binned occ rates...")
 
     # Right now xdata is in the range 0-24, we need to put it in the range 0-360 for circular plotting
     df['xdata'] = 15 * df['xdata']
