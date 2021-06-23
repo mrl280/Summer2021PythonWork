@@ -154,7 +154,7 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
         # The seasons are reversed in the southern hemisphere
         spring_string = "Autumn"
         summer_string = "Winter"
-        fall_string = "	Spring"
+        fall_string = "Spring"
         winter_string = "Summer"
     else:
         raise Exception("Error: Season not recognized.")
