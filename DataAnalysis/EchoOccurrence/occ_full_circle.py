@@ -182,30 +182,30 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
     ax[0].text(ax[0].get_xlim()[0], ax[0].get_ylim()[1], "IS", ha='left', va='top')
     ax[1].text(ax[1].get_xlim()[0], ax[1].get_ylim()[1], "GS", ha='left', va='top')
 
-    print("     Applying correctional rotation...")
-
     # Right now xdata is in the range 0-24, we need to put it in the range 0-360 for circular plotting
     df['xdata'] = 15 * df['xdata']
 
+    print("     Applying correctional rotation...")
     # The 0 degree aacgm line does not line up with the 0 degree geo line, so we need to rotate everything
     zero_degree_lons_aacgm = np.asarray([0] * len(df['lat']))
     heights = np.asarray([250] * len(df['lat']))  # TODO: Figure out what to do about heights
-    zero_degree_lons_geo, _, _ = convert_latlon_arr(in_lat=df['lat'], in_lon=zero_degree_lons_aacgm, height=heights,
+
+    # returns are lat_out, lon_out, r_out
+    _, zero_degree_lons_geo, _ = convert_latlon_arr(in_lat=df['lat'], in_lon=zero_degree_lons_aacgm, height=heights,
                                                     dtime=date_time_est, method_code="A2G")
 
     # And rotate, keeping everything in the 0-360 range
     for i in range(len(df)):
-        adjusted_value_here = df['xdata'].iat[i] + zero_degree_lons_geo[i]
+        adjustment_here = df['xdata'].iat[i] - zero_degree_lons_geo[i]
 
-        if adjusted_value_here > 360:
-            adjusted_value_here = adjusted_value_here - 360
-        elif adjusted_value_here < 0:
-            adjusted_value_here = adjusted_value_here + 360
+        if adjustment_here > 360:
+            adjustment_here = adjustment_here - 360
+        elif adjustment_here < 0:
+            adjustment_here = adjustment_here + 360
 
-        df['xdata'].iat[i] = adjusted_value_here
+        df['xdata'].iat[i] = adjustment_here
 
     print("     Computing binned occ rates...")
-
     # Compute mlt edges
     deg_mlt_per_bin = 2
     n_bins_mlt = int(360 / deg_mlt_per_bin)
@@ -294,7 +294,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "rkn"
