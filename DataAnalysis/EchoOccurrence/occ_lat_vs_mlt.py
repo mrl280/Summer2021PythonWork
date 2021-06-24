@@ -116,7 +116,7 @@ def occ_lat_vs_mlt(station, year, month_range=None, day_range=None, gate_range=N
     df['xdata'] = 15 * df['mlt']
 
     print("     Preparing the plot...")
-    fig, ax = plt.subplots(figsize=[6, 10], dpi=300, nrows=2, ncols=1)
+    fig, ax = plt.subplots(figsize=[6, 10], constrained_layout=True, dpi=300, nrows=2, ncols=1)
     fig.suptitle(month_string + " " + str(year) + " at " + station.upper() +
                  "; Beams " + str(beam_range[0]) + "-" + str(beam_range[1]) +
                  "\nFrequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz", fontsize=18)
