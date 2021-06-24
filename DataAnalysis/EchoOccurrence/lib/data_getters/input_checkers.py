@@ -9,7 +9,7 @@ def check_year_range(year_range):
     """
     now = datetime.datetime.now()
     if year_range is None:
-        year_range = (1993, now.year)  # Assume we all data
+        year_range = (2015, 2020)  # Just pick a range
         warnings.warn("No year range was provided, it has defaulted to (1993, " + str(now.year) + ").",
                       category=Warning)
     if year_range[0] < 1993:
@@ -20,6 +20,14 @@ def check_year_range(year_range):
         year_range = (year_range[0], now.year)
         warnings.warn("It is only " + str(now.year) + ", year_range[1] has defaulted to " + str(str(now.year)) + ".",
                       category=Warning)
+
+    if (year_range[1] - year_range[0]) > 5:
+        warnings.warn("Year range spans more than 5 years, this will take a long time to compute...", category=Warning)
+
+    if year_range[1] < year_range[0]:
+        year_range = (year_range[1], year_range[0])
+        warnings.warn("year_range[1] is less than year_range[0], year_range has defaulted to " + str(year_range))
+
     return year_range
 
 
