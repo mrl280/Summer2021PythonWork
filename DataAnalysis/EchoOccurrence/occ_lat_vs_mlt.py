@@ -215,7 +215,7 @@ def occ_lat_vs_mlt(station, year, month_range=None, day_range=None, gate_range=N
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
@@ -237,12 +237,11 @@ if __name__ == '__main__':
 
         year = 2016
 
-        for month in range(4, 7, 1):
+        for month in range(4, 8, 1):
             if year >= datetime_now.year and month > datetime_now.month:
                 # No data here yet
                 continue
 
-            # Make contour plot
             _, fig = occ_lat_vs_mlt(station=station, year=year, month_range=(month, month), day_range=None,
                                     gate_range=(0, 74), beam_range=None, freq_range=freq_range,
                                     plot_type='pixel', local_testing=local_testing)

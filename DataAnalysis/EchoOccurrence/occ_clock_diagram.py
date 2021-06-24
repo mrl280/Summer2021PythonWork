@@ -290,7 +290,7 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
@@ -313,18 +313,17 @@ if __name__ == '__main__':
 
         year = 2016
 
-        for month in range(4, 7, 1):
+        for month in range(4, 8, 1):
             if year >= datetime_now.year and month > datetime_now.month:
                 # No data here yet
                 continue
 
-            # Make contour plot
             _, fig = occ_clock_diagram(station=station, year=year, month_range=(month, month), day_range=None,
                                        gate_range=(0, 74), beam_range=None, freq_range=freq_range,
                                        plot_type='pixel', time_units='mlt',
                                        local_testing=local_testing)
 
-            out_fig = out_dir + "/occ_full_circle_" + station + "-" + str(year) + "-" + \
+            out_fig = out_dir + "/occ_clock_diagram_" + station + "-" + str(year) + "-" + \
                       str(month) + "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_contour"
             print("Saving plot as " + out_fig)
             fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
