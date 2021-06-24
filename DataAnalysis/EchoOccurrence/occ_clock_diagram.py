@@ -180,25 +180,26 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     # Right now xdata is in the range 0-24, we need to put it in the range 0-360 for circular plotting
     df['xdata'] = 15 * df['xdata']
 
-    print("     Applying correctional rotation...")
-    # The 0 degree aacgm line does not line up with the 0 degree geo line, so we need to rotate everything
-    zero_degree_lons_aacgm = np.asarray([0] * len(df['lat']))
-    heights = np.asarray([250] * len(df['lat']))  # TODO: Figure out what to do about heights
-
-    # returns are lat_out, lon_out, r_out
-    _, zero_degree_lons_geo, _ = convert_latlon_arr(in_lat=df['lat'], in_lon=zero_degree_lons_aacgm, height=heights,
-                                                    dtime=date_time_est, method_code="A2G")
-
-    # And rotate, keeping everything in the 0-360 range
-    for i in range(len(df)):
-        adjusted_xdata_point = df['xdata'].iat[i] - zero_degree_lons_geo[i]
-
-        if adjusted_xdata_point > 360:
-            adjusted_xdata_point = adjusted_xdata_point - 360
-        elif adjusted_xdata_point < 0:
-            adjusted_xdata_point = adjusted_xdata_point + 360
-
-        df['xdata'].iat[i] = adjusted_xdata_point
+    # TODO: Decide if this correctional rotation is required
+    # print("     Applying correctional rotation...")
+    # # The 0 degree aacgm line does not line up with the 0 degree geo line, so we need to rotate everything
+    # zero_degree_lons_aacgm = np.asarray([0] * len(df['lat']))
+    # heights = np.asarray([250] * len(df['lat']))  # TODO: Figure out what to do about heights
+    #
+    # # returns are lat_out, lon_out, r_out
+    # _, zero_degree_lons_geo, _ = convert_latlon_arr(in_lat=df['lat'], in_lon=zero_degree_lons_aacgm, height=heights,
+    #                                                 dtime=date_time_est, method_code="A2G")
+    #
+    # # And rotate, keeping everything in the 0-360 range
+    # for i in range(len(df)):
+    #     adjusted_xdata_point = df['xdata'].iat[i] - zero_degree_lons_geo[i]
+    #
+    #     if adjusted_xdata_point > 360:
+    #         adjusted_xdata_point = adjusted_xdata_point - 360
+    #     elif adjusted_xdata_point < 0:
+    #         adjusted_xdata_point = adjusted_xdata_point + 360
+    #
+    #     df['xdata'].iat[i] = adjusted_xdata_point
 
     print("     Computing binned occ rates...")
     # Compute mlt edges
@@ -289,14 +290,14 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "rkn"
 
         _, fig = occ_clock_diagram(station=station, year=2011, month_range=(11, 11), day_range=None,
                                    gate_range=(0, 74), beam_range=(6, 7), freq_range=None,
-                                   plot_type='pixel', time_units='mlt',
+                                   plot_type='contour', time_units='mlt',
                                    local_testing=local_testing)
 
         plt.show()
@@ -320,7 +321,7 @@ if __name__ == '__main__':
             # Make contour plot
             _, fig = occ_clock_diagram(station=station, year=year, month_range=(month, month), day_range=None,
                                        gate_range=(0, 74), beam_range=None, freq_range=freq_range,
-                                       plot_type='contour', time_units='mlt',
+                                       plot_type='pixel', time_units='mlt',
                                        local_testing=local_testing)
 
             out_fig = out_dir + "/occ_full_circle_" + station + "-" + str(year) + "-" + \
