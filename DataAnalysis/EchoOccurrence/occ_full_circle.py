@@ -196,14 +196,14 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
 
     # And rotate, keeping everything in the 0-360 range
     for i in range(len(df)):
-        adjustment_here = df['xdata'].iat[i] - zero_degree_lons_geo[i]
+        adjusted_xdata_point = df['xdata'].iat[i] - zero_degree_lons_geo[i]
 
-        if adjustment_here > 360:
-            adjustment_here = adjustment_here - 360
-        elif adjustment_here < 0:
-            adjustment_here = adjustment_here + 360
+        if adjusted_xdata_point > 360:
+            adjusted_xdata_point = adjusted_xdata_point - 360
+        elif adjusted_xdata_point < 0:
+            adjusted_xdata_point = adjusted_xdata_point + 360
 
-        df['xdata'].iat[i] = adjustment_here
+        df['xdata'].iat[i] = adjusted_xdata_point
 
     print("     Computing binned occ rates...")
     # Compute mlt edges
@@ -294,7 +294,7 @@ def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
@@ -317,7 +317,7 @@ if __name__ == '__main__':
 
         year = 2016
 
-        for month in range(1, 13, 1):
+        for month in range(4, 7, 1):
             if year >= datetime_now.year and month > datetime_now.month:
                 # No data here yet
                 continue
