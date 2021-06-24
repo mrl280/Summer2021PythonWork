@@ -133,12 +133,11 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     radar_mlts = np.arange(0, 360, 1)
     radar_lats_aacgm = np.asarray([radar_lat_aacgm] * len(radar_mlts))
 
+    lat_extreme = hemisphere.value * 60
     if hemisphere.value == 1:
         projection = ccrs.NorthPolarStereo()
-        lat_extreme = int(radar_lat_aacgm - 3)
     elif hemisphere.value == -1:
         projection = ccrs.SouthPolarStereo()
-        lat_extreme = int(radar_lat_aacgm + 3)
     else:
         raise Exception("hemisphere not recognized")
 
@@ -210,7 +209,10 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
 
     # Compute latitude edges
     n_bins_lat = 90 - abs(lat_extreme)  # One bin per degree of latitude
-    lat_edges = np.linspace(lat_extreme, 90, num=(n_bins_lat + 1))
+    if hemisphere.value == 1:
+        lat_edges = np.linspace(lat_extreme, 90, num=(n_bins_lat + 1))
+    else:
+        lat_edges = np.linspace(-90, lat_extreme, num=(n_bins_lat + 1))
     delta_lat = lat_edges[1] - lat_edges[0]
 
     contour_data_is = np.empty(shape=(n_bins_mlt, n_bins_lat))
@@ -290,10 +292,10 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
-        station = "rkn"
+        station = "dce"
 
         _, fig = occ_clock_diagram(station=station, year=2011, month_range=(11, 11), day_range=None,
                                    gate_range=(0, 74), beam_range=(6, 7), freq_range=None,
@@ -304,37 +306,21 @@ if __name__ == '__main__':
 
 
     else:
-        station = "rkn"
-        datetime_now = datetime.datetime.now()
+        station = "dce"
+        year = 2019
+        month = 3
         freq_range = (9.5, 12.5)
+        plot_type = 'pixel'
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        year = 2016
+        _, fig = occ_clock_diagram(station=station, year=year, month_range=(month, month), day_range=(14, 28),
+                                   gate_range=(0, 74), beam_range=None, freq_range=freq_range,
+                                   plot_type=plot_type, time_units='mlt',
+                                   local_testing=local_testing)
 
-        for month in range(4, 8, 1):
-            if year >= datetime_now.year and month > datetime_now.month:
-                # No data here yet
-                continue
-
-            _, fig = occ_clock_diagram(station=station, year=year, month_range=(month, month), day_range=None,
-                                       gate_range=(0, 74), beam_range=None, freq_range=freq_range,
-                                       plot_type='pixel', time_units='mlt',
-                                       local_testing=local_testing)
-
-            out_fig = out_dir + "/occ_clock_diagram_" + station + "-" + str(year) + "-" + \
-                      str(month) + "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_contour"
-            print("Saving plot as " + out_fig)
-            fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
-
-        # # Then make a pixel plot
-        # _, fig = occ_full_circle(station=station, year=year, month_range=month_range, day_range=None,
-        #                          gate_range=(0, 74), beam_range=None, freq_range=freq_range,
-        #                          plot_type='pixel', time_units='mlt',
-        #                          local_testing=local_testing)
-        #
-        # out_fig = out_dir + "/occ_full_circle_" + station + "-" + str(year) + "-" + \
-        #           str(month_range[0]) + "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_pixel"
-        # print("Saving plot as " + out_fig)
-        # fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+        out_fig = out_dir + "/occ_clock_diagram_" + station + "-" + str(year) + "-" + \
+                  str(month) + "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz" + "_" + plot_type
+        print("Saving plot as " + out_fig)
+        fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
