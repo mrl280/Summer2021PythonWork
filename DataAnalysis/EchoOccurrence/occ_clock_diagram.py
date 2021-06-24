@@ -22,19 +22,14 @@ from lib.data_getters.input_checkers import *
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 
-def occ_full_circle(station, year, month_range=None, day_range=None, gate_range=None, beam_range=None, freq_range=None,
-                    time_units='mlt', plot_type='contour', local_testing=False):
+def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_range=None, beam_range=None,
+                      freq_range=None, time_units='mlt', plot_type='contour', local_testing=False):
     """
 
-    Produce a full circle stereographic plot in either ut or mlt (12 at the top).
-    Can plot a simple echo count, ground scatter count, or average a fitACF parameter over the provided time range.
+    Produce a full circle stereographic occurrence plot in either ut or mlt (12 at the top).
 
     # TODO: Figure out how to fill in the center of the circle Cyclic point is not working (adds in a 95 deg point),
        and setting the last point to 90 deg is not working
-
-    # TODO: Probably need to rotate everything by ~80 deg CCW to align the 0 deg aacgm line with the prime meridian
-    # TODO: you need to produce a regular plot Range gate -UT for March, rectangular coordinates.
-       We then can tell if your lot is correct and how to adjust it.
 
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
@@ -299,10 +294,10 @@ if __name__ == '__main__':
     if local_testing:
         station = "rkn"
 
-        _, fig = occ_full_circle(station=station, year=2011, month_range=(11, 11), day_range=None,
-                                 gate_range=(0, 74), beam_range=(6, 7), freq_range=None,
-                                 plot_type='pixel', time_units='mlt',
-                                 local_testing=local_testing)
+        _, fig = occ_clock_diagram(station=station, year=2011, month_range=(11, 11), day_range=None,
+                                   gate_range=(0, 74), beam_range=(6, 7), freq_range=None,
+                                   plot_type='pixel', time_units='mlt',
+                                   local_testing=local_testing)
 
         plt.show()
 
@@ -323,10 +318,10 @@ if __name__ == '__main__':
                 continue
 
             # Make contour plot
-            _, fig = occ_full_circle(station=station, year=year, month_range=(month, month), day_range=None,
-                                     gate_range=(0, 74), beam_range=None, freq_range=freq_range,
-                                     plot_type='contour', time_units='mlt',
-                                     local_testing=local_testing)
+            _, fig = occ_clock_diagram(station=station, year=year, month_range=(month, month), day_range=None,
+                                       gate_range=(0, 74), beam_range=None, freq_range=freq_range,
+                                       plot_type='contour', time_units='mlt',
+                                       local_testing=local_testing)
 
             out_fig = out_dir + "/occ_full_circle_" + station + "-" + str(year) + "-" + \
                       str(month) + "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_contour"
