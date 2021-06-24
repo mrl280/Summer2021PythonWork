@@ -292,7 +292,7 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "dce"

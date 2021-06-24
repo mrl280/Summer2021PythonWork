@@ -204,7 +204,7 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
