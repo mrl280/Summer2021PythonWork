@@ -20,7 +20,7 @@ from pydarn import radar_fov, SuperDARNRadars
 from DataAnalysis.EchoOccurrence.lib.data_getters.get_local_dummy_data import get_local_dummy_data
 from DataAnalysis.EchoOccurrence.lib.only_keep_45km_res_data import only_keep_45km_res_data
 
-station = "rkn"
+station = "dce"
 
 # Get radar specific hardware information
 all_radars_info = SuperDARNRadars()
@@ -61,21 +61,21 @@ heights = np.asarray([0] * len(in_lon))
 lats = [hemisphere.value * x for x in [80, 70, 60, 50]]
 for lat in lats:
     in_lat = np.asarray([lat] * len(in_lon))
-    out_lats, out_lons, out_rs = convert_latlon_arr(in_lat, in_lon, heights, date, method_code="A2G")
+    out_lats, out_lons, out_rs = convert_latlon_arr(in_lat=in_lat, in_lon=in_lon,
+                                                    height=heights, dtime=date, method_code="A2G")
     plt.plot(out_lons, out_lats, 'k', markersize=3, transform=ccrs.Geodetic(), label=str(lat) + " deg")
 
 # Find the geodetic coordinates for the geomagnetic pole, and plot it as a black dot
-pole_geodetic_lat_N, pole_geodetic_lon_E, _ = aacgmv2.convert_latlon(hemisphere.value * 90, -90, 0,
-                                                                     date, method_code="A2G")
-plt.plot([pole_geodetic_lon_E, pole_geodetic_lon_E],
-         [pole_geodetic_lat_N, pole_geodetic_lat_N],
+pole_geodetic_lat_N, pole_geodetic_lon_E, _ = aacgmv2.convert_latlon(in_lat=hemisphere.value * 90, in_lon=-90, height=0,
+                                                                     dtime=date, method_code="A2G")
+plt.plot([pole_geodetic_lon_E, pole_geodetic_lon_E], [pole_geodetic_lat_N, pole_geodetic_lat_N],
          'ko', markersize=3, transform=ccrs.Geodetic(), label="Geomagnetic North Pole")
 
 
 ax.add_feature(cfeature.OCEAN)
 ax.add_feature(cfeature.LAND)
 
-# Plot a blue dot at the north pole
+# Plot a blue dot at the geographic north pole
 plt.plot([-90, -90], [90, 90], 'bo', markersize=3, transform=ccrs.Geodetic(),
          label="North Pole")
 
@@ -93,7 +93,7 @@ ax.set_boundary(circle, transform=ax.transAxes)
 
 # Add gridlines and mlt labels
 text_offset_multiplier = 1.03
-gl = ax.gridlines(draw_labels=False, linestyle='--', color='white')
+gl = ax.gridlines(draw_labels=True, linestyle='--', color='white')
 gl.xlocator = mticker.FixedLocator([-180, -135, -90, -45, 0, 45, 90, 135])
 ax.text(0, text_offset_multiplier * ax.get_ylim()[1], "12", ha='center', va='bottom')
 ax.text(0, text_offset_multiplier * ax.get_ylim()[0], "00", ha='center', va='top')
@@ -118,13 +118,13 @@ for range_ in range(gate_range[0], gate_range[1] + 2):
              color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
 # Plot the midnight line
-ax.plot([0, 0], [40, 90], 'g-', transform=ccrs.Geodetic())
+ax.plot([0, 0], [hemisphere.value * 40, hemisphere.value * 90], 'g-', transform=ccrs.Geodetic())
 
 # Plot the 6 o-clock line
-ax.plot([6 * 15, 6 * 15], [40, 90], 'm-', transform=ccrs.Geodetic())
+ax.plot([6 * 15, 6 * 15], [hemisphere.value * 40, hemisphere.value * 90], 'm-', transform=ccrs.Geodetic())
 
 # Plot the zero degree of aacgm lon line
-lats_aagcm = np.linspace(40, 90, num=100)
+lats_aagcm = np.linspace(hemisphere.value * 40, hemisphere.value * 90, num=100)
 lons_aagcm = np.asarray([0] * len(lats_aagcm))  # The zero degree line in aacgm
 heights = np.asarray([250] * len(lats_aagcm))
 out_lats, out_lons, out_rs = convert_latlon_arr(lats_aagcm, lons_aagcm, heights, date, method_code="A2G")
@@ -132,7 +132,7 @@ out_lats, out_lons, out_rs = convert_latlon_arr(lats_aagcm, lons_aagcm, heights,
 ax.plot(out_lons, out_lats, 'k-', transform=ccrs.Geodetic())
 
 # Plot the 90 degree of aacgm lon line
-lons_aagcm = np.asarray([90] * len(lats_aagcm))  # The zero degree line in aacgm
+lons_aagcm = np.asarray([90] * len(lats_aagcm))
 out_lats, out_lons, out_rs = convert_latlon_arr(lats_aagcm, lons_aagcm, heights, date, method_code="A2G")
 
 ax.plot(out_lons, out_lats, 'k-', linewidth=0.5, transform=ccrs.Geodetic())
