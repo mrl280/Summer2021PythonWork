@@ -3,7 +3,7 @@ import math
 import pathlib
 import pydarn
 
-from aacgmv2 import get_aacgm_coord, convert_latlon_arr
+from aacgmv2 import get_aacgm_coord
 from cartopy.util import add_cyclic_point
 from matplotlib import pyplot as plt
 from pydarn import radar_fov, SuperDARNRadars
@@ -26,7 +26,7 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
                       freq_range=None, time_units='mlt', plot_type='contour', local_testing=False):
     """
 
-    Produce a full circle stereographic occurrence plot in either ut or mlt (12 at the top).
+    Produce a full circle stereographic occurrence plot (12 at the top).
 
     # TODO: Figure out how to fill in the center of the circle Cyclic point is not working (adds in a 95 deg point),
        and setting the last point to 90 deg is not working
@@ -58,6 +58,7 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
             If omitted (or None), then all frequencies are considered.
     :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
             The time units to plot on the circle, 12 is always at the top.  Default is 'mlt'
+            # TODO: Not sure if this type of plot makes sense for UT time?
     :param plot_type: str (optional):
             The type of plot, either 'contour' or 'pixel', default is 'contour'
     :param local_testing: bool (optional):
@@ -74,12 +75,14 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     all_radars_info = SuperDARNRadars()
     this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
     radar_id = this_radars_info.hardware_info.stid
-    hemisphere = this_radars_info.hemisphere
     radar_lon = this_radars_info.hardware_info.geographic.lon
     radar_lat = this_radars_info.hardware_info.geographic.lat
 
     gate_range = check_gate_range(gate_range, this_radars_info.hardware_info)
     beam_range = check_beam_range(beam_range, this_radars_info.hardware_info)
+
+    beam_string = "Beams " + str(beam_range[0]) + "-" + str(beam_range[1])
+    freq_string = "Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz"
 
     print("     Retrieving data...")
     df = get_data_handler(station, year_range=(year, year), month_range=month_range, day_range=day_range,
@@ -98,8 +101,8 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     print("     Computing MLTs for " + str(year) + " data...")
     cell_corners_aacgm_lats, cell_corners_aacgm_lons = radar_fov(stid=radar_id, coords='aacgm', date=date_time_est)
 
-    df = add_mlt_to_df(cell_corners_aacgm_lons=cell_corners_aacgm_lons,
-                       cell_corners_aacgm_lats=cell_corners_aacgm_lats, df=df)
+    df = add_mlt_to_df(cell_corners_aacgm_lons=cell_corners_aacgm_lons, cell_corners_aacgm_lats=cell_corners_aacgm_lats,
+                       df=df)
 
     # Get our raw x-data
     if time_units == "mlt":
@@ -110,17 +113,14 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
 
         ut_time = []
         for i in range(len(df)):
-            ut_time_here = df['datetime'].iat[i].hour + df['datetime'].iat[i].minute / 60 + \
-                           df['datetime'].iat[i].second / 3600
-
-            if ut_time_here > 24:
-                ut_time_here = ut_time_here - 24
-            elif ut_time_here < 0:
-                ut_time_here = ut_time_here + 24
-
+            datetime_obj = df['datetime'].iat[i]
+            ut_time_here = datetime_obj.hour + datetime_obj.minute / 60 + datetime_obj.second / 3600
             ut_time.append(ut_time_here)
 
         df['xdata'] = np.asarray(ut_time)
+
+    # Right now xdata is in the range 0-24, we need to put it in the range 0-360 for circular plotting
+    df['xdata'] = 15 * df['xdata']
 
     # Compute a circle in axis coordinates which can be used as a boundary
     theta = np.linspace(0, 2 * np.pi, 100)
@@ -133,24 +133,23 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     radar_mlts = np.arange(0, 360, 1)
     radar_lats_aacgm = np.asarray([radar_lat_aacgm] * len(radar_mlts))
 
-    lat_extreme = hemisphere.value * 60
-    if hemisphere.value == 1:
-        projection = ccrs.NorthPolarStereo()
-    elif hemisphere.value == -1:
-        projection = ccrs.SouthPolarStereo()
-    else:
-        raise Exception("hemisphere not recognized")
+    # Regardless of hemisphere, we will always use the North Pole projection because it gives us a stereo projection
+    # with the zero degree line at the bottom of the plot and East is CCW (this is what we need for a clock diagram).
+    projection = ccrs.NorthPolarStereo()
+
+    # Since we are using the North Pole projection we need all latitudes to be positive
+    df['lat'] = df['lat'].abs()
 
     print("     Preparing the plot...")
-    fig, ax = plt.subplots(figsize=[10, 6], dpi=300, nrows=1, ncols=2, subplot_kw={'projection': projection})
-    # plt.subplots_adjust(left=0, right=1, bottom=0, top=0.85)
-    fig.suptitle(month_string + " " + str(year) + " at " + station.upper() +
-                 "; Beams " + str(beam_range[0]) + "-" + str(beam_range[1]) +
-                 "; Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz", fontsize=18)
+    fig, ax = plt.subplots(figsize=[10, 6], dpi=300, nrows=1, ncols=2,  constrained_layout=True,
+                           subplot_kw={'projection': projection})
+    fig.suptitle(month_string + " " + str(year) + " at " + station.upper() + "; " + beam_string + "; " + freq_string,
+                 fontsize=18)
 
     # Apply common subplot formatting
+    lat_extreme = 60
     for i in range(ax.size):
-        ax[i].set_extent([-180, 180, hemisphere.value * 90, lat_extreme], crs=ccrs.PlateCarree())
+        ax[i].set_extent([-180, 180, 90, lat_extreme], crs=ccrs.PlateCarree())
         ax[i].set_boundary(circle, transform=ax[i].transAxes)
 
         # Add gridlines   # Note: Labels wont draw on a circular axis
@@ -176,30 +175,6 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     ax[0].text(ax[0].get_xlim()[0], ax[0].get_ylim()[1], "IS", ha='left', va='top')
     ax[1].text(ax[1].get_xlim()[0], ax[1].get_ylim()[1], "GS", ha='left', va='top')
 
-    # Right now xdata is in the range 0-24, we need to put it in the range 0-360 for circular plotting
-    df['xdata'] = 15 * df['xdata']
-
-    # TODO: Decide if this correctional rotation is required
-    # print("     Applying correctional rotation...")
-    # # The 0 degree aacgm line does not line up with the 0 degree geo line, so we need to rotate everything
-    # zero_degree_lons_aacgm = np.asarray([0] * len(df['lat']))
-    # heights = np.asarray([250] * len(df['lat']))  # TODO: Figure out what to do about heights
-    #
-    # # returns are lat_out, lon_out, r_out
-    # _, zero_degree_lons_geo, _ = convert_latlon_arr(in_lat=df['lat'], in_lon=zero_degree_lons_aacgm, height=heights,
-    #                                                 dtime=date_time_est, method_code="A2G")
-    #
-    # # And rotate, keeping everything in the 0-360 range
-    # for i in range(len(df)):
-    #     adjusted_xdata_point = df['xdata'].iat[i] - zero_degree_lons_geo[i]
-    #
-    #     if adjusted_xdata_point > 360:
-    #         adjusted_xdata_point = adjusted_xdata_point - 360
-    #     elif adjusted_xdata_point < 0:
-    #         adjusted_xdata_point = adjusted_xdata_point + 360
-    #
-    #     df['xdata'].iat[i] = adjusted_xdata_point
-
     print("     Computing binned occ rates...")
     # Compute mlt edges
     deg_mlt_per_bin = 2
@@ -208,11 +183,8 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     delta_mlt = mlt_edges[1] - mlt_edges[0]
 
     # Compute latitude edges
-    n_bins_lat = 90 - abs(lat_extreme)  # One bin per degree of latitude
-    if hemisphere.value == 1:
-        lat_edges = np.linspace(lat_extreme, 90, num=(n_bins_lat + 1))
-    else:
-        lat_edges = np.linspace(-90, lat_extreme, num=(n_bins_lat + 1))
+    n_bins_lat = 90 - lat_extreme  # One bin per degree of latitude
+    lat_edges = np.linspace(lat_extreme, 90, num=(n_bins_lat + 1))
     delta_lat = lat_edges[1] - lat_edges[0]
 
     contour_data_is = np.empty(shape=(n_bins_mlt, n_bins_lat))
@@ -292,7 +264,7 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "dce"
