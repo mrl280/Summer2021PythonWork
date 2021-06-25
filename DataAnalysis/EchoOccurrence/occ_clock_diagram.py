@@ -147,7 +147,7 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
                  fontsize=18)
 
     # Apply common subplot formatting
-    lat_extreme = 60
+    lat_extreme = 60  # TODO: Adjust lat extreme based on the radar (use the most extreme point in the fan)
     for i in range(ax.size):
         ax[i].set_extent([-180, 180, 90, lat_extreme], crs=ccrs.PlateCarree())
         ax[i].set_boundary(circle, transform=ax[i].transAxes)
