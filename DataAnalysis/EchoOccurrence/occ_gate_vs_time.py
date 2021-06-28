@@ -1,6 +1,8 @@
 import math
 import os
 import pathlib
+
+import pandas as pd
 import pydarn
 import calendar
 
@@ -19,7 +21,7 @@ from lib.data_getters.input_checkers import *
 
 def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range=None,
                      gate_range=None, beam_range=None, freq_range=None,
-                     time_units='mlt', plot_type='contour',
+                     season=None, time_units='mlt', plot_type='contour',
                      local_testing=False):
     """
 
@@ -38,8 +40,8 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
     :param year: int:
             The year to consider
-    :param month: int:
-            The month to consider
+    :param month_range: (<int>, <int>) (optional):
+            Inclusive. The month range to consider.  If omitted (or None), then all months will be considered.
     :param day_range: (<int>, <int>) (optional):
             Inclusive. The days of the month to consider.  If omitted (or None), then all days will be considered.
     :param hour_range: (<int>, <int>) (optional):
@@ -54,6 +56,9 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
     :param freq_range: (<float>, <float>) (optional):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
+    :param season: str (optional):
+            "Summer", "Spring", "Autumn", or "Winter"
+            If a season is not None, then month_range is ignored
     :param plot_type: str (optional): default is 'contour'.
             The type of plot, either 'contour' or 'pixel'.
     :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
@@ -67,28 +72,66 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
 
     time_units = check_time_units(time_units)
     year = check_year(year)
-    month_range = check_month_range(month_range)
+
     hour_range = check_hour_range(hour_range)
 
     all_radars_info = SuperDARNRadars()
     this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
     radar_id = this_radars_info.hardware_info.stid
+    hemisphere = this_radars_info.hemisphere
 
     gate_range = check_gate_range(gate_range, this_radars_info.hardware_info)
     beam_range = check_beam_range(beam_range, this_radars_info.hardware_info)
 
+    winter = False
+    if season is not None:
+        season = season.lower()
+        # Then, as advertised, the season will override the provided month range
+        if (hemisphere.value == 1 and season == "spring") or (hemisphere.value == -1 and season == "autumn"):
+            month_range = (3, 5)
+            mid_month = 4
+        elif (hemisphere.value == 1 and season == "summer") or (hemisphere.value == -1 and season == "winter"):
+            month_range = (6, 8)
+            mid_month = 7
+        elif (hemisphere.value == 1 and season == "autumn") or (hemisphere.value == -1 and season == "spring"):
+            month_range = (9, 11)
+            mid_month = 10
+        elif (hemisphere.value == 1 and season == "winter") or (hemisphere.value == -1 and season == "summer"):
+            winter = True
+            mid_month = 1
+        else:
+            raise Exception("Season " + str(season) + " not recognized.")
+    else:
+        # Consider the provided month range
+        month_range = check_month_range(month_range)
+        mid_month = int(month_range[0] + (month_range[1] - month_range[0]) / 2)
+
     print("Retrieving data...")
-    df = get_data_handler(station, year_range=(year, year), month_range=month_range, hour_range=hour_range,
-                          day_range=day_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
-                          occ_data=True, local_testing=local_testing)
+    if winter:
+        # We need Dec, Jan, Feb
+        df1 = get_data_handler(station, year_range=(year, year), month_range=(1, 2), hour_range=hour_range,
+                               day_range=day_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+                               occ_data=True, local_testing=local_testing)
+        # Get Dec data separately in df2
+        df2 = get_data_handler(station, year_range=(year, year), month_range=(12, 22), hour_range=hour_range,
+                               day_range=day_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+                               occ_data=True, local_testing=local_testing)
+        df = pd.concat([df1, df2])
+
+    else:
+        # We can go ahead and get data normally
+        print("Using month range: " + str(month_range))
+        df = get_data_handler(station, year_range=(year, year), month_range=month_range, hour_range=hour_range,
+                              day_range=day_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+                              occ_data=True, local_testing=local_testing)
     df = only_keep_45km_res_data(df)
 
     # Get our raw x-data
     if time_units == "mlt":
         print("Computing MLTs for " + str(year) + " data...")
 
-        # To compute mlt we need longitudes.. use the middle of the month as magnetic field estimate
-        date_time_est, _ = build_datetime_epoch(year, month, 15, 0)
+        # To compute mlt we need longitudes.. use the middle of the middle month for the magnetic field estimate
+        date_time_est, _ = build_datetime_epoch(year, mid_month, 15, 0)
         cell_corners_aacgm_lats, cell_corners_aacgm_lons = \
             radar_fov(stid=radar_id, coords='aacgm', date=date_time_est)
 
@@ -111,16 +154,19 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
     df.reset_index(drop=True, inplace=True)
 
     print("Preparing the plot...")
-    if month_range[1] == month_range[0]:
-        month_string = calendar.month_name[month_range[0]]
+    if season is not None:
+        month_string = season.capitalize()
     else:
-        month_string = calendar.month_name[month_range[0]] + " to " + calendar.month_name[month_range[1]]
+        # We want to state the month range
+        if month_range[1] == month_range[0]:
+            month_string = calendar.month_name[month_range[0]]
+        else:
+            month_string = calendar.month_name[month_range[0]] + " to " + calendar.month_name[month_range[1]]
     beam_string = "Beams " + str(beam_range[0]) + "-" + str(beam_range[1])
     freq_string = "Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz"
 
     # Setup the plot
     fig, ax = plt.subplots(figsize=[10, 8], dpi=300, nrows=2, ncols=1, constrained_layout=True)
-    # plt.subplots_adjust(hspace=0.3, left=0.1, right=1)
     fig.suptitle(month_string + " " + str(year) + " at " + station.upper() + "; " + beam_string + "; " + freq_string +
                  "\nProduced by " + str(os.path.basename(__file__)), fontsize=18)
 
@@ -222,7 +268,7 @@ if __name__ == '__main__':
         # Note: year, month, and day don't matter for local testing
         df, fig = occ_gate_vs_time(station=station, year=2011, month_range=None, day_range=(12, 12), hour_range=None,
                                    gate_range=(0, 74), beam_range=None, freq_range=(11, 13),
-                                   time_units='ut', plot_type='contour',
+                                   season="Winter", time_units='ut', plot_type='contour',
                                    local_testing=local_testing)
 
         plt.show()
@@ -231,21 +277,21 @@ if __name__ == '__main__':
     else:
         station = "dcn"
         freq_range = (8, 10)
+        seasons = ["Spring", "Summer", "Autumn", "Winter"]
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
         for year in range(2019, 2022, 1):
-            for month in range(1, 13, 1):
+            for season in seasons:
 
-                _, fig = occ_gate_vs_time(station=station, year=year, month_range=(month, month), day_range=None,
+                _, fig = occ_gate_vs_time(station=station, year=year, day_range=None,
                                           gate_range=(0, 74), beam_range=(6, 8), freq_range=freq_range,
-                                          time_units='ut', plot_type='pixel',
+                                          season=season, time_units='ut', plot_type='pixel',
                                           local_testing=local_testing)
 
-                out_fig = out_dir + "/occ_gateVtime_" + station + "-" + str(year) + "-" + str(month) + "_" + \
+                out_fig = out_dir + "/occ_gateVtime_" + station + "-" + str(year) + "-" + season + "_" + \
                           str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
 
                 print("Saving plot as " + out_fig)
                 fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
-
