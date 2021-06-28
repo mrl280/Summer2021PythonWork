@@ -156,7 +156,7 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                 (df['tfreq'] >= freq_range[0] * 1000) & (df['tfreq'] <= freq_range[1] * 1000)]
 
     # Until I have an application that requires bad quality points, I will assume they always need to be filtered out
-    df = df.loc[(df['qflg'] == 1)]
+    df = df.loc[(df['qflg'] == 1) & (df['p_l'] >= 3)]
 
     df.drop(columns=['qflg'], inplace=True)
     df.reset_index(drop=True, inplace=True)
