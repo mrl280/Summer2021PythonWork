@@ -1,4 +1,5 @@
 import math
+import os
 import pathlib
 import pydarn
 import calendar
@@ -16,15 +17,15 @@ from lib.build_datetime_epoch import build_datetime_epoch
 from lib.data_getters.input_checkers import *
 
 
-def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
+def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range=None,
                      gate_range=None, beam_range=None, freq_range=None,
                      time_units='mlt', plot_type='contour',
                      local_testing=False):
     """
 
-    Produce a contour plot with gate on the y-axis and time along the x-axis.
+    Produce plots with gate on the y-axis and time along the x-axis.
     There are 2 subplots, one for ionospheric scatter and one for ground scatter
-    Plots echo occurrence rate
+    Plots echo occurrence rates
 
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
@@ -66,7 +67,7 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
 
     time_units = check_time_units(time_units)
     year = check_year(year)
-    month = check_month(month)
+    month_range = check_month_range(month_range)
     hour_range = check_hour_range(hour_range)
 
     all_radars_info = SuperDARNRadars()
@@ -77,7 +78,7 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
     beam_range = check_beam_range(beam_range, this_radars_info.hardware_info)
 
     print("Retrieving data...")
-    df = get_data_handler(station, year_range=(year, year), month_range=(month, month), hour_range=hour_range,
+    df = get_data_handler(station, year_range=(year, year), month_range=month_range, hour_range=hour_range,
                           day_range=day_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
                           occ_data=True, local_testing=local_testing)
     df = only_keep_45km_res_data(df)
@@ -101,15 +102,8 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
 
         ut_time = []
         for i in range(len(df)):
-            ut_time_here = df['datetime'].iat[i].hour + df['datetime'].iat[i].minute / 60 + \
-                           df['datetime'].iat[i].second / 3600
-
-            if ut_time_here > 24:
-                ut_time_here = ut_time_here - 24
-            elif ut_time_here < 0:
-                ut_time_here = ut_time_here + 24
-
-            ut_time.append(ut_time_here)
+            dtime_obj = df['datetime'].iat[i]
+            ut_time.append(dtime_obj.hour + dtime_obj.minute / 60 + dtime_obj.second / 3600)
 
         df['xdata'] = np.asarray(ut_time)
 
@@ -117,13 +111,19 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
     df.reset_index(drop=True, inplace=True)
 
     print("Preparing the plot...")
+    if month_range[1] == month_range[0]:
+        month_string = calendar.month_name[month_range[0]]
+    else:
+        month_string = calendar.month_name[month_range[0]] + " to " + calendar.month_name[month_range[1]]
+    beam_string = "Beams " + str(beam_range[0]) + "-" + str(beam_range[1])
+    freq_string = "Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz"
 
     # Setup the plot
-    fig, ax = plt.subplots(figsize=[10, 8], dpi=300, nrows=2, ncols=1)
-    plt.subplots_adjust(hspace=0.3, left=0.1, right=1)
-    fig.suptitle(calendar.month_name[month] + " " + str(year) + " at " + station.upper() +
-                 "; Beams " + str(beam_range[0]) + "-" + str(beam_range[1]) +
-                 "; Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz", fontsize=18)
+    fig, ax = plt.subplots(figsize=[10, 8], dpi=300, nrows=2, ncols=1, constrained_layout=True)
+    # plt.subplots_adjust(hspace=0.3, left=0.1, right=1)
+    fig.suptitle(month_string + " " + str(year) + " at " + station.upper() + "; " + beam_string + "; " + freq_string +
+                 "\nProduced by " + str(os.path.basename(__file__)), fontsize=18)
+
     ax[0].set_title("Ionospheric Scatter", fontsize=16)
     ax[1].set_title("Ground Scatter", fontsize=16)
 
@@ -139,13 +139,14 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
         ax[i].set_xlabel("Time, " + time_units.upper(), fontsize=16)
 
     # Compute hour_edges
-    bins_per_hour = 4
-    n_bins_x = (hour_range[1] - hour_range[0]) * bins_per_hour  # quarter hour bins
+    bins_per_hour = 4  # quarter hour bins
+    n_bins_x = int((hour_range[1] - hour_range[0]) * bins_per_hour)
     delta_hour = (hour_range[1] - hour_range[0]) / n_bins_x
     hour_edges = np.linspace(hour_range[0], hour_range[1], num=(n_bins_x + 1))
 
     # Compute gate_edges
-    n_bins_y = ((gate_range[1] + 1) - gate_range[0])  # Single gate bins
+    bins_per_gate = 1  # Single gate bins
+    n_bins_y = int(((gate_range[1] + 1) - gate_range[0]) * bins_per_gate)
     gate_edges = np.linspace(gate_range[0], gate_range[1] + 1, num=(n_bins_y + 1), dtype=int)
 
     print("Computing binned occ rates...")
@@ -213,13 +214,13 @@ def occ_gate_vs_time(station, year, month, day_range=None, hour_range=None,
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "rkn"
 
         # Note: year, month, and day don't matter for local testing
-        df, fig = occ_gate_vs_time(station=station, year=2011, month=11, day_range=(12, 12),
+        df, fig = occ_gate_vs_time(station=station, year=2011, month_range=None, day_range=(12, 12), hour_range=None,
                                    gate_range=(0, 74), beam_range=None, freq_range=(11, 13),
                                    time_units='ut', plot_type='contour',
                                    local_testing=local_testing)
@@ -229,22 +230,15 @@ if __name__ == '__main__':
 
     else:
         station = "dcn"
-        datetime_now = datetime.datetime.now()
+        freq_range = (8, 10)
+
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
         for year in range(2019, 2022, 1):
             for month in range(1, 13, 1):
-                if year == 2019 and month == 1:
-                    # There is no data for January 2019
-                    continue
-                if year >= datetime_now.year and month > datetime_now.month:
-                    # No data here yet
-                    continue
 
-                # We will break it up into 2 frequency ranges
-                freq_range = (8, 10)
-                _, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None,
+                _, fig = occ_gate_vs_time(station=station, year=year, month_range=(month, month), day_range=None,
                                           gate_range=(0, 74), beam_range=(6, 8), freq_range=freq_range,
                                           time_units='ut', plot_type='pixel',
                                           local_testing=local_testing)
@@ -255,15 +249,3 @@ if __name__ == '__main__':
                 print("Saving plot as " + out_fig)
                 fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
 
-                # Turns out there isn't much outside of the 8 to 10 MHz frequency range
-                # freq_range = (10, 12)
-                # _, fig = occ_gate_vs_time(station=station, year=year, month=month, day_range=None,
-                #                            gate_range=(0, 74), beam_range=(6, 8), freq_range=freq_range,
-                #                            time_units='ut', plot_type='pixel',
-                #                            local_testing=local_testing)
-                #
-                # out_fig = out_dir + "/occ_gateVtime_" + station + "-" + str(year) + "-" + str(month) + "_" + \
-                #           str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
-                #
-                # print("Saving plot as " + out_fig)
-                # fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
