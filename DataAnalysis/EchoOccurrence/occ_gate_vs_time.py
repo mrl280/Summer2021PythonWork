@@ -260,7 +260,7 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
