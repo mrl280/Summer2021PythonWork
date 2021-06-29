@@ -21,7 +21,7 @@ from lib.data_getters.input_checkers import *
 
 
 def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, beam_range=None,
-                                freq_range=None, plot_type='contour', local_testing=False):
+                                freq_range=None, plot_type='pixel', local_testing=False):
     """
 
     Produce a full years worth of full circle stereographic occurrence plots.
@@ -124,8 +124,8 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
     for month_str in month_axes:
         print("     Computing occurrence data for " + month_str)
 
-        datetime_object = datetime.datetime.strptime(month_str, "%B")
-        month = datetime_object.month
+        month_datetime_object = datetime.datetime.strptime(month_str, "%B")
+        month = month_datetime_object.month
 
         df_mm = df[df['month'] == month]
         ax = month_axes[month_str]
@@ -450,7 +450,7 @@ if __name__ == '__main__':
 
     else:
         station = "dcn"
-        freq_range = (9.5, 12.5)
+        freq_range = (8, 10)
         plot_type = 'pixel'
 
         loc_root = str((pathlib.Path().parent.absolute()))
