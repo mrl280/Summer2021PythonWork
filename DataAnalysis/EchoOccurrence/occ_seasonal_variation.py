@@ -23,6 +23,8 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
 
     Produces an occurrence rate versus year plot that is meant to showcase the seasonal variation in echo occurrence.
 
+    # TODO: Add support for local time: https://www.geeksforgeeks.org/get-time-zone-of-a-given-location-using-python/
+
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
             occurrence investigations often require chewing large amounts of data.
@@ -48,8 +50,12 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
     :param freq_range: (<float>, <float>) (optional):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
-    :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
-            The provided hour_range is assumed to be in these time units.
+    :param time_units: str:
+            The provided hour_range is assumed to be in these time units.  Default is 'mlt'.
+                'ut' for universal time
+                'mlt' for magnetic local time
+                'lt' for local time (based on longitude)
+                'lst' for local standard time (based on time zones).
     :param local_testing: bool (optional): default is False.
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
 
@@ -59,6 +65,13 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
     """
 
     time_units = check_time_units(time_units)
+    # TODO: Add compatibility with other time units, if it makes sense
+    if time_units != 'mlt' and time_units != 'ut':
+        warnings.warn("Currently this program only works with 'mlt' or 'ut' time units.  "
+                      "Time units have defaulted to mlt", category=Warning)
+        time_units = 'mlt'
+
+
     year_range = check_year_range(year_range)
     hour_range = check_hour_range(hour_range)
     freq_range = check_freq_range(freq_range)
@@ -204,7 +217,7 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "rkn"

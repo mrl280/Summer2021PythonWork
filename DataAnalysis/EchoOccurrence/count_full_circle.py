@@ -19,7 +19,7 @@ from lib.z_min_max_defaults import z_min_max_defaults
 from lib.data_getters.input_checkers import check_year
 
 
-def occ_full_circle(station, year, time_units='mlt', month_range=None, day_range=None, hour_range=None, gate_range=None, beam_range=None,
+def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=None, gate_range=None, beam_range=None,
                     local_testing=False, parameter=None, plot_ground_scat=False):
     """
     TODO: Note: this function is not complete
@@ -46,8 +46,6 @@ def occ_full_circle(station, year, time_units='mlt', month_range=None, day_range
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
     :param year: int:
             The year to consider.
-    :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
-            The time units to plot on the circle, 12 is always at the top.  Default is 'mlt'
     :param month_range: (<int>, <int>) (optional):
             Inclusive. The months of the year to consider.  If omitted (or None), then all days will be considered.
     :param day_range: (<int>, <int>) (optional):

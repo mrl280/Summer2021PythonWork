@@ -49,8 +49,12 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
     :param freq_range: (<float>, <float>) (optional):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
-    :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
-            The time units to plot along x.
+    :param time_units: str:
+            The time units to plot along x.  Default is 'mlt'.
+                'ut' for universal time
+                'mlt' for magnetic local time
+                'lt' for local time (based on longitude)
+                'lst' for local standard time (based on time zones).
     :param local_testing: bool (optional): default is False.
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
 
@@ -62,6 +66,12 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
     month_offset = 3
 
     time_units = check_time_units(time_units)
+    # TODO: Add compatibility with other time units, if it makes sense
+    if time_units != 'mlt' and time_units != 'ut':
+        warnings.warn("Currently this program only works with 'mlt' or 'ut' time units.  "
+                      "Time units have defaulted to mlt", category=Warning)
+        time_units = 'mlt'
+
     year = check_year(year)
     hour_range = check_hour_range(hour_range)
 

@@ -61,7 +61,8 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
     analyzed, and the figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
-    time_units = "mlt"  # TODO: Not sure if it makes sense to give other time unit options
+    time_units = "mlt"  # TODO: Add compatibility with other time units, if it makes sense
+
     year = check_year(year)
     freq_range = check_freq_range(freq_range)
 

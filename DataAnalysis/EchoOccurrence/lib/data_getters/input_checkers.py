@@ -202,8 +202,12 @@ def check_freq_range(freq_range):
 
 def check_time_units(time_units):
     """
-    :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time
-    :return: str: suitable time units
+    :param time_units: str:
+        'ut' for universal time
+        'mlt' for magnetic local time
+        'lt' for local time (based on longitude)
+        'lst' for local standard time (based on time zones).
+    :return: str: suitable time units, default is 'ut'
     """
 
     if time_units is None:
@@ -212,10 +216,18 @@ def check_time_units(time_units):
                       category=Warning)
 
     time_units = time_units.lower()
-    if time_units != "mlt" and time_units != "ut":
-        warnings.warn("The provided time units were neither 'mlt' or 'ut', they have defaulted to mlt.",
+    if time_units != "mlt" and time_units != "ut" and time_units != "lt" and time_units != "lst":
+        warnings.warn("The provided time units were neither 'mlt', 'ut', 'lst', or 'lt', they have defaulted to 'ut'.",
                       category=Warning)
-        time_units = "mlt"
+        time_units = "ut"
+
+    if time_units == 'lt':
+        warnings.warn("Note: Local time ('lt') time is based on longitude (not time zones)).  "
+                      "All places on the same longitude have the same local time.", category=Warning)
+
+    if time_units == 'lst':
+        warnings.warn("Note: Local standard time ('lst') is based on time zone (not longitude).  "
+                      "Places on the same longitude might have different standard times).", category=Warning)
 
     return time_units
 

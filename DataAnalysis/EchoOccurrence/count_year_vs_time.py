@@ -17,8 +17,8 @@ from lib.build_datetime_epoch import build_datetime_epoch
 from lib.data_getters.input_checkers import *
 
 
-def occ_year_vs_ut(station, year_range, month_range=None, time_units='mlt', hour_range=None,
-                   gate_range=None, beam_range=None, parameter=None, local_testing=False):
+def occ_year_vs_time(station, year_range, month_range=None, time_units='mlt', hour_range=None,
+                     gate_range=None, beam_range=None, parameter=None, local_testing=False):
     """
 
     Produce a contour plot with year on the y-axis and time along the x-axis.
@@ -38,8 +38,12 @@ def occ_year_vs_ut(station, year_range, month_range=None, time_units='mlt', hour
             Inclusive. The year range to consider.
     :param month_range: (<int>, <int>) (optional):
             Inclusive. The months of the year to consider.  If omitted (or None), then all days will be considered.
-    :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
-            The time units to plot along x.  Default is 'mlt'
+    :param time_units: str:
+            The time units to plot along x.  Default is 'mlt'.
+                'ut' for universal time
+                'mlt' for magnetic local time
+                'lt' for local time (based on longitude)
+                'lst' for local standard time (based on time zones).
     :param hour_range: (<int>, <int>) (optional):
             The hour range to consider.  If omitted (or None), then all hours will be considered.
             Not quite inclusive: if you pass in (0, 5) you will get from 0:00-4:59 UT
@@ -57,6 +61,13 @@ def occ_year_vs_ut(station, year_range, month_range=None, time_units='mlt', hour
     :return: matplotlib.pyplot.figure
             The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
+
+    if time_units is not None:
+        # TODO: Add compatibility with other time units
+        if time_units == 'lt' or time_units == 'lst':
+            warnings.warn("Time units " + str(time_units) + " not supported, time units have defaulted to 'ut'",
+                          category=Warning)
+            time_units = 'ut'
 
     time_units = check_time_units(time_units)
     hour_range = check_hour_range(hour_range)
@@ -179,9 +190,9 @@ if __name__ == '__main__':
     local_testing = True
 
     station = "rkn"
-    fig = occ_year_vs_ut(station=station, time_units='mlt', year_range=(2011, 2012), month_range=(1, 12),
-                         gate_range=(30, 74), beam_range=(7, 7),
-                         parameter='v', local_testing=local_testing)
+    fig = occ_year_vs_time(station=station, time_units='mlt', year_range=(2011, 2012), month_range=(1, 12),
+                           gate_range=(30, 74), beam_range=(7, 7),
+                           parameter='v', local_testing=local_testing)
 
     if local_testing:
         a = 1

@@ -56,9 +56,12 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     :param freq_range: (<float>, <float>) (optional):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
-    :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
-            The time units to plot on the circle, 12 is always at the top.  Default is 'mlt'
-            # TODO: Not sure if this type of plot makes sense for UT time?
+    :param time_units: str:  # TODO: Not sure if this type of plot makes sense for time units other than mlt?
+            The time units to plot on the circle, 12 is always at the top.  Default is 'mlt'.
+                'ut' for universal time
+                'mlt' for magnetic local time
+                'lt' for local time (based on longitude)
+                'lst' for local standard time (based on time zones).
     :param plot_type: str (optional):
             The type of plot, either 'contour' or 'pixel', default is 'contour'
     :param local_testing: bool (optional):
@@ -68,6 +71,12 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     """
 
     time_units = check_time_units(time_units)
+    # TODO: Add compatibility with other time units, if it makes sense
+    if time_units != 'mlt' and time_units != 'ut':
+        warnings.warn("Currently this program only works with 'mlt' or 'ut' time units.  "
+                      "Time units have defaulted to mlt", category=Warning)
+        time_units = 'mlt'
+
     year = check_year(year)
     month_range = check_month_range(month_range)
     freq_range = check_freq_range(freq_range)

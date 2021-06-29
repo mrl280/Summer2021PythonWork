@@ -61,8 +61,12 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
             If a season is not None, then month_range is ignored
     :param plot_type: str (optional): default is 'contour'.
             The type of plot, either 'contour' or 'pixel'.
-    :param time_units: str: 'ut' for universal time or 'mlt' for magnetic local time:
-            The time units to plot along x.
+    :param time_units: str:
+            The time units to plot along x.  Default is 'mlt'.
+                'ut' for universal time
+                'mlt' for magnetic local time
+                'lt' for local time (based on longitude)
+                'lst' for local standard time (based on time zones).
     :param local_testing: bool (optional): default is False.
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
     :return: pandas.DataFrame, matplotlib.pyplot.figure
@@ -71,8 +75,13 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
     """
 
     time_units = check_time_units(time_units)
-    year = check_year(year)
+    # TODO: Add compatibility with other time units, if it makes sense
+    if time_units != 'mlt' and time_units != 'ut':
+        warnings.warn("Currently this program only works with 'mlt' or 'ut' time units.  "
+                      "Time units have defaulted to mlt", category=Warning)
+        time_units = 'mlt'
 
+    year = check_year(year)
     hour_range = check_hour_range(hour_range)
 
     all_radars_info = SuperDARNRadars()
