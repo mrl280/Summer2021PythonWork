@@ -59,7 +59,20 @@ def get_local_dummy_data(station, year, month, day, start_hour_UT, end_hour_UT, 
         in_file = in_dir + "/" + station + str(year) + month + day + "_occ.pkl"
     else:
         in_file = in_dir + "/" + station + str(year) + month + day + ".pkl"
-    df = pd.read_pickle(in_file)
+
+    try:
+        df = pd.read_pickle(in_file)
+    except FileNotFoundError as e:
+        # We might be calling from one level down, recompute the path and try again
+        loc_root = str((((pathlib.Path().parent.absolute()).parent.absolute()).absolute()).parent.absolute())
+        in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + str(year) + month + day
+
+        if occ_data:
+            in_file = in_dir + "/" + station + str(year) + month + day + "_occ.pkl"
+        else:
+            in_file = in_dir + "/" + station + str(year) + month + day + ".pkl"
+
+        df = pd.read_pickle(in_file)
 
     test_start_datetime, test_start_epoch = build_date_epoch(year, int(month), int(day), start_hour_UT)
     test_end_datetime, test_end_epoch = build_date_epoch(year, int(month), int(day), end_hour_UT)
