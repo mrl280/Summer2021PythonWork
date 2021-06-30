@@ -11,6 +11,8 @@ import cartopy.feature as cfeature
 from matplotlib import pyplot as plt
 from pydarn import SuperDARNRadars, radar_fov
 
+from lib.add_decimal_hour_to_df import add_decimal_hour_to_df
+from lib.build_datetime_epoch import build_datetime_epoch
 from lib.data_getters.input_checkers import *
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
@@ -19,7 +21,8 @@ from lib.cm.modified_viridis import modified_viridis
 
 
 def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=None,
-            gate_range=None, beam_range=None, freq_range=None, echo_type='is', parameter=None,
+            gate_range=None, beam_range=None, freq_range=None,
+            time_units='ut', echo_type='is', parameter=None,
             local_testing=False):
     """
 
@@ -55,6 +58,12 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     :param freq_range: (<float>, <float>) (optional):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
+    :param time_units: str:
+            The time units of the provided hour range.  Default is 'ut'.
+                'ut' for universal time
+                'mlt' for magnetic local time
+                'lt' for local time (based on longitude)
+                'lst' for local standard time (based on time zones).
     :param echo_type: str (optional): Default is 'is' (ionospheric scatter)
             The type of echo to consider.  Either ionospheric scatter 'is' or ground scatter 'gs'.
     :param local_testing: bool (optional):
@@ -68,10 +77,11 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     """
 
     echo_type = check_echo_type(echo_type)
+    hour_range = check_hour_range(hour_range)
 
     print("Retrieving data...")
     df = get_data_handler(station, year_range=year_range, month_range=month_range, day_range=day_range,
-                          hour_range=hour_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+                          gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
                           local_testing=local_testing)
 
     print("Getting some hardware info...")
@@ -85,8 +95,14 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
     gate_range = check_gate_range(gate_range, this_radars_info.hardware_info)
     beam_range = check_beam_range(beam_range, this_radars_info.hardware_info)
 
+    # Add decimal hour to df in whatever units were requested
+    # Use the middle of the mid year as magnetic field estimate
+    mid_year = int(year_range[0] + (year_range[1] - year_range[0]) / 2)
+    date_time_est, _ = build_datetime_epoch(year=mid_year, month=6, day=15, hour=0)
+    df = add_decimal_hour_to_df(df=df, time_units=time_units, stid=radar_id, date_time_est=date_time_est)
+
     print("Filtering data...")
-    df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
+    df = df.loc[(df[time_units] >= hour_range[0]) & (df[time_units] <= hour_range[1])]
     if echo_type == 'is' and parameter is not None:
         # Then we are plotting a parameter, like v or p_l
         zmin, zmax = z_min_max_defaults(parameter)

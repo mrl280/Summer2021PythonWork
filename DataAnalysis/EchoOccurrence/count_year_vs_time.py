@@ -5,10 +5,10 @@ import numpy as np
 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from pydarn import radar_fov, SuperDARNRadars
+from pydarn import SuperDARNRadars
 from scipy import stats
 
-from lib.add_mlt_to_df import add_mlt_to_df
+from lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.cm.modified_viridis import modified_viridis
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
@@ -62,27 +62,25 @@ def occ_year_vs_time(station, year_range, month_range=None, time_units='mlt', ho
             The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
-    if time_units is not None:
-        # TODO: Add compatibility with other time units
-        if time_units == 'lt' or time_units == 'lst':
-            warnings.warn("Time units " + str(time_units) + " not supported, time units have defaulted to 'ut'",
-                          category=Warning)
-            time_units = 'ut'
-
     time_units = check_time_units(time_units)
     hour_range = check_hour_range(hour_range)
 
     print("Retrieving data...")
     df = get_data_handler(station, year_range=year_range, month_range=month_range, day_range=(1, 31),
-                          hour_range=hour_range, gate_range=gate_range, beam_range=beam_range,
-                          local_testing=local_testing)
+                          gate_range=gate_range, beam_range=beam_range, local_testing=local_testing)
 
     all_radars_info = SuperDARNRadars()
     this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
     radar_id = this_radars_info.hardware_info.stid
 
+    # Add decimal hour to df in whatever units were requested
+    # Use the middle of the mid year as magnetic field estimate
+    mid_year = int(year_range[0] + (year_range[1] - year_range[0]) / 2)
+    date_time_est, _ = build_datetime_epoch(year=mid_year, month=6, day=15, hour=0)
+    df = add_decimal_hour_to_df(df=df, time_units=time_units, stid=radar_id, date_time_est=date_time_est)
+
     print("Filtering data...")
-    df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
+    df = df.loc[(df[time_units] >= hour_range[0]) & (df[time_units] <= hour_range[1])]
     if parameter is not None:
         zmin, zmax = z_min_max_defaults(parameter)
         df = df.loc[(df[parameter] >= zmin) & (df[parameter] <= zmax)]
@@ -132,28 +130,13 @@ def occ_year_vs_time(station, year_range, month_range=None, time_units='mlt', ho
         df_yy = df.loc[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)].copy()
         df_yy.reset_index(drop=True, inplace=True)
 
-        df_yy['ut_time'] = df_yy['hour'] + df_yy['minute'] / 60 + df_yy['second'] / 3600
-
-        if time_units == "mlt":
-            print("Computing MLTs for " + str(year) + " data...")
-
-            # To compute mlt we need longitudes..
-            # we will use the middle of the year and assume magnetic longitudes don't change much over the year
-            mid_datetime = start_datetime + (end_datetime - start_datetime) / 2
-            cell_corners_aacgm_lats, cell_corners_aacgm_lons = \
-                radar_fov(stid=radar_id, coords='aacgm', date=mid_datetime)
-
-            df_yy = add_mlt_to_df(cell_corners_aacgm_lons=cell_corners_aacgm_lons,
-                                  cell_corners_aacgm_lats=cell_corners_aacgm_lats, df=df_yy)
-
-            df_yy['xdata'] = df_yy['mlt']
-        else:
-            df_yy['xdata'] = df_yy['ut_time']
+        df_yy['xdata'] = df_yy[time_units]
 
         df_yy = df_yy.loc[(df_yy['xdata'] >= hour_range[0]) & (df_yy['xdata'] <= hour_range[1])]
         df_yy.reset_index(drop=True, inplace=True)
 
         # Compute decimal datetime to plot along y
+        df_yy['ut_time'] = df_yy['hour'] + df_yy['minute'] / 60 + df_yy['second'] / 3600
         df_yy['ydata'] = (df_yy['month'] - 1) + (df_yy['day'] - 1) / 31 + df_yy['ut_time'] / 730
 
         if parameter is None:
