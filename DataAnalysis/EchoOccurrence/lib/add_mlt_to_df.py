@@ -47,9 +47,9 @@ def add_mlt_to_df(cell_corners_aacgm_lons, cell_corners_aacgm_lats, df):
     #  Loop through the dataframe, and build up aacgm_lons and dates
     for i in range(len(df)):
 
-        gate = df['slist'][i]
-        beam = df['bmnum'][i]
-        date = df['datetime'][i]
+        gate = df['slist'].iat[i]
+        beam = df['bmnum'].iat[i]
+        date = df['datetime'].iat[i]
 
         aacgm_lons.append(cell_centers_aacgm_lons[gate, beam])
         aacgm_lats.append(cell_centers_aacgm_lats[gate, beam])
