@@ -10,9 +10,9 @@ import numpy as np
 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from pydarn import radar_fov, SuperDARNRadars
+from pydarn import SuperDARNRadars
 
-from lib.add_mlt_to_df import add_mlt_to_df
+from lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.build_datetime_epoch import build_datetime_epoch
@@ -75,12 +75,6 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
     """
 
     time_units = check_time_units(time_units)
-    # TODO: Add compatibility with other time units, if it makes sense
-    if time_units != 'mlt' and time_units != 'ut':
-        warnings.warn("Currently this program only works with 'mlt' or 'ut' time units.  "
-                      "Time units have defaulted to mlt", category=Warning)
-        time_units = 'mlt'
-
     year = check_year(year)
     hour_range = check_hour_range(hour_range)
 
@@ -118,48 +112,28 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
     print("Retrieving data...")
     if winter:
         # We need Dec, Jan, Feb
-        df1 = get_data_handler(station, year_range=(year, year), month_range=(1, 2), hour_range=hour_range,
-                               day_range=day_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+        df1 = get_data_handler(station, year_range=(year, year), month_range=(1, 2), day_range=day_range,
+                               gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
                                occ_data=True, local_testing=local_testing)
         # Get Dec data separately in df2
-        df2 = get_data_handler(station, year_range=(year, year), month_range=(12, 22), hour_range=hour_range,
-                               day_range=day_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+        df2 = get_data_handler(station, year_range=(year, year), month_range=(12, 22), day_range=day_range,
+                               gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
                                occ_data=True, local_testing=local_testing)
         df = pd.concat([df1, df2])
 
     else:
         # We can go ahead and get data normally
         print("Using month range: " + str(month_range))
-        df = get_data_handler(station, year_range=(year, year), month_range=month_range, hour_range=hour_range,
-                              day_range=day_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+        df = get_data_handler(station, year_range=(year, year), month_range=month_range, day_range=day_range,
+                              gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
                               occ_data=True, local_testing=local_testing)
     df = only_keep_45km_res_data(df)
 
-    # Get our raw x-data
-    if time_units == "mlt":
-        print("Computing MLTs for " + str(year) + " data...")
+    # Add decimal hour to df in whatever units were requested
+    date_time_est, _ = build_datetime_epoch(year=year, month=6, day=15, hour=0)
+    df = add_decimal_hour_to_df(df=df, time_units=time_units, stid=radar_id, date_time_est=date_time_est)
 
-        # To compute mlt we need longitudes.. use the middle of the middle month for the magnetic field estimate
-        date_time_est, _ = build_datetime_epoch(year, mid_month, 15, 0)
-        cell_corners_aacgm_lats, cell_corners_aacgm_lons = \
-            radar_fov(stid=radar_id, coords='aacgm', date=date_time_est)
-
-        df = add_mlt_to_df(cell_corners_aacgm_lons=cell_corners_aacgm_lons,
-                           cell_corners_aacgm_lats=cell_corners_aacgm_lats, df=df)
-
-        df['xdata'] = df['mlt']
-
-    else:
-        print("Computing UTs for " + str(year) + " data...")
-
-        ut_time = []
-        for i in range(len(df)):
-            dtime_obj = df['datetime'].iat[i]
-            ut_time.append(dtime_obj.hour + dtime_obj.minute / 60 + dtime_obj.second / 3600)
-
-        df['xdata'] = np.asarray(ut_time)
-
-    df = df.loc[(df['xdata'] >= hour_range[0]) & (df['xdata'] <= hour_range[1])]
+    df = df.loc[(df[time_units] >= hour_range[0]) & (df[time_units] <= hour_range[1])]
     df.reset_index(drop=True, inplace=True)
 
     print("Preparing the plot...")
@@ -215,7 +189,7 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
         if hour_start == hour_edges[-1]:
             continue  # The last edge is not a starting hour
         hour_end = hour_start + delta_hour
-        df_hh = df[(df['xdata'] >= hour_start) & (df['xdata'] <= hour_end)]
+        df_hh = df[(df[time_units] >= hour_start) & (df[time_units] <= hour_end)]
 
         for gate in gate_edges:
             if gate == gate_edges[-1]:
@@ -269,7 +243,7 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "rkn"
@@ -277,7 +251,7 @@ if __name__ == '__main__':
         # Note: year, month, and day don't matter for local testing
         df, fig = occ_gate_vs_time(station=station, year=2011, month_range=None, day_range=(12, 12), hour_range=None,
                                    gate_range=(0, 74), beam_range=None, freq_range=(11, 13),
-                                   season="Winter", time_units='ut', plot_type='contour',
+                                   season="Spring", time_units='ut', plot_type='contour',
                                    local_testing=local_testing)
 
         plt.show()
