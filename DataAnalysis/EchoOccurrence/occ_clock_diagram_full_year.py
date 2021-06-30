@@ -61,6 +61,8 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
     analyzed, and the figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
+    vmax = 0.5
+
     time_units = "mlt"  # TODO: Add compatibility with other time units, if it makes sense
 
     year = check_year(year)
@@ -131,7 +133,7 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
         df_mm = df[df['month'] == month]
         ax = month_axes[month_str]
 
-        add_data_to_plot(df=df_mm, ax=ax, mlt_edges=mlt_edges, lat_edges=lat_edges, plot_type=plot_type)
+        add_data_to_plot(df=df_mm, ax=ax, mlt_edges=mlt_edges, lat_edges=lat_edges, plot_type=plot_type, vmax=vmax)
 
     # Add the seasonal data to the plot
     for season in season_axes:
@@ -149,14 +151,14 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
         ax = season_axes[season]
 
         cbar_ref_plot, _ = add_data_to_plot(df=df_ss, ax=ax, mlt_edges=mlt_edges, lat_edges=lat_edges,
-                                            plot_type=plot_type)
+                                            plot_type=plot_type, vmax=vmax)
 
-    add_colour_bar(fig=fig, cax=cbar_axis, plot=cbar_ref_plot)
+    add_colour_bar(fig=fig, cax=cbar_axis, plot=cbar_ref_plot, vmax=vmax)
 
     return df, fig
 
 
-def add_data_to_plot(df, ax, mlt_edges, lat_edges, plot_type='pixel'):
+def add_data_to_plot(df, ax, mlt_edges, lat_edges, plot_type='pixel', vmax=1):
     """
     Add clock data to a stereographic plot
     :param df: pandas.DataFrame: The restricted dataframe containing the occurance data
@@ -206,21 +208,23 @@ def add_data_to_plot(df, ax, mlt_edges, lat_edges, plot_type='pixel'):
                 raise e
 
     is_plot, gs_plot = plot_data_on_axis(axes=ax, data_is=data_is, data_gs=data_gs,
-                                         mlt_edges=mlt_edges, lat_edges=lat_edges, plot_type=plot_type)
+                                         mlt_edges=mlt_edges, lat_edges=lat_edges, vmax=vmax, plot_type=plot_type)
 
     # All plots have the same scale, we just need to return one for the colour bar to reference
     return is_plot, gs_plot
 
 
-def plot_data_on_axis(axes, data_is, data_gs, mlt_edges, lat_edges, plot_type='pixel'):
+def plot_data_on_axis(axes, data_is, data_gs, mlt_edges, lat_edges, vmax, plot_type='pixel'):
     """
     Add the ionospheric and ground scatter data to the plots
+
     :param axes: dictionary of matplotlib.axes: The axes to draw on
     :param data_is: 2d array containing the ionospheric data
     :param data_gs: 2d array containing the ground scatter data
     :param mlt_edges: The MLT (x data) edges
     :param lat_edges: The LAT (y data) edges
     :param plot_type: str: The type of plot - either "pixel" (default) or "contour"
+     :param vmax: float: Maximum z value.  Default is 1.
     :return matplotlib.pyplot.plot, matplotlib.pyplot.plot: The ionospheric and ground scatter plots
     """
 
@@ -238,7 +242,7 @@ def plot_data_on_axis(axes, data_is, data_gs, mlt_edges, lat_edges, plot_type='p
         contour_data_gs_cyclic, bin_xcenters_cyclic = add_cyclic_point(data_gs.transpose(), coord=bin_xcenters)
 
         levels = 12
-        levels = np.linspace(start=0, stop=1, num=(levels + 1))
+        levels = np.linspace(start=0, stop=vmax, num=(levels + 1))
         cmap = "jet"
         # cmap = modified_jet(levels=len(levels) - 1)
 
@@ -251,9 +255,9 @@ def plot_data_on_axis(axes, data_is, data_gs, mlt_edges, lat_edges, plot_type='p
 
         cmap = 'jet'
         is_plot = axes["is"].pcolormesh(mlt_edges, lat_edges, data_is.transpose(),
-                                        transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=1)
+                                        transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=vmax)
         gs_plot = axes["gs"].pcolormesh(mlt_edges, lat_edges, data_gs.transpose(),
-                                        transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=1)
+                                        transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=vmax)
 
     else:
         raise Exception("plot_type not recognized")
@@ -261,11 +265,15 @@ def plot_data_on_axis(axes, data_is, data_gs, mlt_edges, lat_edges, plot_type='p
     return is_plot, gs_plot
 
 
-def add_colour_bar(fig, cax, plot):
+def add_colour_bar(fig, cax, plot, vmax):
     """
     Add a colour bar to the the provided fig/cax with reference to the provided plot
     """
-    cbar = fig.colorbar(plot, cax=cax, orientation="horizontal", format='%.1f')
+    if vmax < 1:
+        cbar = fig.colorbar(plot, cax=cax, orientation="horizontal", format='%.1f', extend='max')
+    else:
+        cbar = fig.colorbar(plot, cax=cax, orientation="horizontal", format='%.1f')
+
     cbar.ax.tick_params(labelsize=18)
 
 
