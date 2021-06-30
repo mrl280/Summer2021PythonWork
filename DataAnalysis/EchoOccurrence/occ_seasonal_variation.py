@@ -1,4 +1,5 @@
 import math
+import os
 import pathlib
 import pydarn
 
@@ -6,10 +7,10 @@ import numpy as np
 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from pydarn import radar_fov, SuperDARNRadars
+from pydarn import SuperDARNRadars
 import matplotlib.ticker as mticker
 
-from lib.add_mlt_to_df import add_mlt_to_df
+from lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.build_datetime_epoch import build_datetime_epoch
@@ -18,12 +19,10 @@ from lib.data_getters.input_checkers import *
 
 def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=None,
                            gate_range=None, beam_range=None, freq_range=None,
-                           time_units='mlt', local_testing=False):
+                           time_sector=None, time_units='lt', local_testing=False):
     """
 
     Produces an occurrence rate versus year plot that is meant to showcase the seasonal variation in echo occurrence.
-
-    # TODO: Add support for local time: https://www.geeksforgeeks.org/get-time-zone-of-a-given-location-using-python/
 
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
@@ -50,8 +49,13 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
     :param freq_range: (<float>, <float>) (optional):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
+    :param time_sector: str (optional):
+            Time sectors are used to automatically consider predefined hour ranges that are of common interest
+            "Day" (12 +/- 3 h), "Dusk" (18 +/- 3 h), "Night" (24 +/- 3 h), or "Dawn" (6 +/- 3 h)
+            Each time sector contains 6 hours of observations, time sectors do not overlap
+            If a time_sector is not None, then hour_range is ignored
     :param time_units: str:
-            The provided hour_range is assumed to be in these time units.  Default is 'mlt'.
+            The provided hour_range is assumed to be in these time units.  Default is 'lt'.
                 'ut' for universal time
                 'mlt' for magnetic local time
                 'lt' for local time (based on longitude)
@@ -65,15 +69,7 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
     """
 
     time_units = check_time_units(time_units)
-    # TODO: Add compatibility with other time units, if it makes sense
-    if time_units != 'mlt' and time_units != 'ut':
-        warnings.warn("Currently this program only works with 'mlt' or 'ut' time units.  "
-                      "Time units have defaulted to mlt", category=Warning)
-        time_units = 'mlt'
-
-
     year_range = check_year_range(year_range)
-    hour_range = check_hour_range(hour_range)
     freq_range = check_freq_range(freq_range)
 
     all_radars_info = SuperDARNRadars()
@@ -83,6 +79,24 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
     gate_range = check_gate_range(gate_range, this_radars_info.hardware_info)
     beam_range = check_beam_range(beam_range, this_radars_info.hardware_info)
 
+    night = False
+    if time_sector is not None:
+        # Then, as advertised, the time_sector will override the provided hour range
+        time_sector = time_sector.lower()
+        if time_sector == "day":  # From 9 AM to 3 PM
+            hour_range = (9, 15)
+        elif time_sector == "dusk":  # From 3 PM to 9 PM
+            hour_range = (16, 21)
+        elif time_sector == "night":  # From 9 PM to 3 AM (21 - 2)
+            night = True
+        elif time_sector == "dawn":  # From 3 AM to 9 AM
+            hour_range = (3, 9)
+        else:
+            raise Exception("Time sector " + str(time_sector) + " not recognized.")
+    else:
+        # Consider the provided hour range
+        hour_range = check_hour_range(hour_range)
+
     if year_range[1] == year_range[0]:
         year_string = str(year_range[0])
     else:
@@ -90,13 +104,32 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
     beam_string = "Beams " + str(beam_range[0]) + "-" + str(beam_range[1])
     gate_string = "Gates " + str(gate_range[0]) + "-" + str(gate_range[1])
     freq_string = "Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz"
-    hour_string = "Hours " + str(hour_range[0]) + "-" + str(hour_range[1]) + " " + time_units.upper()
+    if time_sector is not None:
+        hour_string = "Time Sector: " + time_sector.capitalize() + " (" + time_units.upper() + ")"
+    else:
+        hour_string = "Hours " + str(hour_range[0]) + "-" + str(hour_range[1]) + " " + time_units.upper()
 
     print("Retrieving data...")
-    df = get_data_handler(station, year_range=year_range, month_range=None, day_range=day_range, hour_range=hour_range,
-                          gate_range=gate_range, beam_range=beam_range, freq_range=freq_range, occ_data=True,
-                          local_testing=local_testing)
+    df = get_data_handler(station, year_range=year_range, month_range=None, day_range=day_range,
+                          gate_range=gate_range, beam_range=beam_range,
+                          freq_range=freq_range, occ_data=True, local_testing=local_testing)
     df = only_keep_45km_res_data(df)
+
+    # Add decimal hour to df in whatever units were requested
+    # Use the middle of the mid year as magnetic field estimate
+    mid_year = int(year_range[0] + (year_range[1] - year_range[0]) / 2)
+    date_time_est, _ = build_datetime_epoch(mid_year, 6, 15, 0)
+    df = add_decimal_hour_to_df(df=df, time_units=time_units, stid=radar_id, date_time_est=date_time_est)
+
+    # Restrict for valid hour ranges
+    if night:
+        # From 9 PM to 3 AM (21 - 3)
+        df = df.loc[(df[time_units] >= 21) | (df[time_units] <= 3)]
+    else:
+        # We can restrict based on hour range normally
+        df = df.loc[(df[time_units] >= hour_range[0]) & (df[time_units] <= hour_range[1])]
+
+    df.reset_index(drop=True, inplace=True)
 
     print("Preparing the figure...")
     y_lim = [0, 0.8]
@@ -119,9 +152,9 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
     ax.set_xlabel("Year", fontsize=14)
     ax.set_ylabel("Echo Occurrence Rate", fontsize=14)
 
-    fig.suptitle(year_string + " at " + station.upper() +
-                 "\n" + gate_string + "; " + beam_string +
-                 "\n" + freq_string + "; " + hour_string, fontsize=18)
+    fig.suptitle(year_string + " at " + station.upper() + "; " + gate_string + "; " + beam_string +
+                 "\n" + freq_string + "; " + hour_string +
+                 "\nProduced by " + str(os.path.basename(__file__)), fontsize=18)
 
     print("Computing UT decimal years/hours...")
     minutes_in_an_hour = 60
@@ -145,26 +178,6 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
 
     df['decimal_hour'] = np.asarray(decimal_hours)
     df['decimal_year'] = np.asarray(decimal_years)
-
-    if hour_range != (0, 24):
-        # Then we need to  restrict ourselves to within the desired hour_range
-        if time_units == "mlt":
-            print("Computing MLT for hour restriction...")
-
-            # To compute mlt we need longitudes.. use the middle of the year as magnetic field estimate
-            date_time_est, _ = build_datetime_epoch(year, 6, 15, 0)
-            cell_corners_aacgm_lats, cell_corners_aacgm_lons = radar_fov(stid=radar_id, coords='aacgm',
-                                                                         date=date_time_est)
-
-            df = add_mlt_to_df(cell_corners_aacgm_lons=cell_corners_aacgm_lons,
-                               cell_corners_aacgm_lats=cell_corners_aacgm_lats, df=df)
-
-            df = df.loc[(df['mlt'] >= hour_range[0]) & (df['mlt'] <= hour_range[1])]
-
-        else:
-            df = df.loc[(df['decimal_hour'] >= hour_range[0]) & (df['decimal_hour'] <= hour_range[1])]
-
-        df.reset_index(drop=True, inplace=True)
 
     # Compute year_edges
     bins_per_year = 180
@@ -202,8 +215,8 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
 
     if local_testing:
         # Plot as a point so we can see it even while testing with little data
-        ax.plot(bin_xcenters, occurrence_data_is, 'ro', label='IS')
-        ax.plot(bin_xcenters, occurrence_data_gs, 'bo', label='GS')
+        ax.plot(bin_xcenters, occurrence_data_is, 'bo', label='IS')
+        ax.plot(bin_xcenters, occurrence_data_gs, 'ro', label='GS')
     else:
         # Plot as a line
         ax.plot(bin_xcenters, occurrence_data_is, color="blue", linestyle='-', label='IS')
@@ -217,7 +230,7 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
@@ -225,7 +238,7 @@ if __name__ == '__main__':
         # Note: year, month, and day don't matter for local testing
         df, fig = occ_seasonal_variation(station=station, year_range=(2011, 2012), day_range=(12, 12),
                                          gate_range=(10, 30), beam_range=(6, 8), freq_range=(11, 13),
-                                         time_units='ut', local_testing=local_testing)
+                                         time_sector="night", time_units='lt', local_testing=local_testing)
 
         plt.show()
 
@@ -234,18 +247,22 @@ if __name__ == '__main__':
         station = "dcn"
         year_range = (2019, 2021)
         freq_range = (8, 10)
+        time_sectors = ["day", "dusk", "night", "dawn"]
+        time_units = "lt"
 
         datetime_now = datetime.datetime.now()
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        df, fig = occ_seasonal_variation(station=station, year_range=year_range, day_range=None,
-                                         gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
-                                         time_units='ut', local_testing=local_testing)
+        for time_sector in time_sectors:
+            _, fig = occ_seasonal_variation(station=station, year_range=year_range, day_range=None,
+                                            gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
+                                            time_sector=time_sector, time_units=time_units,
+                                            local_testing=local_testing)
 
-        out_fig = out_dir + "/occ_seasonalVariation_" + station + \
-                  "_" + str(year_range[0]) + "-" + str(year_range[1]) + \
-                  "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
+            out_fig = out_dir + "/occ_seasonalVariation_" + station + \
+                      "_" + str(year_range[0]) + "-" + str(year_range[1]) + \
+                      "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_" + time_sector + "_" + time_units
 
-        print("Saving plot as " + out_fig)
-        fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+            print("Saving plot as " + out_fig)
+            fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
