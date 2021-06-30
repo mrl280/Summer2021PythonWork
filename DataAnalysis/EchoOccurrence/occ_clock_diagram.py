@@ -110,7 +110,6 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
 
     if time_units != 'mlt':
         # We already have mlt, otherwise add the required time units
-        date_time_est, _ = build_datetime_epoch(year=year, month=6, day=15, hour=0)
         df = add_decimal_hour_to_df(df=df, time_units=time_units, stid=radar_id, date_time_est=date_time_est)
 
     # Right now xdata is in the range 0-24, we need to put it in the range 0-360 for circular plotting

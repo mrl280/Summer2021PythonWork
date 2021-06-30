@@ -12,6 +12,7 @@ import matplotlib.path as mpath
 import matplotlib.ticker as mticker
 import numpy as np
 
+from lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.cm.modified_jet import modified_jet
 from lib.add_mlt_to_df import add_mlt_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
@@ -21,7 +22,7 @@ from lib.data_getters.input_checkers import *
 
 
 def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, beam_range=None,
-                                freq_range=None, plot_type='pixel', local_testing=False):
+                                freq_range=None, time_units='mlt', plot_type='pixel', local_testing=False):
     """
 
     Produce a full years worth of full circle stereographic occurrence plots.
@@ -52,6 +53,12 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
     :param freq_range: (<float>, <float>) (optional):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
+    :param time_units: str:
+            The time units to plot on the circle, 12 is always at the top.  Default is 'mlt'.
+                'ut' for universal time
+                'mlt' for magnetic local time
+                'lt' for local time (based on longitude)
+                'lst' for local standard time (based on time zones).
     :param plot_type: str (optional):
             The type of plot, either 'contour' or 'pixel', default is 'contour'
     :param local_testing: bool (optional):
@@ -63,8 +70,7 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
 
     vmax = 0.5
 
-    time_units = "mlt"  # TODO: Add compatibility with other time units, if it makes sense
-
+    time_units = check_time_units(time_units)
     year = check_year(year)
     freq_range = check_freq_range(freq_range)
 
@@ -92,8 +98,12 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
     df = add_mlt_to_df(cell_corners_aacgm_lons=cell_corners_aacgm_lons, cell_corners_aacgm_lats=cell_corners_aacgm_lats,
                        df=df)
 
-    # Right now MLTs are in the range 0-24, we need to put it in the range 0-360 for circular plotting
-    df['mlt'] = 15 * df['mlt']
+    if time_units != 'mlt':
+        # We already have mlt, otherwise compute decimal time in the required time units
+        df = add_decimal_hour_to_df(df=df, time_units=time_units, stid=radar_id, date_time_est=date_time_est)
+
+    # Right now xdata is in the range 0-24, we need to put it in the range 0-360 for circular plotting
+    df['mlt'] = 15 * df[time_units]
 
     # Since we are using the North Pole projection we need all latitudes to be positive
     df['lat'] = df['lat'].abs()
@@ -452,7 +462,7 @@ if __name__ == '__main__':
 
         _, fig = occ_clock_diagram_full_year(station=station, year=2011, day_range=None,
                                              gate_range=(0, 74), beam_range=(6, 7), freq_range=None,
-                                             plot_type='pixel', local_testing=local_testing)
+                                             time_units='lt', plot_type='pixel', local_testing=local_testing)
 
         plt.show()
 
@@ -461,6 +471,7 @@ if __name__ == '__main__':
         station = "dcn"
         freq_range = (8, 10)
         plot_type = 'pixel'
+        time_units = 'lt'
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
@@ -468,9 +479,10 @@ if __name__ == '__main__':
         for year in range(2019, 2022, 1):
             _, fig = occ_clock_diagram_full_year(station=station, year=year, day_range=None,
                                                  gate_range=(0, 74), beam_range=None, freq_range=freq_range,
-                                                 plot_type=plot_type, local_testing=local_testing)
+                                                 time_units=time_units, plot_type=plot_type,
+                                                 local_testing=local_testing)
 
             out_fig = out_dir + "/occ_clock_diagram_full_year_" + station + "_" + str(year) + "_" + \
-                      str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz" + "_" + plot_type
+                      str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz" + "_" + plot_type + "_" + time_units
             print("Saving plot as " + out_fig)
             fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
