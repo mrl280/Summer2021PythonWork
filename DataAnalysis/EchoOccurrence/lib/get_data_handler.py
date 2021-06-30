@@ -7,8 +7,9 @@ from .data_getters.get_local_dummy_data import get_local_dummy_data
 from .data_getters.input_checkers import *
 
 
-def get_data_handler(station, year_range=None, month_range=None, day_range=None, hour_range=None,
-                     gate_range=None, beam_range=None, freq_range=None, occ_data=False, local_testing=False):
+def get_data_handler(station, year_range=None, month_range=None, day_range=None,
+                     gate_range=None, beam_range=None, freq_range=None, occ_data=False,
+                     local_testing=False):
     """
 
     Get the required data, put it into a dataframe, and then return the dataframe for plotting/analysis
@@ -22,9 +23,6 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
             Inclusive. The months of the year to consider.  If omitted (or None), then all days will be considered.
     :param day_range: (<int>, <int>) (optional):
             Inclusive. The days of the month to consider.  If omitted (or None), then all days will be considered.
-    :param hour_range: (<int>, <int>) (optional):
-            The hour range to consider.  If omitted (or None), then all hours will be considered.
-            Not inclusive: if you pass in (0, 5) you will get from 0:00-4:59 UT
     :param gate_range: (<int>, <int>) (optional):
             Inclusive. The gate range to consider.  If omitted (or None), then all the gates will be considered.
             Note that gates start at 0, so gates (0, 3) is 4 gates.
@@ -81,13 +79,12 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
         year_range = check_year_range(year_range)
         month_range = check_month_range(month_range)
         day_range = check_day_range(day_range)
-        hour_range = check_hour_range(hour_range)
 
         if occ_data:
             df = get_data_occ(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
                               gate_range=gate_range, beam_range=beam_range, freq_range=freq_range)
         else:
             df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
-                          hour_range=hour_range, gate_range=gate_range, beam_range=beam_range, freq_range=freq_range)
+                          gate_range=gate_range, beam_range=beam_range, freq_range=freq_range)
 
     return df

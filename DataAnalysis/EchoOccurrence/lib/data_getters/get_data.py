@@ -7,9 +7,10 @@ import time
 import calendar
 
 import pandas as pd
+import datetime as datetime
 
 
-def get_data(station, year_range, month_range, day_range, hour_range, gate_range, beam_range, freq_range):
+def get_data(station, year_range, month_range, day_range, gate_range, beam_range, freq_range):
     """
     Get all of the SuperDARN data within the desired range/time, put it into a dataframe,
     and then return the dataframe for plotting/analysis
@@ -26,9 +27,6 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
             Inclusive. The months of the year to consider.  If omitted (or None), then all days will be considered.
     :param day_range: (<int>, <int>) (optional):
             Inclusive. The days of the month to consider.  If omitted (or None), then all days will be considered.
-    :param hour_range: (<int>, <int>) (optional):
-            The hour range to consider.  If omitted (or None), then all hours will be considered.
-            Not inclusive: if you pass in (0, 5) you will get from 0:00-4:59 UT
     :param gate_range: (<int>, <int>) (optional):
             Inclusive. The gate range to consider.  If omitted (or None), then all the gates will be considered.
             Note that gates start at 0, so gates (0, 3) is 4 gates.
@@ -43,7 +41,6 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
 
     loc_root = "/data/fitacf_30"    # fitACF 3.0
     # loc_root = "/data/fitacf_25"  # fitACF 2.5
-    pattern = "%Y.%m.%d %H:%M:%S"
 
     # Create empty arrays for scalar parameters
     epoch, date_time = [], []
@@ -148,8 +145,7 @@ def get_data(station, year_range, month_range, day_range, hour_range, gate_range
                        })
 
     # Filter the data for the needed time, beam, gate, and freq ranges
-    df = df.loc[(df['datetime'].hour >= hour_range[0]) & (df['datetime'].hour < hour_range[1]) &
-                (df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
+    df = df.loc[(df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
                 (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1]) &
 
                 # Note: freq_range is in MHz while data in 'tfreq' is in kHz
@@ -188,7 +184,7 @@ def build_datetime_epoch_local(year, month, day, hour, minute, second):
 
 if __name__ == '__main__':
     """ Testing """
-    df = get_data("rkn", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1), hour_range=(0, 24),
-                  gate_range=(0, 99), beam_range=(0, 15))
+    df = get_data("rkn", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1),
+                  gate_range=(0, 99), beam_range=(0, 15), freq_range=(5, 25))
 
     print(df.head())
