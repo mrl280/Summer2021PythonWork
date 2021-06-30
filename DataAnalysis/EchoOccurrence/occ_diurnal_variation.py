@@ -271,6 +271,8 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
         ax.plot(bin_xcenters, occurrence_data_is, color="blue", linestyle='-', label='IS')
         ax.plot(bin_xcenters, occurrence_data_gs, color="red", linestyle='-', label='GS')
 
+        spring_axis.legend(loc='upper right')
+
     print("Returning the dataframe and figure...")
     return df, fig
 
