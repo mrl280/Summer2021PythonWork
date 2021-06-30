@@ -13,6 +13,7 @@ import matplotlib.path as mpath
 import matplotlib.ticker as mticker
 import numpy as np
 
+from lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.cm.modified_jet import modified_jet
 from lib.add_mlt_to_df import add_mlt_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
@@ -71,12 +72,6 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     """
 
     time_units = check_time_units(time_units)
-    # TODO: Add compatibility with other time units, if it makes sense
-    if time_units != 'mlt' and time_units != 'ut':
-        warnings.warn("Currently this program only works with 'mlt' or 'ut' time units.  "
-                      "Time units have defaulted to mlt", category=Warning)
-        time_units = 'mlt'
-
     year = check_year(year)
     month_range = check_month_range(month_range)
     freq_range = check_freq_range(freq_range)
@@ -113,23 +108,13 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     df = add_mlt_to_df(cell_corners_aacgm_lons=cell_corners_aacgm_lons, cell_corners_aacgm_lats=cell_corners_aacgm_lats,
                        df=df)
 
-    # Get our raw x-data
-    if time_units == "mlt":
-        df['xdata'] = df['mlt']
-
-    else:
-        print("     Computing UTs for " + str(year) + " data...")
-
-        ut_time = []
-        for i in range(len(df)):
-            datetime_obj = df['datetime'].iat[i]
-            ut_time_here = datetime_obj.hour + datetime_obj.minute / 60 + datetime_obj.second / 3600
-            ut_time.append(ut_time_here)
-
-        df['xdata'] = np.asarray(ut_time)
+    if time_units != 'mlt':
+        # We already have mlt, otherwise add the required time units
+        date_time_est, _ = build_datetime_epoch(year=year, month=6, day=15, hour=0)
+        df = add_decimal_hour_to_df(df=df, time_units=time_units, stid=radar_id, date_time_est=date_time_est)
 
     # Right now xdata is in the range 0-24, we need to put it in the range 0-360 for circular plotting
-    df['xdata'] = 15 * df['xdata']
+    df['xdata'] = 15 * df[time_units]
 
     # Compute a circle in axis coordinates which can be used as a boundary
     theta = np.linspace(0, 2 * np.pi, 100)
@@ -280,7 +265,7 @@ if __name__ == '__main__':
 
         _, fig = occ_clock_diagram(station=station, year=2011, month_range=(11, 11), day_range=None,
                                    gate_range=(0, 74), beam_range=(6, 7), freq_range=None,
-                                   plot_type='contour', time_units='mlt',
+                                   plot_type='contour', time_units='lt',
                                    local_testing=local_testing)
 
         plt.show()
