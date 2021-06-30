@@ -7,10 +7,10 @@ import numpy as np
 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from pydarn import radar_fov, SuperDARNRadars
+from pydarn import SuperDARNRadars
 import matplotlib.ticker as mticker
 
-from lib.add_mlt_to_df import add_mlt_to_df
+from lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
 from lib.build_datetime_epoch import build_datetime_epoch
@@ -66,12 +66,6 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
     month_offset = 3
 
     time_units = check_time_units(time_units)
-    # TODO: Add compatibility with other time units, if it makes sense
-    if time_units != 'mlt' and time_units != 'ut':
-        warnings.warn("Currently this program only works with 'mlt' or 'ut' time units.  "
-                      "Time units have defaulted to mlt", category=Warning)
-        time_units = 'mlt'
-
     year = check_year(year)
     hour_range = check_hour_range(hour_range)
 
@@ -195,32 +189,12 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
     df = get_data_handler(station, year_range=(year, year), month_range=None, day_range=day_range,
                           gate_range=gate_range, beam_range=beam_range, freq_range=freq_range, occ_data=True,
                           local_testing=local_testing)
-    df = only_keep_45km_res_data(df)
+    df = only_keep_45km_res_data(df=df)
 
-    # Get our raw x-data
-    if time_units == "mlt":
-        print("Computing MLTs...")
-
-        # To compute mlt we need longitudes.. use the middle of the year as magnetic field estimate
-        date_time_est, _ = build_datetime_epoch(year, 6, 15, 0)
-        cell_corners_aacgm_lats, cell_corners_aacgm_lons = radar_fov(stid=radar_id, coords='aacgm', date=date_time_est)
-
-        df = add_mlt_to_df(cell_corners_aacgm_lons=cell_corners_aacgm_lons,
-                           cell_corners_aacgm_lats=cell_corners_aacgm_lats, df=df)
-
-        df['xdata'] = df['mlt']
-
-    else:
-        print("Computing UTs...")
-
-        ut_time = []
-        for i in range(len(df)):
-            ut_time_here = df['datetime'].iat[i].hour + df['datetime'].iat[i].minute / 60 + \
-                           df['datetime'].iat[i].second / 3600
-
-            ut_time.append(ut_time_here)
-
-        df['xdata'] = np.asarray(ut_time)
+    # Get our raw x-data (decimal hour in the provided time_units)
+    date_time_est, _ = build_datetime_epoch(year, 6, 15, 0)  # Use the middle of the year as magnetic field estimate
+    df = add_decimal_hour_to_df(df=df, time_units=time_units, stid=radar_id, date_time_est=date_time_est)
+    df['xdata'] = df[time_units]
 
     df = df.loc[(df['xdata'] >= hour_range[0]) & (df['xdata'] <= hour_range[1])]
     df.reset_index(drop=True, inplace=True)
@@ -353,7 +327,7 @@ def add_month_data_to_plot(df, month_axes, month_offset, hour_edges, bin_xcenter
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "rkn"
@@ -361,7 +335,7 @@ if __name__ == '__main__':
         # Note: year, month, and day don't matter for local testing
         df, fig = occ_diurnal_variation(station=station, year=2011, day_range=(12, 12),
                                         gate_range=(10, 30), beam_range=(6, 8), freq_range=(11, 13),
-                                        time_units='ut', local_testing=local_testing)
+                                        time_units='lst', local_testing=local_testing)
 
         plt.show()
 
