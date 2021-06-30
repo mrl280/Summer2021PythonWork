@@ -74,6 +74,7 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
 
                     # Note: freq_range is in MHz while data in 'tfreq' is in kHz
                     (df['tfreq'] >= freq_range[0] * 1000) & (df['tfreq'] <= freq_range[1] * 1000)]
+        df.reset_index(drop=True, inplace=True)
 
     else:
         # Assume are on maxwell.usask.ca, check the time parameters and use get_data()

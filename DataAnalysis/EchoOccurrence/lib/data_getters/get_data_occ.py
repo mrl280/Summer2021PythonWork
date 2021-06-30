@@ -150,6 +150,7 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
 
                 # Note: freq_range is in MHz while data in 'tfreq' is in kHz
                 (df['tfreq'] >= freq_range[0] * 1000) & (df['tfreq'] <= freq_range[1] * 1000)]
+    df.reset_index(drop=True, inplace=True)
 
     return df
 
