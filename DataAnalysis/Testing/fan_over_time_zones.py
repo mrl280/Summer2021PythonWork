@@ -29,7 +29,7 @@ all_radars_info = SuperDARNRadars()
 
 # Note: Radars not in the same hemisphere will be omitted
 # stations = ["dce", "dcn"]
-stations = ["dcn"]
+stations = ["dce"]
 reference_hemisphere = all_radars_info.radars[pydarn.read_hdw_file(stations[0]).stid].hemisphere
 
 date = datetime.datetime.now()
@@ -215,9 +215,9 @@ plt.show()
 
 out_dir = loc_root + "/out"
 if reference_hemisphere.value == 1:
-    out_file = out_dir + "/localTimeZones_" + "NH"
+    out_file = out_dir + "/localTimeZones_" + "NH_" + str(stations[0])
 else:
-    out_file = out_dir + "/localTimeZones_" + "SH"
+    out_file = out_dir + "/localTimeZones_" + "SH_" + str(stations[0])
 fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
 plt.close(fig)
 
