@@ -165,13 +165,16 @@ def occ_diurnal_variation(station, year, day_range=None, hour_range=None,
 
     season_txt_fontsize = 16
     spring_axis.text(spring_axis.get_xlim()[0] + 0.05 * (spring_axis.get_xlim()[1] - spring_axis.get_xlim()[0]),
-                     0.9 * spring_axis.get_ylim()[1], spring_string, ha='left', va='center', fontsize=season_txt_fontsize)
+                     0.9 * spring_axis.get_ylim()[1], spring_string, ha='left', va='center',
+                     fontsize=season_txt_fontsize)
     summer_axis.text(summer_axis.get_xlim()[0] + 0.05 * (summer_axis.get_xlim()[1] - summer_axis.get_xlim()[0]),
-                     0.9 * summer_axis.get_ylim()[1], summer_string, ha='left', va='center', fontsize=season_txt_fontsize)
+                     0.9 * summer_axis.get_ylim()[1], summer_string, ha='left', va='center',
+                     fontsize=season_txt_fontsize)
     fall_axis.text(fall_axis.get_xlim()[0] + 0.05 * (fall_axis.get_xlim()[1] - fall_axis.get_xlim()[0]),
                    0.9 * fall_axis.get_ylim()[1], fall_string, ha='left', va='center', fontsize=season_txt_fontsize)
     winter_axis.text(winter_axis.get_xlim()[0] + 0.05 * (winter_axis.get_xlim()[1] - winter_axis.get_xlim()[0]),
-                     0.9 * winter_axis.get_ylim()[1], winter_string, ha='left', va='center', fontsize=season_txt_fontsize)
+                     0.9 * winter_axis.get_ylim()[1], winter_string, ha='left', va='center',
+                     fontsize=season_txt_fontsize)
 
     fig.suptitle(str(year) + " at " + station.upper() + "; " + gate_string +
                  "\n" + beam_string + "; " + freq_string, fontsize=18)
@@ -327,7 +330,7 @@ def add_month_data_to_plot(df, month_axes, month_offset, hour_edges, bin_xcenter
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
@@ -343,19 +346,19 @@ if __name__ == '__main__':
     else:
         station = "dcn"
         freq_range = (8, 10)
+        time_units = 'lt'
 
         datetime_now = datetime.datetime.now()
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
         for year in range(2019, 2022, 1):
-
             df, fig = occ_diurnal_variation(station=station, year=year, day_range=None,
-                                           gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
-                                           time_units='ut', local_testing=local_testing)
+                                            gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
+                                            time_units=time_units, local_testing=local_testing)
 
             out_fig = out_dir + "/occ_diurnalVariation_" + station + "-" + str(year) + "_" + \
-                      str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
+                      str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_" + time_units.upper()
 
             print("Saving plot as " + out_fig)
             fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
