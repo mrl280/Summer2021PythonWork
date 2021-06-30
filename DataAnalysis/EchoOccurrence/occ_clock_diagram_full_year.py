@@ -158,7 +158,7 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
     return df, fig
 
 
-def add_data_to_plot(df, ax, mlt_edges, lat_edges, plot_type='pixel', vmax=1):
+def add_data_to_plot(df, ax, mlt_edges, lat_edges, plot_type='pixel', vmax=1.0):
     """
     Add clock data to a stereographic plot
     :param df: pandas.DataFrame: The restricted dataframe containing the occurance data
