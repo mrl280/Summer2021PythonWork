@@ -10,7 +10,8 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from pydarn import SuperDARNRadars
 
-from lib.add_solar_flux_data import plot_solar_flux_data
+from lib.boxcar_smooth import boxcar_smooth
+from lib.plot_solar_flux_data import plot_solar_flux_data
 from lib.plot_sunspot_data import plot_sunspot_data
 from lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
@@ -225,15 +226,26 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
         # Plot as a point so we can see it even while testing with little data
         occ_ax.plot(bin_xcenters, occurrence_data_is, 'bo', label='IS')
         occ_ax.plot(bin_xcenters, occurrence_data_gs, 'ro', label='GS')
+
     else:
         # Plot as a line
-        occ_ax.plot(bin_xcenters, occurrence_data_is, color="blue", linestyle='-', label='IS')
-        occ_ax.plot(bin_xcenters, occurrence_data_gs, color="red", linestyle='-', label='GS')
+        occ_ax.plot(bin_xcenters, occurrence_data_is, linewidth=0.25, color="blue", linestyle='-', label='IS (Raw)')
+        occ_ax.plot(bin_xcenters, occurrence_data_gs, linewidth=0.25, color="red", linestyle='-', label='GS (Raw)')
+
+        # Compute and plot smoothed data
+        # 30 bins is about a 60 day boxcar filter
+        occurrence_data_is_smoothed = boxcar_smooth(occurrence_data_is, window_size=30)
+        occurrence_data_gs_smoothed = boxcar_smooth(occurrence_data_gs, window_size=30)
+
+        occ_ax.plot(bin_xcenters, occurrence_data_is_smoothed, linewidth=1, color="blue", linestyle='-',
+                    label='IS (Smoothed)')
+        occ_ax.plot(bin_xcenters, occurrence_data_gs_smoothed, linewidth=1, color="red", linestyle='-',
+                    label='GS (Smoothed)')
 
     occ_ax.legend(loc='upper right')
 
-    plot_solar_flux_data(ax=axes[1], year_range=year_range, smoothing_window_size_in_days=30)
-    plot_sunspot_data(ax=axes[2], year_range=year_range, smoothing_window_size_in_days=30)
+    plot_solar_flux_data(ax=axes[1], year_range=(year_range[0], year_range[1] + 1), smoothing_window_size_in_days=30)
+    plot_sunspot_data(ax=axes[2], year_range=(year_range[0], year_range[1] + 1), smoothing_window_size_in_days=30)
 
     return df, fig
 
@@ -241,7 +253,7 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
@@ -263,22 +275,36 @@ if __name__ == '__main__':
         station = "dcn"
         year_range = (2019, 2021)
         freq_range = (8, 10)
-        time_sectors = ["day", "dusk", "night", "dawn"]
+
         time_units = "lt"
 
         datetime_now = datetime.datetime.now()
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        for time_sector in time_sectors:
-            _, fig = occ_seasonal_variation(station=station, year_range=year_range, day_range=None,
-                                            gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
-                                            time_sector=time_sector, time_units=time_units,
-                                            local_testing=local_testing)
+        _, fig = occ_seasonal_variation(station=station, year_range=year_range, day_range=None,
+                                        gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
+                                        time_units=time_units,
+                                        local_testing=local_testing)
 
-            out_fig = out_dir + "/occ_seasonalVariation_" + station + \
-                      "_" + str(year_range[0]) + "-" + str(year_range[1]) + \
-                      "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_" + time_sector + "_" + time_units
+        out_fig = out_dir + "/occ_seasonalVariation_" + station + \
+                  "_" + str(year_range[0]) + "-" + str(year_range[1]) + \
+                  "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_" + "_" + time_units
 
-            print("Saving plot as " + out_fig)
-            fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+        print("Saving plot as " + out_fig)
+        fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+
+
+        # time_sectors = ["day", "dusk", "night", "dawn"]
+        # for time_sector in time_sectors:
+        #     _, fig = occ_seasonal_variation(station=station, year_range=year_range, day_range=None,
+        #                                     gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
+        #                                     time_sector=time_sector, time_units=time_units,
+        #                                     local_testing=local_testing)
+        #
+        #     out_fig = out_dir + "/occ_seasonalVariation_" + station + \
+        #               "_" + str(year_range[0]) + "-" + str(year_range[1]) + \
+        #               "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_" + time_sector + "_" + time_units
+        #
+        #     print("Saving plot as " + out_fig)
+        #     fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
