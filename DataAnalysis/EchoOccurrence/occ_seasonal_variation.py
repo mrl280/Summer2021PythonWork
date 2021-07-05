@@ -4,12 +4,14 @@ import pathlib
 import pydarn
 
 import numpy as np
+import matplotlib.ticker as mticker
 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from pydarn import SuperDARNRadars
-import matplotlib.ticker as mticker
 
+from lib.add_solar_flux_data import plot_solar_flux_data
+from lib.plot_sunspot_data import plot_sunspot_data
 from lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
@@ -23,6 +25,10 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
     """
 
     Produces an occurrence rate versus year plot that is meant to showcase the seasonal variation in echo occurrence.
+
+    Also creates subplots for:
+     F10.7 Flux (https://www.spaceweather.gc.ca/forecast-prevision/solar-solaire/solarflux/sx-3-en.php)
+     Sunspot data (http://sidc.oma.be/silso/home)
 
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
@@ -136,25 +142,27 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
     y_axis_major_labels = [0.0, 0.2, 0.4, 0.6, 0.8]
     x_lim = [year_range[0], year_range[1] + 1]  # Make sure we go the end of the final year
 
-    fig, ax = plt.subplots(figsize=[8, 6], dpi=300, constrained_layout=True, nrows=1, ncols=1)
-
-    ax.set_xlim(x_lim)
-    ax.xaxis.set_major_locator(MultipleLocator(1))
-    ax.xaxis.set_minor_locator(MultipleLocator(0.25))
-
-    ax.set_ylim(y_lim)
-    ax.yaxis.set_major_locator(mticker.FixedLocator(y_axis_major_labels))
-    ax.yaxis.set_minor_locator(MultipleLocator(0.05))
-
-    ax.grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5, color='black')
-    ax.grid(b=True, which='minor', axis='both', linestyle='--', linewidth=0.2, color='black')
-
-    ax.set_xlabel("Year", fontsize=14)
-    ax.set_ylabel("Echo Occurrence Rate", fontsize=14)
-
+    fig, axes = plt.subplots(figsize=[8, 12], dpi=300, constrained_layout=True, nrows=3, ncols=1)
     fig.suptitle(year_string + " at " + station.upper() + "; " + gate_string + "; " + beam_string +
                  "\n" + freq_string + "; " + hour_string +
                  "\nProduced by " + str(os.path.basename(__file__)), fontsize=18)
+
+    occ_ax = axes[0]
+
+    # Format the first plot for echo occurrence data
+    occ_ax.set_xlim(x_lim)
+    occ_ax.xaxis.set_major_locator(MultipleLocator(1))
+    occ_ax.xaxis.set_minor_locator(MultipleLocator(0.25))
+
+    occ_ax.set_ylim(y_lim)
+    occ_ax.yaxis.set_major_locator(mticker.FixedLocator(y_axis_major_labels))
+    occ_ax.yaxis.set_minor_locator(MultipleLocator(0.05))
+
+    occ_ax.grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5, color='black')
+    occ_ax.grid(b=True, which='minor', axis='both', linestyle='--', linewidth=0.2, color='black')
+
+    occ_ax.set_xlabel("Year", fontsize=14)
+    occ_ax.set_ylabel("Echo Occurrence Rate", fontsize=14)
 
     print("Computing UT decimal years/hours...")
     minutes_in_an_hour = 60
@@ -215,14 +223,17 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
 
     if local_testing:
         # Plot as a point so we can see it even while testing with little data
-        ax.plot(bin_xcenters, occurrence_data_is, 'bo', label='IS')
-        ax.plot(bin_xcenters, occurrence_data_gs, 'ro', label='GS')
+        occ_ax.plot(bin_xcenters, occurrence_data_is, 'bo', label='IS')
+        occ_ax.plot(bin_xcenters, occurrence_data_gs, 'ro', label='GS')
     else:
         # Plot as a line
-        ax.plot(bin_xcenters, occurrence_data_is, color="blue", linestyle='-', label='IS')
-        ax.plot(bin_xcenters, occurrence_data_gs, color="red", linestyle='-', label='GS')
+        occ_ax.plot(bin_xcenters, occurrence_data_is, color="blue", linestyle='-', label='IS')
+        occ_ax.plot(bin_xcenters, occurrence_data_gs, color="red", linestyle='-', label='GS')
 
-    ax.legend(loc='upper right')
+    occ_ax.legend(loc='upper right')
+
+    plot_solar_flux_data(ax=axes[1], year_range=year_range, smoothing_window_size_in_days=30)
+    plot_sunspot_data(ax=axes[2], year_range=year_range, smoothing_window_size_in_days=30)
 
     return df, fig
 
@@ -230,15 +241,20 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "rkn"
 
+        # # Note: year, month, and day don't matter for local testing
+        # df, fig = occ_seasonal_variation(station=station, year_range=(2011, 2012), day_range=(12, 12),
+        #                                  gate_range=(10, 30), beam_range=(6, 8), freq_range=(11, 13),
+        #                                  time_sector="night", time_units='lt', local_testing=local_testing)
+
         # Note: year, month, and day don't matter for local testing
         df, fig = occ_seasonal_variation(station=station, year_range=(2011, 2012), day_range=(12, 12),
                                          gate_range=(10, 30), beam_range=(6, 8), freq_range=(11, 13),
-                                         time_sector="night", time_units='lt', local_testing=local_testing)
+                                         local_testing=local_testing)
 
         plt.show()
 
