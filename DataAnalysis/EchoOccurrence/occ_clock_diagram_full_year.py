@@ -471,7 +471,7 @@ if __name__ == '__main__':
         station = "dcn"
         freq_range = (8, 10)
         plot_type = 'pixel'
-        time_units = 'lt'
+        time_units = 'mlt'
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
