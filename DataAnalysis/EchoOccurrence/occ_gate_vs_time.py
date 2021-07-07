@@ -201,8 +201,8 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
                 contour_data_gs[hour_idx][gate] = sum(df_hh_gg['good_grndscat_echo']) / len(df_hh_gg)
             except ZeroDivisionError:
                 # There are no points in this interval
-                contour_data_is[hour_idx, gate] = math.nan
-                contour_data_gs[hour_idx, gate] = math.nan
+                contour_data_is[hour_idx][gate] = math.nan
+                contour_data_gs[hour_idx][gate] = math.nan
             except BaseException as e:
                 print("Hour index: " + str(hour_idx))
                 print("Gate: " + str(gate))
