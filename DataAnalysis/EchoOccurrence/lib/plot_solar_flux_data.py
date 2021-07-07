@@ -3,7 +3,6 @@ import numpy as np
 
 from .boxcar_smooth import boxcar_smooth
 from .data_getters.get_LISIRD_data import get_LISIRD_data
-from .data_getters.input_checkers import check_year_range
 
 
 def plot_solar_flux_data(ax, year_range, smoothing_window_size_in_days):
@@ -65,9 +64,6 @@ def plot_solar_flux_data(ax, year_range, smoothing_window_size_in_days):
 
     df['decimal_hour'] = np.asarray(decimal_hours)
     df['decimal_year'] = np.asarray(decimal_years)
-
-    # Plot the raw data
-    ax.plot(df['decimal_year'], df['observed_flux'], color="cornflowerblue", linestyle='-', linewidth=0.5)
 
     # Smooth the data with a boxcar filter, and plot that on top of the raw data
     smoothed_data = boxcar_smooth(df['observed_flux'], window_size=sm_in_days)

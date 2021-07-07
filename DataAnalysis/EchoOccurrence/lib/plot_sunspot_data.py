@@ -3,7 +3,6 @@ import numpy as np
 
 from .boxcar_smooth import boxcar_smooth
 from .data_getters.get_LISIRD_data import get_LISIRD_data
-from .data_getters.input_checkers import check_year_range
 
 
 def plot_sunspot_data(ax, year_range, smoothing_window_size_in_days):
