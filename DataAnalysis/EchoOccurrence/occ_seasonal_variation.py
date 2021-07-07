@@ -1,6 +1,8 @@
 import math
 import os
 import pathlib
+
+import pandas as pd
 import pydarn
 
 import numpy as np
@@ -228,18 +230,25 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
         occ_ax.plot(bin_xcenters, occurrence_data_gs, 'ro', label='GS')
 
     else:
-        # Plot as a line
+        # Plot as a faint line
         occ_ax.plot(bin_xcenters, occurrence_data_is, linewidth=0.25, color="blue", linestyle='-', label='IS (Raw)')
         occ_ax.plot(bin_xcenters, occurrence_data_gs, linewidth=0.25, color="red", linestyle='-', label='GS (Raw)')
 
         # Compute and plot smoothed data
-        # 30 bins is about a 60 day boxcar filter
-        occurrence_data_is_smoothed = boxcar_smooth(occurrence_data_is, window_size=30)
-        occurrence_data_gs_smoothed = boxcar_smooth(occurrence_data_gs, window_size=30)
+        # Before we smooth, we have to remove all nan values - otherwise we get discontinuities in the smoothed data
+        is_mini_df = pd.DataFrame({'bin_xcenters': bin_xcenters, 'occurrence_data': occurrence_data_is})
+        gs_mini_df = pd.DataFrame({'bin_xcenters': bin_xcenters, 'occurrence_data': occurrence_data_gs})
 
-        occ_ax.plot(bin_xcenters, occurrence_data_is_smoothed, linewidth=1, color="blue", linestyle='-',
+        is_mini_df = is_mini_df.loc[is_mini_df['occurrence_data'].notna()]
+        gs_mini_df = gs_mini_df.loc[gs_mini_df['occurrence_data'].notna()]
+
+        # 30 bins is about a 60 day boxcar filter
+        is_mini_df['occurrence_data'] = boxcar_smooth(is_mini_df['occurrence_data'], window_size=30)
+        gs_mini_df['occurrence_data'] = boxcar_smooth(gs_mini_df['occurrence_data'], window_size=30)
+
+        occ_ax.plot(is_mini_df['bin_xcenters'], is_mini_df['occurrence_data'], linewidth=1, color="blue", linestyle='-',
                     label='IS (Smoothed)')
-        occ_ax.plot(bin_xcenters, occurrence_data_gs_smoothed, linewidth=1, color="red", linestyle='-',
+        occ_ax.plot(gs_mini_df['bin_xcenters'], gs_mini_df['occurrence_data'], linewidth=1, color="red", linestyle='-',
                     label='GS (Smoothed)')
 
     occ_ax.legend(loc='upper right')
