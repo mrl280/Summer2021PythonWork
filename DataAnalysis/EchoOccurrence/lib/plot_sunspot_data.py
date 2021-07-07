@@ -23,7 +23,6 @@ def plot_sunspot_data(ax, year_range, smoothing_window_size_in_days):
 
     sunspot_dataset = "international_sunspot_number"
     sm_in_days = smoothing_window_size_in_days  # Convenience
-    year_range = check_year_range(year_range)  # Just in case
 
     # Format the axes
     ax.set_xlim(year_range)
