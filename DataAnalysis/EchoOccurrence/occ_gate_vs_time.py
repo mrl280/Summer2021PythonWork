@@ -130,7 +130,7 @@ def occ_gate_vs_time(station, year, month_range=None, day_range=None, hour_range
     df = only_keep_45km_res_data(df)
 
     # Add decimal hour to df in whatever units were requested
-    date_time_est, _ = build_datetime_epoch(year=year, month=6, day=15, hour=0)
+    date_time_est, _ = build_datetime_epoch(year=year, month=mid_month, day=15, hour=0)
     df = add_decimal_hour_to_df(df=df, time_units=time_units, stid=radar_id, date_time_est=date_time_est)
 
     df = df.loc[(df[time_units] >= hour_range[0]) & (df[time_units] <= hour_range[1])]
