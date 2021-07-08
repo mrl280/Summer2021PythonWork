@@ -68,7 +68,8 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
                 'ut' for universal time
                 'mlt' for magnetic local time
                 'lt' for local time (based on longitude)
-                'lst' for local standard time (based on time zones).
+                'lst' for local standard time (based on time zones)
+                'ast' for apparent solar time (based on the apparent angular motion of the sun across the sky)
     :param local_testing: bool (optional): default is False.
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
 

@@ -63,7 +63,8 @@ def occ_fan(station, year_range, month_range=None, day_range=None, hour_range=No
                 'ut' for universal time
                 'mlt' for magnetic local time
                 'lt' for local time (based on longitude)
-                'lst' for local standard time (based on time zones).
+                'lst' for local standard time (based on time zones)
+                'ast' for apparent solar time (based on the apparent angular motion of the sun across the sky)
     :param echo_type: str (optional): Default is 'is' (ionospheric scatter)
             The type of echo to consider.  Either ionospheric scatter 'is' or ground scatter 'gs'.
     :param local_testing: bool (optional):

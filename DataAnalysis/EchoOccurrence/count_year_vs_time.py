@@ -43,7 +43,8 @@ def occ_year_vs_time(station, year_range, month_range=None, time_units='mlt', ho
                 'ut' for universal time
                 'mlt' for magnetic local time
                 'lt' for local time (based on longitude)
-                'lst' for local standard time (based on time zones).
+                'lst' for local standard time (based on time zones)
+                'ast' for apparent solar time (based on the apparent angular motion of the sun across the sky)
     :param hour_range: (<int>, <int>) (optional):
             The hour range to consider.  If omitted (or None), then all hours will be considered.
             Not quite inclusive: if you pass in (0, 5) you will get from 0:00-4:59 UT

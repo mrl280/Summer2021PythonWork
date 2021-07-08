@@ -58,7 +58,8 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
                 'ut' for universal time
                 'mlt' for magnetic local time
                 'lt' for local time (based on longitude)
-                'lst' for local standard time (based on time zones).
+                'lst' for local standard time (based on time zones)
+                'ast' for apparent solar time (based on the apparent angular motion of the sun across the sky)
     :param plot_type: str (optional):
             The type of plot, either 'contour' or 'pixel', default is 'contour'
     :param local_testing: bool (optional):

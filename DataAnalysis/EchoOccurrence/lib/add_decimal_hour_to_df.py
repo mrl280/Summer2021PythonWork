@@ -7,8 +7,13 @@ import datetime as datetime
 from pydarn import radar_fov, SuperDARNRadars
 from timezonefinder import TimezoneFinder
 
-from .add_mlt_to_df import add_mlt_to_df, centroid
-from .get_data_handler import get_data_handler
+try:
+    from .add_mlt_to_df import add_mlt_to_df, centroid
+    from .get_data_handler import get_data_handler
+except ImportError:
+    # We are performing local testing
+    from DataAnalysis.EchoOccurrence.lib.add_mlt_to_df import add_mlt_to_df, centroid
+    from DataAnalysis.EchoOccurrence.lib.get_data_handler import get_data_handler
 
 
 def add_decimal_hour_to_df(df, time_units, stid, date_time_est):
@@ -29,7 +34,8 @@ def add_decimal_hour_to_df(df, time_units, stid, date_time_est):
                 'ut' for universal time
                 'mlt' for magnetic local time
                 'lt' for local time (based on longitude)
-                'lst' for local standard time (based on time zones).
+                'lst' for local standard time (based on time zones)
+                'ast' for apparent solar time (based on the apparent angular motion of the sun across the sky)
     :param stid: int:
             The radar station id.
     :param date_time_est: datetime.datetime:
@@ -39,7 +45,8 @@ def add_decimal_hour_to_df(df, time_units, stid, date_time_est):
     """
 
     time_units = time_units.lower()
-    if time_units != "ut" and time_units != "mlt" and time_units != "lt" and time_units != "lst":
+    if time_units != "ut" and time_units != "mlt" and time_units != "lt" and \
+            time_units != "lst" and time_units != "ast":
         raise Exception("add_decimal_hour_to_df(): time_units not recognized.")
 
     print(" Computing " + time_units.upper() + "s...")
@@ -99,7 +106,9 @@ def add_decimal_hour_to_df(df, time_units, stid, date_time_est):
 
         else:
 
-            # Go ahead and compute lt; local time depends on longitude
+            # AST requires LT
+
+            # Go ahead and compute LT; local time depends on longitude
             cell_corners_lats, cell_corners_lons = radar_fov(stid=stid, coords='geo', date=date_time_est)
             fan_shape = cell_corners_lons.shape
 
@@ -143,7 +152,40 @@ def add_decimal_hour_to_df(df, time_units, stid, date_time_est):
                 else:
                     lt.append(lt_time)
 
-            df['lt'] = np.asarray(lt)
+            if time_units == "lt":
+                df['lt'] = np.asarray(lt)
+
+            else:
+                # Go ahead and compute AST
+                # Apparent solar time depends on the time of the year, so we need n
+                days_in_a_month = 30.42
+
+                n = []  # Day of the year
+                for i in range(len(df)):
+                    datetime_obj = df['datetime'].iat[i]
+                    n_here = (datetime_obj.month - 1) * days_in_a_month + datetime_obj.day
+                    n.append(n_here)
+                n = np.asarray(n)
+
+                B = (n - 81) * 360 / 364  # (Eq. 2.2 in Solar Energy Engineering)
+
+                # Compute equation of time (Eq. 2.1 in Solar Energy Engineering)
+                eq_of_time_in_min = 9.87 * np.sin(2 * B) - 7.53 * np.cos(B) - 1.5 * np.sin(B)  # min
+                eq_of_time_in_hours = eq_of_time_in_min / 60
+
+                ast_time = np.asarray(lt) + eq_of_time_in_hours
+
+                # Since our computation is not perfect, we might have spilled outside of the 0-24 range, fix it
+                ast = []
+                for i in range(len(ast_time)):
+                    if ast_time[i] > 24:
+                        ast.append(ast_time[i] - 24)
+                    elif ast_time[i] < 0:
+                        ast.append(ast_time[i] + 24)
+                    else:
+                        ast.append(ast_time[i])
+
+                df['ast'] = ast
 
     else:
         # Go ahead and compute mlt
@@ -170,7 +212,7 @@ if __name__ == "__main__":
                           gate_range=(10, 30), beam_range=(6, 8), freq_range=(11, 13), occ_data=True,
                           local_testing=local_testing)
 
-    df = df.head(n=25)
+    # df = df.head(n=25)
 
     print("Keys before adding any decimal times:")
     print(df.keys())
@@ -187,4 +229,7 @@ if __name__ == "__main__":
     print("Adding lst...")
     df = add_decimal_hour_to_df(df=df, time_units='lst', stid=radar_id, date_time_est=date_time_est)
 
-    print(df[['slist', 'bmnum', 'datetime', 'ut', 'mlt', 'lt', 'lst']])
+    print("Adding ast...")
+    df = add_decimal_hour_to_df(df=df, time_units='ast', stid=radar_id, date_time_est=date_time_est)
+
+    print(df[['slist', 'bmnum', 'datetime', 'ut', 'mlt', 'lt', 'lst', 'ast']])
