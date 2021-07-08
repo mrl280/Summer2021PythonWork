@@ -3,7 +3,12 @@ import pydarn
 import datetime as datetime
 
 from pydarn import radar_fov, SuperDARNRadars
-from add_mlt_to_df import centroid
+
+try:
+    from add_mlt_to_df import centroid
+except ImportError:
+    # We are performing local testing
+    from DataAnalysis.EchoOccurrence.lib.add_mlt_to_df import centroid
 
 
 def get_middle_of_fov(station, beam_range, gate_range, date_time_est=None, coords='geo'):
@@ -46,10 +51,14 @@ def get_middle_of_fov(station, beam_range, gate_range, date_time_est=None, coord
     cell_corners_lats, cell_corners_lons = radar_fov(stid=radar_id, coords=coords, date=date_time_est)
 
     # Compute coordinate tuples for each of the extreme corners
-    lower_left_corner = (cell_corners_lons[starting_gate_idx, starting_beam_idx])
-    lower_right_corner = (cell_corners_lons[starting_gate_idx, ending_beam_idx])
-    upper_left_corner = (cell_corners_lons[ending_gate_idx, starting_beam_idx])
-    upper_right_corner = (cell_corners_lons[ending_gate_idx, ending_beam_idx])
+    lower_left_corner = (cell_corners_lons[starting_gate_idx, starting_beam_idx],
+                         cell_corners_lats[starting_gate_idx, starting_beam_idx])
+    lower_right_corner = (cell_corners_lons[starting_gate_idx, ending_beam_idx],
+                          cell_corners_lats[starting_gate_idx, ending_beam_idx])
+    upper_left_corner = (cell_corners_lons[ending_gate_idx, starting_beam_idx],
+                         cell_corners_lats[ending_gate_idx, starting_beam_idx])
+    upper_right_corner = (cell_corners_lons[ending_gate_idx, ending_beam_idx],
+                          cell_corners_lats[ending_gate_idx, ending_beam_idx])
 
     # And finally go ahead and compute the centroid
     cent_lon, cent_lat = centroid(vertexes=[lower_left_corner, lower_right_corner,
