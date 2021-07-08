@@ -65,6 +65,9 @@ def plot_solar_flux_data(ax, year_range, smoothing_window_size_in_days):
     df['decimal_hour'] = np.asarray(decimal_hours)
     df['decimal_year'] = np.asarray(decimal_years)
 
+    # Plot the raw data
+    ax.plot(df['decimal_year'], df['observed_flux'], color="cornflowerblue", linestyle='-', linewidth=0.5)
+
     # Smooth the data with a boxcar filter, and plot that on top of the raw data
     smoothed_data = boxcar_smooth(df['observed_flux'], window_size=sm_in_days)
     ax.plot(df['decimal_year'], smoothed_data, color="blue", linewidth="1", linestyle="-")
