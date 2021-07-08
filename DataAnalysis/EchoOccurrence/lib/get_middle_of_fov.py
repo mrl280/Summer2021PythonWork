@@ -5,7 +5,7 @@ import datetime as datetime
 from pydarn import radar_fov, SuperDARNRadars
 
 try:
-    from add_mlt_to_df import centroid
+    from .add_mlt_to_df import centroid
 except ImportError:
     # We are performing local testing
     from DataAnalysis.EchoOccurrence.lib.add_mlt_to_df import centroid
