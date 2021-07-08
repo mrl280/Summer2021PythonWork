@@ -299,7 +299,7 @@ if __name__ == '__main__':
 
         out_fig = out_dir + "/occ_seasonalVariation_" + station + \
                   "_" + str(year_range[0]) + "-" + str(year_range[1]) + \
-                  "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_" + "_" + time_units
+                  "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_" + time_units
 
         print("Saving plot as " + out_fig)
         fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
