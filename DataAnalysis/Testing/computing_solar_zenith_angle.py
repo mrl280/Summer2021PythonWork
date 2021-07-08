@@ -58,7 +58,7 @@ def test_solar_zenith_angle():
     bin_year_centers = year_edges[1:] - delta_year / 2
     hour_centers, year_centers = np.meshgrid(bin_hour_centers, bin_year_centers)
 
-    # Compute n, the number of days in the year
+    # Compute n, the day of the year
     # We need to convert from decimal year to day of the year
     days_in_a_year = 365
     percent_of_year, _ = np.modf(year_centers)
