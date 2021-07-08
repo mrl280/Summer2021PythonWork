@@ -274,7 +274,7 @@ def add_angle_contours(ax, type_of_contours, year_range, hour_range, beam_range,
     :param type_of_contours: str:
             The type of angle contours to superimpose on top of the data.
                 'zenith' for solar zenith angle (the angle between the sun’s rays and a vertical plane)
-                'alt' for solar altitude angle (the angle between the sun’s rays and a horizontal plane)
+                'altitude' for solar altitude angle (the angle between the sun’s rays and a horizontal plane)
     :param year_range: See occ_year_vs_time() docstring.
     :param hour_range: See occ_year_vs_time() docstring.
     :param beam_range: See occ_year_vs_time() docstring.
