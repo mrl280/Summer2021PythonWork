@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from pydarn import SuperDARNRadars
 
-from DataAnalysis.EchoOccurrence.lib.get_middle_of_fov import get_middle_of_fov
+from lib.get_middle_of_fov import get_middle_of_fov
 from lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.only_keep_45km_res_data import only_keep_45km_res_data
 from lib.get_data_handler import get_data_handler
@@ -26,8 +26,6 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
     Produce plots with year on the y-axis and time along the x-axis.
     There are 2 subplots, one for ionospheric scatter and one for ground scatter
     Echo occurrence rates are plotted along z (as either contours or pixels)
-
-    # TODO: Add contours for Solar zenith angle (the angle between the sun’s rays and the vertical direction)
 
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
@@ -123,7 +121,10 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
 
     df['decimal_year'] = np.asarray(decimal_years)
 
-    day_string = "Days " + str(day_range[0]) + "-" + str(day_range[1])
+    if day_range == (1, 31):
+        day_string = "All Days"
+    else:
+        day_string = "Days " + str(day_range[0]) + "-" + str(day_range[1])
     beam_string = "Beams " + str(beam_range[0]) + "-" + str(beam_range[1])
     freq_string = "Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz"
 
@@ -132,8 +133,8 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
     fig.suptitle(station.upper() + "; " + beam_string + "; " + freq_string + "; " + day_string +
                  "\nProduced by " + str(os.path.basename(__file__)), fontsize=18)
 
-    ax[0].set_title("Ionospheric Scatter", fontsize=16)
-    ax[1].set_title("Ground Scatter", fontsize=16)
+    ax[0].set_title("Ionospheric Scatter", fontsize=20)
+    ax[1].set_title("Ground Scatter", fontsize=20)
 
     if plot_type == "contour":
         tick_colour = "black"
@@ -246,6 +247,7 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
                 raise Exception("Error in occ_year_vs_time(): param angle_contour not recognized, "
                                 "options are 'zenith' and 'altitude'.")
 
+            print("Drawing Angle Contours...")
             # We are good to go ahead and draw angle contours
             for i in range(ax.size):
                 add_angle_contours(ax=ax[i], type_of_contours=angle_contours, year_range=year_range,
@@ -282,7 +284,6 @@ def add_angle_contours(ax, type_of_contours, year_range, hour_range, beam_range,
 
     degree_sign = u'\N{DEGREE SIGN}'
     contour_colour = 'white'
-    contour_levels = [60, 75, 90, 105, 120]  # deg
 
     # Compute hour edges
     bins_per_hour = 4  # quarter hour bins
@@ -345,16 +346,21 @@ def add_angle_contours(ax, type_of_contours, year_range, hour_range, beam_range,
     # Put angles in degrees
     angles = np.rad2deg(angles)
 
-    contours = ax.contour(hour_centers, year_centers, angles, colors=contour_colour, levels=contour_levels, zorder=5,
-                          label="Solar" + type_of_contours.capitalize() + " Angles")
+    contours = ax.contour(hour_centers, year_centers, angles, colors=contour_colour, zorder=5)
+
     plt.clabel(contours, inline=True, fontsize=12, colors=contour_colour, fmt='%d' + degree_sign,
                inline_spacing=3, zorder=5)
+
+    # Add in a legend specifying what contours represent
+    contour_label = "Solar " + type_of_contours.capitalize() + " Angles"
+    contours.collections[0].set_label(contour_label)
+    ax.legend(loc=(0, 1.02), fontsize=12, facecolor='red')
 
 
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
@@ -362,7 +368,7 @@ if __name__ == '__main__':
         # Note: year, month, and day don't matter for local testing
         df, fig = occ_year_vs_time(station=station, year_range=(2011, 2012), month_range=None, day_range=None,
                                    hour_range=None, gate_range=(0, 74), beam_range=None, freq_range=(11, 13),
-                                   time_units='lt', plot_type='pixel', angle_contours='zenith',
+                                   time_units='lt', plot_type='contour', angle_contours='zenith',
                                    local_testing=local_testing)
 
         plt.show()
@@ -372,17 +378,18 @@ if __name__ == '__main__':
         station = "dcn"
         freq_range = (8, 10)
         year_range = (2019, 2021)
+        angle_contours = 'zenith'
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
         _, fig = occ_year_vs_time(station=station, year_range=year_range, day_range=None,
                                   gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
-                                  time_units='ut', plot_type='contour',
+                                  time_units='lt', plot_type='contour', angle_contours=angle_contours,
                                   local_testing=local_testing)
 
         out_fig = out_dir + "/occ_yearVtime_" + station + "_" + \
-                  str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz"
+                  str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz - with_" + angle_contours + "_contours"
 
         print("Saving plot as " + out_fig)
         fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
