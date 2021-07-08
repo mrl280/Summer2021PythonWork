@@ -1,21 +1,16 @@
 import os
 
 import numpy as np
-import pydarn
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from pydarn import SuperDARNRadars, radar_fov
 
-from DataAnalysis.EchoOccurrence.lib.add_decimal_hour_to_df import add_decimal_hour_to_df
-from DataAnalysis.EchoOccurrence.lib.add_mlt_to_df import centroid
-from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_epoch
-from DataAnalysis.EchoOccurrence.lib.get_data_handler import get_data_handler
-from DataAnalysis.EchoOccurrence.lib.only_keep_45km_res_data import only_keep_45km_res_data
+from DataAnalysis.EchoOccurrence.lib.get_middle_of_fov import get_middle_of_fov
 
 
-def test_solar_zenith_angle(station, year_range):
+def test_solar_zenith_angle():
     """
     Test computing solar zenith angle and plotting contours
+    Computations are based on Solar Energy Engineering. Processes and Systems by Soteris A. Kalogirou
 
     Important links:
 
@@ -32,44 +27,80 @@ def test_solar_zenith_angle(station, year_range):
     Other links:
     https://www.sciencedirect.com/topics/engineering/solar-declination
 
-    :param station:
-    :param year_range:
-    :return:
+
     """
 
+    # station = "inv"
+    # beam_range = (13, 15)
+
+    station = "dce"
+    beam_range = (10, 12)
+
+    year_range = (2013, 2014)
     hour_range = (0, 24)
+    gate_range = (10, 30)
     time_units = "lt"
 
-    all_radars_info = SuperDARNRadars()
-    this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
-    radar_id = this_radars_info.hardware_info.stid
-    radar_lon = this_radars_info.hardware_info.geographic.lon
-    radar_lat = this_radars_info.hardware_info.geographic.lat
+    # Compute hour edges
+    bins_per_hour = 4  # quarter hour bins
+    n_bins_x = int((hour_range[1] - hour_range[0]) * bins_per_hour)
+    hour_edges = np.linspace(hour_range[0], hour_range[1], num=(n_bins_x + 1))
+    delta_hour = hour_edges[1] - hour_edges[0]
 
-    print("Getting some data...")
-    df = get_data_handler(station, year_range=year_range, month_range=None, day_range=None,
-                          gate_range=(0, 74), beam_range=(6, 8), freq_range=None,
-                          occ_data=True, local_testing=True)
-    df = df.head(n=200)  # To speed things up
-    df = only_keep_45km_res_data(df)
+    # Compute year edges
+    bins_per_year = 24  # Single gate bins
+    n_bins_y = int(((year_range[1] + 1) - year_range[0]) * bins_per_year)
+    year_edges = np.linspace(year_range[0], year_range[1] + 1, num=(n_bins_y + 1))
+    delta_year = year_edges[1] - year_edges[0]
 
-    # Add in longitude based local time
-    mid_year = int(year_range[0] + (year_range[1] - year_range[0]) / 2)
-    date_time_est, _ = build_datetime_epoch(year=mid_year, month=6, day=15, hour=0)
-    df = add_decimal_hour_to_df(df=df, time_units=time_units, stid=radar_id, date_time_est=date_time_est)
+    # Compute bin centers
+    bin_hour_centers = hour_edges[1:] - delta_hour / 2
+    bin_year_centers = year_edges[1:] - delta_year / 2
+    hour_centers, year_centers = np.meshgrid(bin_hour_centers, bin_year_centers)
 
     # Compute n, the number of days in the year
-    avg_days_in_a_month = 30.42
-    n = []
-    for i in range(len(df)):
-        datetime_obj = df['datetime'].iat[i]
-        # N is the day of the year beginning with N=0 at midnight Universal Time (UT) as January 1
-        n.append(datetime_obj.month * avg_days_in_a_month + datetime_obj.day)
-    df['n'] = np.asarray(n)
+    # We need to convert from decimal year to day of the year
+    days_in_a_year = 365
+    percent_of_year, _ = np.modf(year_centers)
+    n = percent_of_year * days_in_a_year
 
-    df = add_in_solar_time(df=df)
-    df = add_in_local_latitudes(df=df, radar_id=radar_id)
-    df = add_in_declination(df=df)
+    # Compute declination (delta)
+    # Declination (Equation 2.5 in Solar Energy Engineering)
+    declination = 23.45 * np.sin(np.deg2rad(360 / 365 * (284 + n)))
+
+    B = (n - 81) * 360 / 364  # (Eq. 2.2 in Solar Energy Engineering)
+    # Compute equation of time (Equation 2.1 in Solar Energy Engineering)
+    ET_in_min = 9.87 * np.sin(2 * B) - 7.53 * np.cos(B) - 1.5 * np.sin(B)  # in minutes
+    ET_in_hours = ET_in_min / 60
+
+    AST = hour_centers + ET_in_hours
+
+    # The hour angle, h, of a point on the earth’s surface is defined as the angle through which the earth
+    # would turn to bring the meridian of the point directly under the sun.
+    hour_angle = (AST - 12) * 15  # 15 deg of longitude in 1 hour
+
+    # Get local latitude
+    cent_lon, cent_lat = get_middle_of_fov(station=station, beam_range=beam_range, gate_range=gate_range, coords='geo')
+
+    # Put it into matrix form like everything else
+    local_lat = np.empty(shape=hour_centers.shape)
+    local_lat[:] = cent_lat
+
+    # Put all parameters into radians
+    local_lat = np.deg2rad(local_lat)
+    hour_angle = np.deg2rad(hour_angle)
+    declination = np.deg2rad(declination)
+
+    # Finally, solve for solar Zenith angle (Equation 2.12 in Solar Energy Engineering)
+    term1 = np.multiply(np.sin(local_lat), np.sin(declination))
+    term2 = np.multiply(np.multiply(np.cos(local_lat), np.cos(declination)), np.cos(hour_angle))
+
+    solar_zenith_angles = np.arccos(term1 + term2)
+    solar_altitude_angles = np.arcsin(term1 + term2)
+
+    # Put the zenith and altitude angles into degrees
+    solar_zenith_angles = np.rad2deg(solar_zenith_angles)
+    solar_altitude_angles = np.rad2deg(solar_altitude_angles)
 
 
     fig, ax = plt.subplots(figsize=[10, 12], dpi=300, nrows=2, ncols=1, constrained_layout=True)
@@ -92,109 +123,27 @@ def test_solar_zenith_angle(station, year_range):
         ax[i].tick_params(axis='both', which='major', direction='in', color='black', labelsize=14)
         ax[i].tick_params(axis='y', which='minor', direction='in', color='black', labelsize=14)
 
-        ax[i].grid(which='minor', axis='y', linestyle='--', linewidth=0.2, color='white', zorder=4)
-        ax[i].grid(which='major', axis='both', linestyle='--', linewidth=0.5, color='white', zorder=4)
+        ax[i].grid(which='minor', axis='y', linestyle='--', linewidth=0.2, color='black', zorder=4)
+        ax[i].grid(which='major', axis='both', linestyle='--', linewidth=0.5, color='black', zorder=4)
 
+    # ax[0].scatter(hour_centers, year_centers, c='black', s=1)
+
+    degree_sign = u'\N{DEGREE SIGN}'
+
+    contour_colour = 'blue'
+    contour_levels = [60, 75, 90, 105, 120]  # Degrees
+    contours = ax[0].contour(hour_centers, year_centers, solar_zenith_angles,
+                             colors=contour_colour, levels=contour_levels, zorder=5)
+    plt.clabel(contours, inline=True, fontsize=12, colors=contour_colour, fmt='%d' + degree_sign,
+               inline_spacing=3, zorder=5)
 
     return fig
-
-
-def add_in_solar_time(df):
-    """
-
-    Add in the solar time, calculation based on
-    https://faculty.eng.ufl.edu/jonathan-scheffe/wp-content/uploads/sites/100/2020/08/Solar-Time1419.pdf
-
-    :param df: The dataframe, with column 'n'
-    """
-
-    df['B'] = (df['n'] - 1) * 360 / 365
-
-    df['E'] = 299.2 * (0.000075 * 0.001868 * np.cos(df['B']) - 0.032022 * np.sin(df['B'])
-                       - 0.014615 * np.cos(2 * df['B']) - 0.04089 * np.sin(2 * df['B']))
-
-    df['solar_time'] = df['lt'] + df['E']
-
-    return df
-
-
-def add_in_local_latitudes(df, radar_id):
-    """
-
-    Add 'local_lat' to dataframe (latitudes in geographical coordinates)
-
-    :param df: The dataframe
-    """
-
-    print("Getting local latitudes...")
-    mid_year = int(year_range[0] + (year_range[1] - year_range[0]) / 2)
-    date_time_est, _ = build_datetime_epoch(year=mid_year, month=6, day=15, hour=0)
-    cell_corners_lats, cell_corners_lons = radar_fov(stid=radar_id, coords='geo', date=date_time_est)
-
-    # Compute cell centroids
-    fan_shape = cell_corners_lons.shape
-    cell_centers_aacgm_lons = np.zeros(shape=(fan_shape[0], fan_shape[1]))
-    cell_centers_aacgm_lats = np.zeros(shape=(fan_shape[0], fan_shape[1]))
-
-    for gate_corner in range(fan_shape[0] - 1):
-        for beam_corner in range(fan_shape[1] - 1):
-            cent_lon, cent_lat = centroid([(cell_corners_lons[gate_corner, beam_corner],
-                                            cell_corners_lats[gate_corner, beam_corner]),
-                                           (cell_corners_lons[gate_corner + 1, beam_corner],
-                                            cell_corners_lats[gate_corner + 1, beam_corner]),
-                                           (cell_corners_lons[gate_corner, beam_corner + 1],
-                                            cell_corners_lats[gate_corner, beam_corner + 1]),
-                                           (cell_corners_lons[gate_corner + 1, beam_corner + 1],
-                                            cell_corners_lats[gate_corner + 1, beam_corner + 1])])
-            cell_centers_aacgm_lons[gate_corner, beam_corner] = cent_lon
-            cell_centers_aacgm_lats[gate_corner, beam_corner] = cent_lat
-
-    #  Loop through the dataframe, and build up local latitudes
-    local_lat = []
-    for i in range(len(df)):
-        gate = df['slist'].iat[i]
-        beam = df['bmnum'].iat[i]
-
-        local_lat.append(cell_centers_aacgm_lons[gate, beam])
-
-    df['local_lat'] = local_lat
-
-    return df
-
-
-def add_in_declination(df):
-    """
-
-    Add 'declination' to dataframe
-
-    """
-
-    print("Computing declination of the sun...")
-
-    avg_days_in_a_month = 30.42
-
-    # Compute declination of the sun
-    # https://en.wikipedia.org/wiki/Position_of_the_Sun#Declination_of_the_Sun_as_seen_from_Earth
-    N = []
-    for i in range(len(df)):
-        datetime_obj = df['datetime'].iat[i]
-        # N is the day of the year beginning with N=0 at midnight Universal Time (UT) as January 1
-        N.append(datetime_obj.month * avg_days_in_a_month + datetime_obj.day - 1)
-    df['N'] = np.asarray(N)
-
-    # TODO: Compare to formula on page 62 of the textbook
-    df['declination'] = -23.44 * np.cos(np.deg2rad(360 / 365 * (df['N'] + 10)))
-
-    return df
 
 
 if __name__ == "__main__":
     """ Testing """
 
-    station = "rkn"
-    year_range = (2011, 2012)
-
-    fig = test_solar_zenith_angle(station=station, year_range=year_range)
+    fig = test_solar_zenith_angle()
 
     plt.show()
     plt.close(fig)
