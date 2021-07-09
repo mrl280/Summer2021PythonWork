@@ -1,3 +1,5 @@
+import math
+
 import pydarn
 import bz2
 import pandas as pd
@@ -113,11 +115,28 @@ def PickleFITACF(station, date):
                 w_l_e.append(fitacf_data[record]['w_l_e'][gate_idx])
                 sd_l.append(fitacf_data[record]['sd_l'][gate_idx])
                 sd_phi.append(fitacf_data[record]['sd_phi'][gate_idx])
-                phi0.append(fitacf_data[record]['phi0'][gate_idx])
-                phi0_e.append(fitacf_data[record]['phi0_e'][gate_idx])
-                elv.append(fitacf_data[record]['elv'][gate_idx])
-                elv_low.append(fitacf_data[record]['elv_low'][gate_idx])
-                elv_high.append(fitacf_data[record]['elv_high'][gate_idx])
+
+                try:
+                    phi0.append(fitacf_data[record]['phi0'][gate_idx])
+                    phi0_e.append(fitacf_data[record]['phi0_e'][gate_idx])
+                except KeyError:
+                    # Some files might not have this parameter
+                    phi0.append(math.nan)
+                    phi0_e.append(math.nan)
+                except BaseException:
+                    raise
+
+                try:
+                    elv.append(fitacf_data[record]['elv'][gate_idx])
+                    elv_low.append(fitacf_data[record]['elv_low'][gate_idx])
+                    elv_high.append(fitacf_data[record]['elv_high'][gate_idx])
+                except KeyError:
+                    # Some files might not have this parameter
+                    elv.append(math.nan)
+                    elv_low.append(math.nan)
+                    elv_high.append(math.nan)
+                except BaseException:
+                    raise
 
                 # Build up scalar data, it is faster to have this in this inner loop
                 epoch.append(epoch_here)
@@ -174,7 +193,7 @@ if __name__ == '__main__':
     """
     Handler to call PickleFITACF on SuperDARN data files
     """
-    PICKLE_ALL = True  # To prevent accidentally pickling all data
+    PICKLE_ALL = False  # To prevent accidentally pickling all data
 
     if PICKLE_ALL:
         print("Pickling all downloaded SuperDARN data...")
@@ -183,7 +202,7 @@ if __name__ == '__main__':
                 print("\nStarting " + in_dir)
                 PickleFITACF(station, in_dir[3:])
     else:
-        station = "rkn"
-        date = "20161105"
+        station = "sas"
+        date = "20010101"
         print("Pickling " + station + date + "...")
         PickleFITACF(station, date)
