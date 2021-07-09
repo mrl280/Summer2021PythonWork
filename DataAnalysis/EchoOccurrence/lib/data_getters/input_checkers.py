@@ -207,24 +207,26 @@ def check_time_units(time_units):
         'mlt' for magnetic local time
         'lt' for local time (based on longitude)
         'lst' for local standard time (based on time zones).
-    :return: str: suitable time units, default is 'ut'
+        'ast' for apparent solar time (based on the apparent angular motion of the sun across the sky)
+    :return: str: suitable time units, default is Universal Time ('ut')
     """
 
     if time_units is None:
-        time_units = "mlt"
-        warnings.warn("No time_units provided, they have defaulted to mlt.",
+        time_units = "ut"
+        warnings.warn("No time_units provided, they have defaulted to ut.",
                       category=Warning)
 
     time_units = time_units.lower()
-    if time_units != "mlt" and time_units != "ut" and time_units != "lt" and time_units != "lst":
-        warnings.warn("The provided time units were neither 'mlt', 'ut', 'lst', or 'lt', they have defaulted to 'ut'.",
-                      category=Warning)
+    if time_units != "mlt" and time_units != "ut" and time_units != "lt" \
+            and time_units != "lst" and time_units != "ast":
+        warnings.warn("The provided time units were neither 'mlt', 'ut', 'lst', 'lt', or 'ast'"
+                      " they have defaulted to 'ut'.", category=Warning)
         time_units = "ut"
 
+    # lt and lst can be confused, print messages making it clear what I am computing
     if time_units == 'lt':
         warnings.warn("Note: Local time ('lt') time is based on longitude (not time zones)).  "
                       "All places on the same longitude have the same local time.", category=Warning)
-
     if time_units == 'lst':
         warnings.warn("Note: Local standard time ('lst') is based on time zone (not longitude).  "
                       "Places on the same longitude might have different standard times).", category=Warning)
