@@ -349,7 +349,7 @@ if __name__ == '__main__':
     else:
         station = "dcn"
         freq_range = (8, 10)
-        time_units = 'ast'
+        time_units = 'mlt'
 
         datetime_now = datetime.datetime.now()
         loc_root = str((pathlib.Path().parent.absolute()))
