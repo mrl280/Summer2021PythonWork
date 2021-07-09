@@ -269,10 +269,19 @@ def plot_data_on_axis(axes, data_is, data_gs, mlt_edges, lat_edges, vmaxs, plot_
         cmap = "jet"
         # cmap = modified_jet(levels=len(levels) - 1)
 
-        is_plot = axes["is"].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is_cyclic,
-                                      cmap=cmap, levels=is_levels, transform=ccrs.PlateCarree())
-        gs_plot = axes["gs"].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs_cyclic,
-                                      cmap=cmap, levels=gs_levels, transform=ccrs.PlateCarree())
+        if vmaxs['is'] < 1:
+            is_plot = axes["is"].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is_cyclic,
+                                          cmap=cmap, levels=is_levels, transform=ccrs.PlateCarree(), extend='max')
+        else:
+            is_plot = axes["is"].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is_cyclic,
+                                          cmap=cmap, levels=is_levels, transform=ccrs.PlateCarree())
+
+        if vmaxs['gs'] < 1:
+            gs_plot = axes["gs"].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs_cyclic,
+                                          cmap=cmap, levels=gs_levels, transform=ccrs.PlateCarree(), extend='max')
+        else:
+            gs_plot = axes["gs"].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs_cyclic,
+                                          cmap=cmap, levels=gs_levels, transform=ccrs.PlateCarree())
 
     elif plot_type == "pixel":
 

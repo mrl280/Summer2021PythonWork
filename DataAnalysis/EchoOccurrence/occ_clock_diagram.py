@@ -238,10 +238,19 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
         cmap = 'jet'
         # cmap = modified_jet(levels=len(levels) - 1)
 
-        plot0 = ax[0].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is_cyclic,
-                               cmap=cmap, levels=is_levels, transform=ccrs.PlateCarree())
-        plot1 = ax[1].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs_cyclic,
-                               cmap=cmap, levels=gs_levels, transform=ccrs.PlateCarree())
+        if is_vmax < 1:
+            plot0 = ax[0].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is_cyclic,
+                                   cmap=cmap, levels=is_levels, transform=ccrs.PlateCarree(), extend='max')
+        else:
+            plot0 = ax[0].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is_cyclic,
+                                   cmap=cmap, levels=is_levels, transform=ccrs.PlateCarree())
+
+        if gs_vmax < 1:
+            plot1 = ax[1].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs_cyclic,
+                                   cmap=cmap, levels=gs_levels, transform=ccrs.PlateCarree(), extend='max')
+        else:
+            plot1 = ax[1].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs_cyclic,
+                                  cmap=cmap, levels=gs_levels, transform=ccrs.PlateCarree())
 
     elif plot_type == "pixel":
 
