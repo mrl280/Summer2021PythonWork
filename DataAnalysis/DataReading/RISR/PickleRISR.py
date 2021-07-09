@@ -94,7 +94,7 @@ def PickleRISR(station, date):
             epoch.append(epoch_here)
 
         adjusted_df = pd.DataFrame(
-            {'stationId': [station] * len(epoch),
+            {'station': [station] * len(epoch),
              'datetime': date_time,
              'epoch': epoch,
              'decimalTime': np.asarray(df['HOUR']) + np.asarray(df['MIN']) / 60.0 + np.asarray(df['SEC']) / 3600.0,

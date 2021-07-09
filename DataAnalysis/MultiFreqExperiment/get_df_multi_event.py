@@ -130,5 +130,5 @@ if __name__ == '__main__':
     """
 
     df = get_df_multi_event(file_name="event_summary", flag='for_vel_hist')
-    print(df[['stationId', 'year', 'month', 'day']].head())
+    print(df[['station', 'year', 'month', 'day']].head())
 

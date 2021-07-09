@@ -59,7 +59,7 @@ if __name__ == '__main__':
     df.reset_index(drop=True, inplace=True)
 
     # Build an event summary that can be printed onto the plot
-    df['eventString'] = df['stationId'] + " " + \
+    df['eventString'] = df['station'] + " " + \
                         df['year'].astype(str) + "." + df['month'].astype(str) + "." + df['day'].astype(str)
     list_of_included_events = [i for i in df['eventString'].unique()]
 

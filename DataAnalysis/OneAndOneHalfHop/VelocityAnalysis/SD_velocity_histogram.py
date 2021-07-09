@@ -39,15 +39,15 @@ def SD_velocity_histogram(file_name, flag, plot_out):
     # Restrict to the overlapping data
     # At RKN the overlap is beam 5 and gates 25-32
     # At INV the overlap is beam 12 and gates 30-38
-    starting_gate = np.where(df['stationId'] == 'rkn', 25, 30)
-    ending_gate = np.where(df['stationId'] == 'rkn', 32, 38)
-    overlapping_beam = np.where(df['stationId'] == 'rkn', 5, 12)
+    starting_gate = np.where(df['station'] == 'rkn', 25, 30)
+    ending_gate = np.where(df['station'] == 'rkn', 32, 38)
+    overlapping_beam = np.where(df['station'] == 'rkn', 5, 12)
     df = df.loc[(df['gate'] >= starting_gate) & (df['gate'] <= ending_gate) & (df['bmnum'] == overlapping_beam)]
     df = df.loc[df['vel'].notna()]  # There should not be any nan velocities, but just to be safe
     df.reset_index(drop=True, inplace=True)
 
     # Build an event summary that can be printed onto the plot
-    df['eventString'] = df['stationId'] + " " + \
+    df['eventString'] = df['station'] + " " + \
                         df['year'].astype(str) + "." + df['month'].astype(str) + "." + df['day'].astype(str)
     list_of_included_events = [i for i in df['eventString'].unique()]
 
