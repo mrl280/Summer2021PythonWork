@@ -117,9 +117,9 @@ def PickleRISR(station, date):
              })
 
         # Compute Data Resolution in minutes
-        temp_df = adjusted_df.drop_duplicates(subset=['dateTime'])
-        resolution = int((temp_df['minute'].iloc[1] + temp_df['second'].iloc[1] / 60.0)
-                         - (temp_df['minute'].iloc[0] + temp_df['second'].iloc[0] / 60.0))
+        temp_df = adjusted_df.drop_duplicates(subset=['datetime'])
+        resolution = int((temp_df['minute'].iat[1] + temp_df['second'].iat[1] / 60.0)
+                         - (temp_df['minute'].iat[0] + temp_df['second'].iat[0] / 60.0))
 
         # Save to file
         out_file = in_file[:len(in_file) - 8] + "." + str(resolution) + "min.pkl"
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     """
     Handler to call PickleRISR on RISR txt data files
     """
-    PICKLE_ALL = False  # To prevent accidentally pickling all data
+    PICKLE_ALL = True  # To prevent accidentally pickling all data
 
     if PICKLE_ALL:
         print("Pickling all downloaded RISR data...")
