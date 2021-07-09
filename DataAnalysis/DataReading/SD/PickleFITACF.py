@@ -139,7 +139,7 @@ def PickleFITACF(station, date):
 
     # Put the data into a dataframe
     print("     Building the data frame...")
-    df = pd.DataFrame({'stationId': [station] * len(epoch),
+    df = pd.DataFrame({'station': [station] * len(epoch),
                        'datetime': date_time,
                        'epoch': epoch,
                        'decimalTime': np.asarray(hour) + np.asarray(minute) / 60.0 + np.asarray(second) / 3600.0,
