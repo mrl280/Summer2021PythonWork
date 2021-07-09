@@ -292,15 +292,12 @@ def add_colour_bar(fig, cax, plot, vmax):
     """
     Add a colour bar to the the provided fig/cax with reference to the provided plot
     """
-    if vmax < 0.6:
-        format = '%.2f'
-    else:
-        format = '%.1f'
+    text_format = '%.2f'
 
     if vmax < 1:
-        cbar = fig.colorbar(plot, cax=cax, orientation="horizontal", format=format, extend='max')
+        cbar = fig.colorbar(plot, cax=cax, orientation="horizontal", format=text_format, extend='max')
     else:
-        cbar = fig.colorbar(plot, cax=cax, orientation="horizontal", format=format)
+        cbar = fig.colorbar(plot, cax=cax, orientation="horizontal", format=text_format)
 
     cbar.ax.tick_params(labelsize=18)
 
