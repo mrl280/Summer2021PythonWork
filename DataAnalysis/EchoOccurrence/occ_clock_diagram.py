@@ -72,6 +72,9 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
             It can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
+    is_vmax = 0.8
+    gs_vmax = 0.4
+
     time_units = check_time_units(time_units)
     year = check_year(year)
     month_range = check_month_range(month_range)
@@ -135,39 +138,43 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     df['lat'] = df['lat'].abs()
 
     print("     Preparing the plot...")
-    fig, ax = plt.subplots(figsize=[10, 6], dpi=300, nrows=1, ncols=2,  constrained_layout=True,
+    fig, ax = plt.subplots(figsize=[10, 6], dpi=300, nrows=1, ncols=2, constrained_layout=True,
                            subplot_kw={'projection': projection})
     fig.suptitle(month_string + " " + str(year) + " at " + station.upper() + "; " + beam_string + "; " + freq_string,
                  fontsize=18)
 
     # Apply common subplot formatting
-    lat_extreme = 60  # TODO: Adjust lat extreme based on the radar (use the most extreme point in the fan)
+    lat_extreme = 70  # TODO: Adjust lat extreme based on the radar (use the most extreme point in the fan)
     for i in range(ax.size):
         ax[i].set_extent([-180, 180, 90, lat_extreme], crs=ccrs.PlateCarree())
-        ax[i].set_boundary(circle, transform=ax[i].transAxes)
+        ax[i].set_boundary(circle, transform=ax[i].transAxes)  # Comment out this line to enable auto labelling
 
-        # Add gridlines   # Note: Labels wont draw on a circular axis
-        gl = ax[i].gridlines(draw_labels=True, linestyle='--', linewidth=0.5, zorder=5)
+        # Add gridlines
+        gl = ax[i].gridlines(draw_labels=True, linestyle='--', linewidth=0.75, zorder=4)
         gl.xlocator = mticker.FixedLocator([-180, -135, -90, -45, 0, 45, 90, 135])
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
 
+        # Latitude labels won't draw on a circular plot, add them on manually
+        add_lat_labels_to_clock_diagram(ax=ax[i], hemisphere=this_radars_info.hemisphere,
+                                        lat_extreme=lat_extreme, lat_labels=[85, 80, 75])
+
         # Print clock numbers
         text_offset_multiplier = 1.03
-        ax[i].text(0, text_offset_multiplier * ax[i].get_ylim()[1], "12", ha='center', va='bottom')
-        ax[i].text(0, text_offset_multiplier * ax[i].get_ylim()[0], "00", ha='center', va='top')
-        ax[i].text(text_offset_multiplier * ax[i].get_xlim()[1], 0, "06", ha='left', va='center')
-        ax[i].text(text_offset_multiplier * ax[i].get_xlim()[0], 0, "18", ha='right', va='center')
+        ax[i].text(0, text_offset_multiplier * ax[i].get_ylim()[1], "12", ha='center', va='bottom', fontsize=14)
+        ax[i].text(0, text_offset_multiplier * ax[i].get_ylim()[0], "00", ha='center', va='top', fontsize=14)
+        ax[i].text(text_offset_multiplier * ax[i].get_xlim()[1], 0, "06", ha='left', va='center', fontsize=14)
+        ax[i].text(text_offset_multiplier * ax[i].get_xlim()[0], 0, "18", ha='right', va='center', fontsize=14)
 
         # Print out the time units
-        ax[i].text(ax[i].get_xlim()[1], ax[i].get_ylim()[1], time_units.upper(), ha='right', va='top')
+        ax[i].text(ax[i].get_xlim()[1], ax[i].get_ylim()[1], time_units.upper(), ha='right', va='top', fontsize=14)
 
         # Plot radar track
         ax[i].plot(radar_mlts, radar_lats_aacgm, color='k', linewidth=1, linestyle="--", transform=ccrs.Geodetic())
 
     # Print out echo types
-    ax[0].text(ax[0].get_xlim()[0], ax[0].get_ylim()[1], "IS", ha='left', va='top')
-    ax[1].text(ax[1].get_xlim()[0], ax[1].get_ylim()[1], "GS", ha='left', va='top')
+    ax[0].text(ax[0].get_xlim()[0], ax[0].get_ylim()[1], "IS", ha='left', va='top', fontsize=14)
+    ax[1].text(ax[1].get_xlim()[0], ax[1].get_ylim()[1], "GS", ha='left', va='top', fontsize=14)
 
     print("     Computing binned occ rates...")
     # Compute mlt edges
@@ -225,34 +232,84 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
         contour_data_is_cyclic, bin_xcenters_cyclic = add_cyclic_point(contour_data_is.transpose(), coord=bin_xcenters)
         contour_data_gs_cyclic, bin_xcenters_cyclic = add_cyclic_point(contour_data_gs.transpose(), coord=bin_xcenters)
 
-        levels = 12
-        levels = np.linspace(start=0, stop=1, num=(levels + 1))
+        n_levels = 12
+        is_levels = np.linspace(start=0, stop=is_vmax, num=(n_levels + 1))
+        gs_levels = np.linspace(start=0, stop=gs_vmax, num=(n_levels + 1))
         cmap = 'jet'
         # cmap = modified_jet(levels=len(levels) - 1)
 
         plot0 = ax[0].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is_cyclic,
-                               cmap=cmap, levels=levels, transform=ccrs.PlateCarree())
+                               cmap=cmap, levels=is_levels, transform=ccrs.PlateCarree())
         plot1 = ax[1].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs_cyclic,
-                               cmap=cmap, levels=levels, transform=ccrs.PlateCarree())
+                               cmap=cmap, levels=gs_levels, transform=ccrs.PlateCarree())
 
     elif plot_type == "pixel":
 
         cmap = 'jet'
         plot0 = ax[0].pcolormesh(mlt_edges, lat_edges, contour_data_is.transpose(),
-                                 transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=1)
+                                 transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=is_vmax)
         plot1 = ax[1].pcolormesh(mlt_edges, lat_edges, contour_data_gs.transpose(),
-                                 transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=1)
+                                 transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=gs_vmax)
 
     else:
         raise Exception("plot_type not recognized")
 
-    cbar0 = fig.colorbar(plot0, ax=ax[0], shrink=0.7, orientation="horizontal", format='%.2f')
-    cbar0.ax.tick_params(labelsize=14, labelrotation=30)
+    if is_vmax < 1:
+        cbar0 = fig.colorbar(plot0, ax=ax[0], shrink=0.7, orientation="horizontal", format='%.1f', extend='max')
+    else:
+        cbar0 = fig.colorbar(plot0, ax=ax[0], shrink=0.7, orientation="horizontal", format='%.1f')
+    cbar0.ax.tick_params(labelsize=16, labelrotation=0)
 
-    cbar1 = fig.colorbar(plot1, ax=ax[1], shrink=0.7, orientation="horizontal", format='%.2f')
-    cbar1.ax.tick_params(labelsize=14, labelrotation=30)
+    if gs_vmax < 1:
+        cbar1 = fig.colorbar(plot1, ax=ax[1], shrink=0.7, orientation="horizontal", format='%.1f', extend='max')
+    else:
+        cbar1 = fig.colorbar(plot1, ax=ax[1], shrink=0.7, orientation="horizontal", format='%.1f')
+    cbar1.ax.tick_params(labelsize=16, labelrotation=0)
 
     return df, fig
+
+
+def add_lat_labels_to_clock_diagram(ax, hemisphere, lat_extreme, lat_labels, color='white', fontsize=12):
+    """
+
+    Clock diagram axis are clipped using a matplotlib path object and labels wont draw on these circular axis,
+     so this function prints them our manually.
+    Also, we always NorthPoleStereo projection and this allows us to print the proper hemisphere (N or S)
+
+    :param ax: matplotlib.pyplot.axis:
+            The axis to draw on
+    :param hemisphere: A pydarn hemisphere object:
+            Which hemisphere is the radar in?
+    :param lat_extreme:
+    :param lat_labels: list/array of ints:
+            The latitude labels to print out
+    :param color: Matplotlib named colour as a string: (optional)
+            The colour for the labels, default is 'white'
+    :param fontsize: int: (optional)
+            The fontsize, default is 12
+    """
+
+    degree_sign = u'\N{DEGREE SIGN}'
+    angle_to_print_on = 135  # deg clockwise starting at the top
+
+    if hemisphere.value == 1:
+        hemi_str = "N"
+    elif hemisphere.value == -1:
+        hemi_str = "S"
+    else:
+        raise Exception("Error in add_lat_labels_to_clock_diagram(): Hemisphere not recognized")
+
+    lat_range = 90 - lat_extreme  # The range of latitudes that are covered by the plot
+
+    for lat in lat_labels:
+        distance_from_edge = lat - lat_extreme
+        percent_of_way_to_edge = 1 - distance_from_edge / lat_range
+
+        x_scale = percent_of_way_to_edge * math.sin(math.radians(angle_to_print_on))
+        y_scale = percent_of_way_to_edge * math.cos(math.radians(angle_to_print_on))
+
+        ax.text(x_scale * ax.get_xlim()[1], y_scale * ax.get_ylim()[1], str(lat) + degree_sign + hemi_str,
+                color=color, fontsize=fontsize, ha='center', va='center', zorder=5)
 
 
 if __name__ == '__main__':
@@ -265,7 +322,7 @@ if __name__ == '__main__':
 
         _, fig = occ_clock_diagram(station=station, year=2011, month_range=(11, 11), day_range=None,
                                    gate_range=(0, 74), beam_range=(6, 7), freq_range=None,
-                                   plot_type='contour', time_units='lt',
+                                   plot_type='pixel', time_units='mlt',
                                    local_testing=local_testing)
 
         plt.show()
