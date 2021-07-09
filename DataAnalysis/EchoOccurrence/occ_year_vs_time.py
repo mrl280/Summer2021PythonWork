@@ -74,7 +74,8 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
             The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
-    vmax = 0.8  # The top of the colour bar
+    vmaxs = {"is": 0.8,  # The top of the colour bar
+             "gs": 0.2}
 
     time_units = check_time_units(time_units)
     year_range = check_year_range(year_range)
@@ -143,7 +144,6 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
 
     # Apply common subplot formatting
     for i in range(ax.size):
-
         ax[i].set_xlim(hour_range)
         ax[i].set_xlabel("Time, " + time_units.upper(), fontsize=16)
         ax[i].xaxis.set_major_locator(MultipleLocator(4))
@@ -210,31 +210,49 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
         bin_xcenters = hour_edges[1:] - delta_hour / 2
         bin_ycenters = year_edges[1:] - delta_year / 2
 
-        levels = 12
-        levels = np.linspace(start=0, stop=vmax, num=(levels + 1))
+        n_levels = 12
+        is_levels = np.linspace(start=0, stop=vmaxs['is'], num=(n_levels + 1))
+        gs_levels = np.linspace(start=0, stop=vmaxs['gs'], num=(n_levels + 1))
         cmap = 'jet'
         # cmap = modified_jet(levels=len(levels) - 1)
 
-        plot0 = ax[0].contourf(bin_xcenters, bin_ycenters, contour_data_is.transpose(),
-                               cmap=cmap, levels=levels, zorder=0)
-        plot1 = ax[1].contourf(bin_xcenters, bin_ycenters, contour_data_gs.transpose(),
-                               cmap=cmap, levels=levels, zorder=0)
+        if vmaxs['is'] < 1:
+            plot0 = ax[0].contourf(bin_xcenters, bin_ycenters, contour_data_is.transpose(),
+                                   cmap=cmap, levels=is_levels, zorder=0, extend='max')
+        else:
+            plot0 = ax[0].contourf(bin_xcenters, bin_ycenters, contour_data_is.transpose(),
+                                   cmap=cmap, levels=is_levels, zorder=0)
+
+        if vmaxs['gs'] < 1:
+            plot1 = ax[1].contourf(bin_xcenters, bin_ycenters, contour_data_gs.transpose(),
+                                   cmap=cmap, levels=gs_levels, zorder=0, extend='max')
+        else:
+            plot1 = ax[1].contourf(bin_xcenters, bin_ycenters, contour_data_gs.transpose(),
+                                   cmap=cmap, levels=gs_levels, zorder=0)
 
     elif plot_type == "pixel":
 
         cmap = 'jet'
         plot0 = ax[0].pcolormesh(hour_edges, year_edges, contour_data_is.transpose(),
-                                 cmap=cmap, vmin=0, vmax=vmax, zorder=0)
+                                 cmap=cmap, vmin=0, vmax=vmaxs['is'], zorder=0)
         plot1 = ax[1].pcolormesh(hour_edges, year_edges, contour_data_gs.transpose(),
-                                 cmap=cmap, vmin=0, vmax=vmax, zorder=0)
+                                 cmap=cmap, vmin=0, vmax=vmaxs['gs'], zorder=0)
 
     else:
         raise Exception("plot_type not recognized")
 
-    cbar0 = fig.colorbar(plot0, ax=ax[0], orientation="vertical", format='%.1f')
+    # Add in colour bars for each plot
+    cbar_text_format = '%.2f'
+    if vmaxs['is'] < 1:  # The extend here is needed for the pixel option, it has no effect on coutours
+        cbar0 = fig.colorbar(plot0, ax=ax[0], orientation="vertical", format=cbar_text_format, extend='max')
+    else:
+        cbar0 = fig.colorbar(plot0, ax=ax[0], orientation="vertical", format=cbar_text_format)
     cbar0.ax.tick_params(labelsize=14)
 
-    cbar1 = fig.colorbar(plot1, ax=ax[1], orientation="vertical", format='%.1f')
+    if vmaxs['gs'] < 1:
+        cbar1 = fig.colorbar(plot1, ax=ax[1], orientation="vertical", format=cbar_text_format, extend='max')
+    else:
+        cbar1 = fig.colorbar(plot1, ax=ax[1], orientation="vertical", format=cbar_text_format)
     cbar1.ax.tick_params(labelsize=14)
 
     if angle_contours is not None and time_units == 'lt':
@@ -255,8 +273,8 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
 
     # For some reason gridlines have to be turned on at the end otherwise they don't show up?
     for i in range(ax.size):
-        ax[i].grid(which='minor', axis='y', linestyle='--', linewidth=0.2, color='white', zorder=4)
-        ax[i].grid(which='major', axis='both', linestyle='--', linewidth=0.5, color='white', zorder=4)
+        ax[i].grid(which='minor', axis='y', linestyle='--', linewidth=0.4, color='white', zorder=4)
+        ax[i].grid(which='major', axis='both', linestyle='--', linewidth=0.7, color='white', zorder=4)
 
     return df, fig
 
@@ -353,8 +371,10 @@ def add_angle_contours(ax, type_of_contours, year_range, hour_range, beam_range,
 
     # Add in a legend specifying what contours represent
     contour_label = "Solar " + type_of_contours.capitalize() + " Angles"
-    contours.collections[0].set_label(contour_label)
-    ax.legend(loc=(0, 1.02), fontsize=12, facecolor='red')
+    # Use the last contour line as the example because it is the most likely to be positive (solid line)
+    contours.collections[-1].set_label(contour_label)
+
+    ax.legend(loc=(0.01, 1.02), fontsize=12, labelcolor='white', facecolor='darkgrey', framealpha=1)
 
 
 if __name__ == '__main__':
@@ -368,29 +388,30 @@ if __name__ == '__main__':
         # Note: year, month, and day don't matter for local testing
         df, fig = occ_year_vs_time(station=station, year_range=(2011, 2012), month_range=None, day_range=None,
                                    hour_range=None, gate_range=(0, 74), beam_range=None, freq_range=(11, 13),
-                                   time_units='lt', plot_type='contour', angle_contours='zenith',
+                                   time_units='lt', plot_type='contour', angle_contours='altitude',
                                    local_testing=local_testing)
 
         plt.show()
 
 
     else:
-        station = "dcn"
-        freq_range = (8, 10)
+        stations = ["dce", "dcn"]
+        freq_range = (8, 18)
         year_range = (2019, 2021)
-        angle_contours = 'zenith'
+        angle_contour_types = ['zenith', 'altitude']
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        _, fig = occ_year_vs_time(station=station, year_range=year_range, day_range=None,
-                                  gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
-                                  time_units='lt', plot_type='contour', angle_contours=angle_contours,
-                                  local_testing=local_testing)
+        for station in stations:
+            for angle_contours in angle_contour_types:
+                _, fig = occ_year_vs_time(station=station, year_range=year_range, day_range=None,
+                                          gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
+                                          time_units='lt', plot_type='contour', angle_contours=angle_contours,
+                                          local_testing=local_testing)
 
-        out_fig = out_dir + "/occ_yearVtime_" + station + "_" + \
-                  str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz - with_" + angle_contours + "_contours"
+                out_fig = out_dir + "/occ_yearVtime_" + station + "_" + \
+                          str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz - with_" + angle_contours + "_contours"
 
-        print("Saving plot as " + out_fig)
-        fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
-
+                print("Saving plot as " + out_fig)
+                fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
