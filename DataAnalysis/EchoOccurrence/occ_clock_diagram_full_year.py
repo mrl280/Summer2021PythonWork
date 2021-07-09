@@ -12,6 +12,8 @@ import matplotlib.path as mpath
 import matplotlib.ticker as mticker
 import numpy as np
 
+from occ_clock_diagram import add_lat_labels_to_clock_diagram
+
 from lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.cm.modified_jet import modified_jet
 from lib.add_mlt_to_df import add_mlt_to_df
@@ -69,7 +71,8 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
     analyzed, and the figure can then be modified, added to, printed out, or saved in whichever file format is desired.
     """
 
-    vmax = 0.5
+    vmaxs = {"is": 0.6,  # The top of the colour bar
+             "gs": 0.2}
 
     time_units = check_time_units(time_units)
     year = check_year(year)
@@ -118,8 +121,8 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
     print("     Preparing the figure...")
     fig = plt.figure(figsize=[8, 14], constrained_layout=True, dpi=300)
 
-    lat_extreme = 59  # TODO: Adjust lat extreme based on the radar (use the most extreme point in the fan)
-    month_axes, season_axes, cbar_axis = add_axes(fig=fig, radar_info=this_radars_info, lat_extreme=lat_extreme)
+    lat_extreme = 69  # TODO: Adjust lat extreme based on the radar (use the most extreme point in the fan)
+    month_axes, season_axes, cbar_axes = add_axes(fig=fig, radar_info=this_radars_info, lat_extreme=lat_extreme)
     fig.suptitle(str(year) + " at " + station.upper() + "; " + beam_string + "; " + freq_string +
                  "\n Data Plotted in AACGM Latitudes and " + time_units.upper() +
                  "\nProduced by " + str(os.path.basename(__file__)), fontsize=18)
@@ -144,7 +147,7 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
         df_mm = df[df['month'] == month]
         ax = month_axes[month_str]
 
-        add_data_to_plot(df=df_mm, ax=ax, mlt_edges=mlt_edges, lat_edges=lat_edges, plot_type=plot_type, vmax=vmax)
+        add_data_to_plot(df=df_mm, ax=ax, mlt_edges=mlt_edges, lat_edges=lat_edges, plot_type=plot_type, vmaxs=vmaxs)
 
     # Add the seasonal data to the plot
     for season in season_axes:
@@ -161,24 +164,32 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
 
         ax = season_axes[season]
 
-        cbar_ref_plot, _ = add_data_to_plot(df=df_ss, ax=ax, mlt_edges=mlt_edges, lat_edges=lat_edges,
-                                            plot_type=plot_type, vmax=vmax)
+        cbar_ref_plot_is, cbar_ref_plot_gs = add_data_to_plot(df=df_ss, ax=ax, mlt_edges=mlt_edges, lat_edges=lat_edges,
+                                                              plot_type=plot_type, vmaxs=vmaxs)
 
-    add_colour_bar(fig=fig, cax=cbar_axis, plot=cbar_ref_plot, vmax=vmax)
+    add_colour_bar(fig=fig, cax=cbar_axes['is'], plot=cbar_ref_plot_is, vmax=vmaxs['is'])
+    add_colour_bar(fig=fig, cax=cbar_axes['gs'], plot=cbar_ref_plot_gs, vmax=vmaxs['gs'])
 
     return df, fig
 
 
-def add_data_to_plot(df, ax, mlt_edges, lat_edges, plot_type='pixel', vmax=1.0):
+def add_data_to_plot(df, ax, mlt_edges, lat_edges, plot_type='pixel', vmaxs=None):
     """
     Add clock data to a stereographic plot
+
     :param df: pandas.DataFrame: The restricted dataframe containing the occurance data
     :param ax: matplotlib.axes: The axes to draw on
     :param mlt_edges: The MLT (x data) edges
     :param lat_edges: The LAT (y data) edges
     :param plot_type: str: The type of plot - either "pixel" (default) or "contour"
+    :param vmaxs: dictionary: with "is" and "gs" keyed items containing the colour bar maximums (z max)
+
     :return matplotlib.pyplot.plot, matplotlib.pyplot.plot: The ionospheric and ground scatter plots
     """
+
+    if vmaxs is None:
+        vmaxs = {"is": 1.0,  # The top of the colour bar
+                 "gs": 0.5}
 
     n_bins_mlt = len(mlt_edges) - 1
     n_bins_lat = len(lat_edges) - 1
@@ -219,13 +230,13 @@ def add_data_to_plot(df, ax, mlt_edges, lat_edges, plot_type='pixel', vmax=1.0):
                 raise e
 
     is_plot, gs_plot = plot_data_on_axis(axes=ax, data_is=data_is, data_gs=data_gs,
-                                         mlt_edges=mlt_edges, lat_edges=lat_edges, vmax=vmax, plot_type=plot_type)
+                                         mlt_edges=mlt_edges, lat_edges=lat_edges, vmaxs=vmaxs, plot_type=plot_type)
 
     # All plots have the same scale, we just need to return one for the colour bar to reference
     return is_plot, gs_plot
 
 
-def plot_data_on_axis(axes, data_is, data_gs, mlt_edges, lat_edges, vmax, plot_type='pixel'):
+def plot_data_on_axis(axes, data_is, data_gs, mlt_edges, lat_edges, vmaxs, plot_type='pixel'):
     """
     Add the ionospheric and ground scatter data to the plots
 
@@ -235,7 +246,7 @@ def plot_data_on_axis(axes, data_is, data_gs, mlt_edges, lat_edges, vmax, plot_t
     :param mlt_edges: The MLT (x data) edges
     :param lat_edges: The LAT (y data) edges
     :param plot_type: str: The type of plot - either "pixel" (default) or "contour"
-     :param vmax: float: Maximum z value.  Default is 1.
+    :param vmaxs: dictionary: with "is" and "gs" keyed items containing the colour bar maximums
     :return matplotlib.pyplot.plot, matplotlib.pyplot.plot: The ionospheric and ground scatter plots
     """
 
@@ -252,23 +263,24 @@ def plot_data_on_axis(axes, data_is, data_gs, mlt_edges, lat_edges, vmax, plot_t
         contour_data_is_cyclic, bin_xcenters_cyclic = add_cyclic_point(data_is.transpose(), coord=bin_xcenters)
         contour_data_gs_cyclic, bin_xcenters_cyclic = add_cyclic_point(data_gs.transpose(), coord=bin_xcenters)
 
-        levels = 12
-        levels = np.linspace(start=0, stop=vmax, num=(levels + 1))
+        n_levels = 12
+        is_levels = np.linspace(start=0, stop=vmaxs['is'], num=(n_levels + 1))
+        gs_levels = np.linspace(start=0, stop=vmaxs['gs'], num=(n_levels + 1))
         cmap = "jet"
         # cmap = modified_jet(levels=len(levels) - 1)
 
         is_plot = axes["is"].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_is_cyclic,
-                                      cmap=cmap, levels=levels, transform=ccrs.PlateCarree())
+                                      cmap=cmap, levels=is_levels, transform=ccrs.PlateCarree())
         gs_plot = axes["gs"].contourf(bin_xcenters_cyclic, bin_ycenters, contour_data_gs_cyclic,
-                                      cmap=cmap, levels=levels, transform=ccrs.PlateCarree())
+                                      cmap=cmap, levels=gs_levels, transform=ccrs.PlateCarree())
 
     elif plot_type == "pixel":
 
         cmap = 'jet'
         is_plot = axes["is"].pcolormesh(mlt_edges, lat_edges, data_is.transpose(),
-                                        transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=vmax)
+                                        transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=vmaxs['is'])
         gs_plot = axes["gs"].pcolormesh(mlt_edges, lat_edges, data_gs.transpose(),
-                                        transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=vmax)
+                                        transform=ccrs.PlateCarree(), cmap=cmap, vmin=0, vmax=vmaxs['gs'])
 
     else:
         raise Exception("plot_type not recognized")
@@ -280,10 +292,15 @@ def add_colour_bar(fig, cax, plot, vmax):
     """
     Add a colour bar to the the provided fig/cax with reference to the provided plot
     """
-    if vmax < 1:
-        cbar = fig.colorbar(plot, cax=cax, orientation="horizontal", format='%.1f', extend='max')
+    if vmax < 0.6:
+        format = '%.2f'
     else:
-        cbar = fig.colorbar(plot, cax=cax, orientation="horizontal", format='%.1f')
+        format = '%.1f'
+
+    if vmax < 1:
+        cbar = fig.colorbar(plot, cax=cax, orientation="horizontal", format=format, extend='max')
+    else:
+        cbar = fig.colorbar(plot, cax=cax, orientation="horizontal", format=format)
 
     cbar.ax.tick_params(labelsize=18)
 
@@ -316,8 +333,7 @@ def add_axes(fig, radar_info, lat_extreme=60):
 
     gs = fig.add_gridspec(ncols=8, nrows=13)
 
-    month_axes = dict()
-    season_axes = dict()
+    month_axes, season_axes, cbar_axes = dict(), dict(), dict()
 
     # Build all of the spring axes
     # For seasonal axis, remember that splices don't include last index
@@ -360,15 +376,17 @@ def add_axes(fig, radar_info, lat_extreme=60):
     season_axes["Winter"] = {"is": fig.add_subplot(gs[9:12, 1:4], projection=proj),
                              "gs": fig.add_subplot(gs[9:12, 4:7], projection=proj)}
 
-    cbar_axis = fig.add_subplot(gs[12, 1:7])
+    # Add two colour bar axes, one for ionospheric scatter and one for ground scatter
+    cbar_axes["is"] = fig.add_subplot(gs[12, 0:4])
+    cbar_axes["gs"] = fig.add_subplot(gs[12, 4:8])
 
-    apply_common_subplot_formatting(month_axes=month_axes, season_axes=season_axes,
-                                    radar_info=radar_info, lat_extreme=lat_extreme)
+    apply_subplot_formatting(month_axes=month_axes, season_axes=season_axes,
+                             radar_info=radar_info, lat_extreme=lat_extreme)
 
-    return month_axes, season_axes, cbar_axis
+    return month_axes, season_axes, cbar_axes
 
 
-def apply_common_subplot_formatting(month_axes, season_axes, radar_info, lat_extreme):
+def apply_subplot_formatting(month_axes, season_axes, radar_info, lat_extreme):
     """
     :param lat_extreme: The most extreme latitude to plot.
         Note: since we always use a NorthPoleStereo projection, this should be positive
@@ -394,25 +412,38 @@ def apply_common_subplot_formatting(month_axes, season_axes, radar_info, lat_ext
             ax[subplot_type].set_extent([-180, 180, 90, lat_extreme], crs=ccrs.PlateCarree())
             ax[subplot_type].set_boundary(circle, transform=ax[subplot_type].transAxes)
 
-            # Add gridlines   # Note: Labels wont draw on a circular axis
-            gl = ax[subplot_type].gridlines(draw_labels=True, linestyle='--', linewidth=0.5, zorder=5)
-            gl.xlocator = mticker.FixedLocator([-180, -135, -90, -45, 0, 45, 90, 135])
-
-    # Add printouts to month axes
+    # Format month axes
+    month_font_size = 9
     for month in month_axes:
         for subplot_type in subplot_types:
             ax = month_axes[month][subplot_type]
 
+            # Add gridlines
+            gl = ax.gridlines(draw_labels=True, linestyle='--', linewidth=0.6, zorder=5)
+            gl.xlocator = mticker.FixedLocator([-180, -135, -90, -45, 0, 45, 90, 135])
+            gl.ylocator = mticker.FixedLocator([90, 80, 70])
+
             # Print out the month
-            ax.text(ax.get_xlim()[0], ax.get_ylim()[1], month[:3], ha='center', va='top', fontsize=9)
+            ax.text(ax.get_xlim()[0], ax.get_ylim()[1], month[:3], ha='center', va='top', fontsize=month_font_size)
 
             # Print out the type of scatter
-            ax.text(ax.get_xlim()[1], ax.get_ylim()[1], subplot_type.upper(), ha='center', va='top', fontsize=9)
+            ax.text(ax.get_xlim()[1], ax.get_ylim()[1], subplot_type.upper(), ha='center', va='top',
+                    fontsize=month_font_size)
 
-    # Add printouts to seasonal axes
+            # Latitude labels won't draw on a circular plot, add them on manually
+            add_lat_labels_to_clock_diagram(ax=ax, hemisphere=hemisphere, lat_extreme=lat_extreme,
+                                            lat_labels=[80], color='white', fontsize=month_font_size / 2)
+
+    # Format season axes
+    season_font_size = 12
     for season in season_axes:
         for subplot_type in subplot_types:
             ax = season_axes[season][subplot_type]
+
+            # Add gridlines
+            gl = ax.gridlines(draw_labels=True, linestyle='--', linewidth=0.6, zorder=5)
+            gl.xlocator = mticker.FixedLocator([-180, -135, -90, -45, 0, 45, 90, 135])
+            gl.ylocator = mticker.FixedLocator([90, 85, 80, 75, 70])
 
             if hemisphere.value == 1:
                 season_str = season
@@ -423,10 +454,15 @@ def apply_common_subplot_formatting(month_axes, season_axes, radar_info, lat_ext
                 raise Exception("Error: Season not recognized.")
 
             # Print out the season
-            ax.text(ax.get_xlim()[0], ax.get_ylim()[1], season_str, ha='left', va='top', fontsize=12)
+            ax.text(ax.get_xlim()[0], ax.get_ylim()[1], season_str, ha='left', va='top', fontsize=season_font_size)
 
             # Print out the type of scatter
-            ax.text(ax.get_xlim()[1], ax.get_ylim()[1], subplot_type.upper(), ha='right', va='top', fontsize=12)
+            ax.text(ax.get_xlim()[1], ax.get_ylim()[1], subplot_type.upper(), ha='right', va='top',
+                    fontsize=season_font_size)
+
+            # Latitude labels won't draw on a circular plot, add them on manually
+            add_lat_labels_to_clock_diagram(ax=ax, hemisphere=hemisphere, lat_extreme=lat_extreme,
+                                            lat_labels=[85, 80, 75], color='white', fontsize=season_font_size / 2)
 
             # Print clock numbers
             text_offset_multiplier = 1.03
@@ -463,27 +499,28 @@ if __name__ == '__main__':
 
         _, fig = occ_clock_diagram_full_year(station=station, year=2011, day_range=None,
                                              gate_range=(0, 74), beam_range=(6, 7), freq_range=None,
-                                             time_units='lt', plot_type='pixel', local_testing=local_testing)
+                                             time_units='mlt', plot_type='pixel', local_testing=local_testing)
 
         plt.show()
 
 
     else:
-        station = "dcn"
-        freq_range = (8, 10)
+        stations = ["dcn", "dce"]
+        freq_range = (8, 18)
         plot_type = 'pixel'
         time_units = 'mlt'
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        for year in range(2019, 2022, 1):
-            _, fig = occ_clock_diagram_full_year(station=station, year=year, day_range=None,
-                                                 gate_range=(0, 74), beam_range=None, freq_range=freq_range,
-                                                 time_units=time_units, plot_type=plot_type,
-                                                 local_testing=local_testing)
+        for station in stations:
+            for year in range(2019, 2022, 1):
+                _, fig = occ_clock_diagram_full_year(station=station, year=year, day_range=None,
+                                                     gate_range=(0, 74), beam_range=None, freq_range=freq_range,
+                                                     time_units=time_units, plot_type=plot_type,
+                                                     local_testing=local_testing)
 
-            out_fig = out_dir + "/occ_clock_diagram_full_year_" + station + "_" + str(year) + "_" + \
-                      str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz" + "_" + plot_type + "_" + time_units
-            print("Saving plot as " + out_fig)
-            fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+                out_fig = out_dir + "/occ_clock_diagram_full_year_" + station + "_" + str(year) + "_" + \
+                          str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz" + "_" + plot_type + "_" + time_units
+                print("Saving plot as " + out_fig)
+                fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
