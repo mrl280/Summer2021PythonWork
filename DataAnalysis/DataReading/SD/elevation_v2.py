@@ -1,51 +1,46 @@
+import math
+import pydarn
+
 import pandas as pd
 import numpy as np
-import math
 
 
-def elevation_v2(df, t_diff):
+def elevation_v2(df, t_diff=0.0):
     """
     This function is based on the rst code found here:
         https://github.com/SuperDARN/rst/blob/master/codebase/superdarn/src.lib/tk/elevation.1.0/src/elevation_v2.c
     The method is based on 'Elevation angle determination for SuperDARN HF radar layouts' by S. G. Shepherd
 
-    Note: This program is a tad slow, so it is best to filter your dataframe before calling it.
-    Note: In the fitACF file, a phase offset of 0 results in an elevation angle of 0.
-        However, that is not the case for this program.  Rather, you will get the appropriate non-zero elevation angle.
+    Note:
+    - This program is a tad slow, so it is best to filter your dataframe before calling it.
+    - In the fitACF file, a phase offset of 0 results in an elevation angle of 0.  However, that is not the case
+     for this program.  Rather, you will get the appropriate non-zero elevation angle.
 
-    :param df: SuperDARN data frame.  Must contain the following standard parameters: 'tfreq', 'phase', 'stationId',
-        'bmnum'
-    :param t_diff: The extra time delay to add in, in microseconds.
-    :return: The input dataframe, but with the added parameters: 'adjPhase', 'adjElv'
+    :param df: pandas.DataFrame:
+        SuperDARN data frame.  Must contain the following standard parameters: 'tfreq', 'phase', 'station', 'bmnum'
+    :param t_diff: float: (Optional, default is 0.0)
+        The extra time delay to add in, in microseconds.
+    :return: pandas.DataFrame:
+        The input dataframe, but with the added parameters: 'adjPhase', 'adjElv'
     """
+
+    df.reset_index(drop=True, inplace=True)  # Just encase
+    if len(df) <= 0:
+        df['adjPhase'] = []
+        df['adjElv'] = []
+        return
 
     c = 2.998e+8  # Speed of light in vacuum [m/s]
 
-    if df['stationId'].iloc[0] == "rkn":
-        x = 0  # From hdw.  Interferometer offset in metres
-        y = -100
-        z = 0
-        maxbeam = 16  # From hdw.  Maximum number of beams to be used at a particular radar site.
-        bmsep = 3.24  # From hdw.  Beam separation (Angular separation in degrees between adjacent beams). [deg]
-        t_diff_hdw = 0.0  # From hdw.  Propagation time difference between the main array and the interferometer array.
-    elif df['stationId'].iloc[0] == "cly":
-        x = 0  # From hdw.  Interferometer offset in metres
-        y = 100
-        z = 0
-        maxbeam = 16  # From hdw.  Maximum number of beams to be used at a particular radar site.
-        bmsep = 3.24  # From hdw.  Beam separation (Angular separation in degrees between adjacent beams). [deg]
-        t_diff_hdw = 0.0  # From hdw.  Propagation time difference between the main array and the interferometer array.
-    elif df['stationId'].iloc[0] == "inv":
-        x = 1.5  # From hdw.  Interferometer offset in metres
-        y = 100
-        z = 0
-        maxbeam = 16  # From hdw.  Maximum number of beams to be used at a particular radar site.
-        bmsep = 3.24  # From hdw.  Beam separation (Angular separation in degrees between adjacent beams). [deg]
-        t_diff_hdw = 0.0  # From hdw.  Propagation time difference between the main array and the interferometer array.
-    else:
-        raise Exception("Error in elevation_v2(), " + df['stationId'].iloc[0] + " station not recognized")
-
-    df.reset_index(drop=True, inplace=True)  # Just encase
+    # Pull the required information out of the hardware file
+    station = df['station'].iat[0]
+    hdw_info = pydarn.read_hdw_file(station)
+    x = hdw_info.interferometer_offset.x  # Metres
+    y = hdw_info.interferometer_offset.y  # Metres
+    z = hdw_info.interferometer_offset.z  # Metres
+    maxbeam = hdw_info.beams
+    bmsep = hdw_info.beam_separation  # Angular separation in degrees between adjacent beams [deg]
+    t_diff_hdw = hdw_info.tdiff  # Microseconds
 
     if y < 0:
         # Then the interferometer array is behind the main antenna
