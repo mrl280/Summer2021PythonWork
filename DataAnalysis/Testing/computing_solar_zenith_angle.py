@@ -1,4 +1,5 @@
 import os
+import pathlib
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -33,8 +34,11 @@ def test_solar_zenith_angle():
     # station = "inv"
     # beam_range = (13, 15)
 
-    station = "dce"
-    beam_range = (10, 12)
+    # station = "dce"
+    # beam_range = (10, 12)
+
+    station = "dcn"
+    beam_range = (6, 8)
 
     year_range = (2013, 2014)
     hour_range = (0, 24)
@@ -102,12 +106,11 @@ def test_solar_zenith_angle():
     solar_zenith_angles = np.rad2deg(solar_zenith_angles)
     solar_altitude_angles = np.rad2deg(solar_altitude_angles)
 
-
     fig, ax = plt.subplots(figsize=[10, 12], dpi=300, nrows=2, ncols=1, constrained_layout=True)
     fig.suptitle(station.upper() + "\nProduced by " + str(os.path.basename(__file__)), fontsize=18)
 
-    ax[0].set_title("Ionospheric Scatter", fontsize=16)
-    ax[1].set_title("Ground Scatter", fontsize=16)
+    ax[0].set_title("Solar Zenith Angles", fontsize=16)
+    ax[1].set_title("Solar Altitude Angles", fontsize=16)
 
     # Apply common subplot formatting
     for i in range(ax.size):
@@ -131,10 +134,16 @@ def test_solar_zenith_angle():
     degree_sign = u'\N{DEGREE SIGN}'
 
     contour_colour = 'blue'
+
     contour_levels = [60, 75, 90, 105, 120]  # Degrees
-    contours = ax[0].contour(hour_centers, year_centers, solar_zenith_angles,
-                             colors=contour_colour, levels=contour_levels, zorder=5)
-    plt.clabel(contours, inline=True, fontsize=12, colors=contour_colour, fmt='%d' + degree_sign,
+    contours0 = ax[0].contour(hour_centers, year_centers, solar_zenith_angles,
+                              colors=contour_colour, levels=contour_levels, zorder=5)
+    plt.clabel(contours0, inline=True, fontsize=12, colors=contour_colour, fmt='%d' + degree_sign,
+               inline_spacing=3, zorder=5)
+
+    contours1 = ax[1].contour(hour_centers, year_centers, solar_altitude_angles,
+                              colors=contour_colour, zorder=5)
+    plt.clabel(contours1, inline=True, fontsize=12, colors=contour_colour, fmt='%d' + degree_sign,
                inline_spacing=3, zorder=5)
 
     return fig
@@ -144,6 +153,13 @@ if __name__ == "__main__":
     """ Testing """
 
     fig = test_solar_zenith_angle()
+
+    loc_root = str((pathlib.Path().parent.absolute()))
+    out_dir = loc_root + "/out"
+
+    out_fig = out_dir + "/solar_angles"
+    print("Saving plot as " + out_fig)
+    fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
 
     plt.show()
     plt.close(fig)
