@@ -17,7 +17,7 @@ def elevation_v2(df, t_diff=0.0):
      for this program.  Rather, you will get the appropriate non-zero elevation angle.
 
     :param df: pandas.DataFrame:
-        SuperDARN data frame.  Must contain the following standard parameters: 'tfreq', 'phase', 'station', 'bmnum'
+        SuperDARN data frame.  Must contain the following standard parameters: 'transFreq', 'phase', 'station', 'bmnum'
     :param t_diff: float: (Optional, default is 0.0)
         The extra time delay to add in, in microseconds.
     :return: pandas.DataFrame:
@@ -101,8 +101,10 @@ if __name__ == '__main__':
     Compare fitACF elevation angles to elevation angles computed by elevation_v2()
     """
 
+    # station = "rkn"
+    # date = "20111011"
     station = "rkn"
-    date = "20111011"
+    date = "20160926"
 
     in_dir = "data/" + station + "/" + station + date
     in_file = in_dir + "/" + station + date + ".pkl"
