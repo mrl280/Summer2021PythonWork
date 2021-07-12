@@ -131,7 +131,7 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
     freq_string = "Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz"
 
     # Prepare the plot
-    fig, ax = plt.subplots(figsize=[10, 12], dpi=300, nrows=2, ncols=1, constrained_layout=True)
+    fig, ax = plt.subplots(figsize=[10, 20], dpi=300, nrows=2, ncols=1, constrained_layout=True)
     fig.suptitle(station.upper() + "; " + beam_string + "; " + gate_string + "; " + freq_string + "; " +
                  "\n" + day_string + "; Produced by " + str(os.path.basename(__file__)), fontsize=18)
 
@@ -381,13 +381,13 @@ def add_angle_contours(ax, type_of_contours, year_range, hour_range, beam_range,
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
-        station = "rkn"
+        station = "dce"
 
         # Note: year, month, and day don't matter for local testing
-        df, fig = occ_year_vs_time(station=station, year_range=(2011, 2012), month_range=None, day_range=None,
+        df, fig = occ_year_vs_time(station=station, year_range=(2013, 2021), month_range=None, day_range=None,
                                    hour_range=None, gate_range=(0, 74), beam_range=None, freq_range=(11, 13),
                                    time_units='lt', plot_type='contour', angle_contours='altitude',
                                    local_testing=local_testing)
@@ -396,23 +396,22 @@ if __name__ == '__main__':
 
 
     else:
-        stations = ["dce", "dcn"]
-        freq_range = (8, 18)
-        year_range = (2019, 2021)
-        angle_contour_types = ['zenith', 'altitude']
+        stations = ["dce", "mcm"]
+        freq_range = (8, 11)
+        year_range = (2013, 2021)
+        # angle_contour_types = ['zenith', 'altitude']
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
         for station in stations:
-            for angle_contours in angle_contour_types:
-                _, fig = occ_year_vs_time(station=station, year_range=year_range, day_range=None,
-                                          gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
-                                          time_units='lt', plot_type='contour', angle_contours=angle_contours,
-                                          local_testing=local_testing)
+            _, fig = occ_year_vs_time(station=station, year_range=year_range, day_range=None,
+                                      gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
+                                      time_units='lt', plot_type='contour', angle_contours='zenith',
+                                      local_testing=local_testing)
 
-                out_fig = out_dir + "/occ_yearVtime_" + station + "_" + \
-                          str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz - with_" + angle_contours + "_contours"
+            out_fig = out_dir + "/occ_yearVtime_" + station + "_" + \
+                      str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz - with_zenith_contours"
 
-                print("Saving plot as " + out_fig)
-                fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+            print("Saving plot as " + out_fig)
+            fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
