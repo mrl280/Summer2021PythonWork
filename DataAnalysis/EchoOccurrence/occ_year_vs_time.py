@@ -200,9 +200,9 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
                 print("Year start: " + str(year_start))
                 raise e
 
-    # By default, Nan cells will be plotted white.  If this is not what is wanted, replace all nans with 0
-    contour_data_is = np.nan_to_num(contour_data_is, nan=0)
-    contour_data_gs = np.nan_to_num(contour_data_gs, nan=0)
+    # # By default, Nan cells will be plotted white.  If this is not what is wanted, replace all nans with 0
+    # contour_data_is = np.nan_to_num(contour_data_is, nan=0)
+    # contour_data_gs = np.nan_to_num(contour_data_gs, nan=0)
 
     # And we can now plot the data
     if plot_type == "contour":
