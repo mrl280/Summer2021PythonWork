@@ -127,12 +127,13 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
     else:
         day_string = "Days " + str(day_range[0]) + "-" + str(day_range[1])
     beam_string = "Beams " + str(beam_range[0]) + "-" + str(beam_range[1])
+    gate_string = "Gates " + str(gate_range[0]) + "-" + str(gate_range[1])
     freq_string = "Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz"
 
     # Prepare the plot
     fig, ax = plt.subplots(figsize=[10, 12], dpi=300, nrows=2, ncols=1, constrained_layout=True)
-    fig.suptitle(station.upper() + "; " + beam_string + "; " + freq_string + "; " + day_string +
-                 "\nProduced by " + str(os.path.basename(__file__)), fontsize=18)
+    fig.suptitle(station.upper() + "; " + beam_string + "; " + gate_string + "; " + freq_string + "; " +
+                 "\n" + day_string + "; Produced by " + str(os.path.basename(__file__)), fontsize=18)
 
     ax[0].set_title("Ionospheric Scatter", fontsize=20)
     ax[1].set_title("Ground Scatter", fontsize=20)
@@ -380,7 +381,7 @@ def add_angle_contours(ax, type_of_contours, year_range, hour_range, beam_range,
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "rkn"
