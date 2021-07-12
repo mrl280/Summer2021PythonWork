@@ -274,7 +274,7 @@ if __name__ == '__main__':
         #                                  time_sector="night", time_units='lt', local_testing=local_testing)
 
         # Note: year, month, and day don't matter for local testing
-        df, fig = occ_seasonal_variation(station=station, year_range=(2011, 2012), day_range=(12, 12),
+        df, fig = occ_seasonal_variation(station=station, year_range=(2013, 2021), day_range=(12, 12),
                                          gate_range=(10, 30), beam_range=(6, 8), freq_range=(11, 13),
                                          local_testing=local_testing)
 
@@ -282,9 +282,9 @@ if __name__ == '__main__':
 
 
     else:
-        station = "dcn"
-        year_range = (2019, 2021)
-        freq_range = (8, 10)
+        station = "dce"
+        year_range = (2013, 2021)
+        freq_range = (8, 11)
 
         time_units = "lt"
 
@@ -292,30 +292,32 @@ if __name__ == '__main__':
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        time_sectors = ["day", "dusk", "night", "dawn"]
-        for time_sector in time_sectors:
-            print("Working on the following time sector: " + time_sector.upper())
-            _, fig = occ_seasonal_variation(station=station, year_range=year_range, day_range=None,
-                                            gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
-                                            time_sector=time_sector, time_units=time_units,
-                                            local_testing=local_testing)
-
-            out_fig = out_dir + "/occ_seasonalVariation_" + station + \
-                      "_" + str(year_range[0]) + "-" + str(year_range[1]) + \
-                      "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_" + time_sector + "_" + time_units
-
-            print("Saving plot as " + out_fig)
-            fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
-
-        # _, fig = occ_seasonal_variation(station=station, year_range=year_range, day_range=None,
-        #                                 gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
-        #                                 time_units=time_units,
-        #                                 local_testing=local_testing)
+        """ This code is for running time sectors """
+        # time_sectors = ["day", "dusk", "night", "dawn"]
+        # for time_sector in time_sectors:
+        #     print("Working on the following time sector: " + time_sector.upper())
+        #     _, fig = occ_seasonal_variation(station=station, year_range=year_range, day_range=None,
+        #                                     gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
+        #                                     time_sector=time_sector, time_units=time_units,
+        #                                     local_testing=local_testing)
         #
-        # out_fig = out_dir + "/occ_seasonalVariation_" + station + \
-        #           "_" + str(year_range[0]) + "-" + str(year_range[1]) + \
-        #           "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_" + time_units
+        #     out_fig = out_dir + "/occ_seasonalVariation_" + station + \
+        #               "_" + str(year_range[0]) + "-" + str(year_range[1]) + \
+        #               "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_" + time_sector + "_" + time_units
         #
-        # print("Saving plot as " + out_fig)
-        # fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+        #     print("Saving plot as " + out_fig)
+        #     fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+
+        """ This code is for running for an hour range other than the built in time sectors """
+        _, fig = occ_seasonal_variation(station=station, year_range=year_range, day_range=None, hour_range=None,
+                                        gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
+                                        time_units=time_units,
+                                        local_testing=local_testing)
+
+        out_fig = out_dir + "/occ_seasonalVariation_" + station + \
+                  "_" + str(year_range[0]) + "-" + str(year_range[1]) + \
+                  "_" + str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz_" + time_units
+
+        print("Saving plot as " + out_fig)
+        fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
 
