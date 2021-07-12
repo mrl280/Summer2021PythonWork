@@ -5,7 +5,7 @@ def radar_code(id):
     :param: int id: The station id
     :return: String: 3 character long radar code
     """
-    # SuperDARN Radars
+    # SuperDARN Radars  # TODO: Use the pydarn library to obtain this info automatically
     if id == 64:
         return 'inv'
     elif id == 65:
