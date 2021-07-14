@@ -12,7 +12,7 @@ import numpy as np
 
 
 def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_range, freq_range,
-                 print_timing_info=False):
+                 fitACF_version=2.5, print_timing_info=False):
     """
     Take a fitACF file and for each possible echo, record whether or not there was a good echo there
     Note: occurrence rate is not actually computed here, but all the data required to compute it is put into the df
@@ -41,13 +41,21 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
             If omitted (or None), then all frequencies are considered.
     :param print_timing_info: bool (optional; default is False)
             Print out some time information for performance testing
+    :param fitACF_version: float: (optional):
+            The fitACF version number.  At the time of writing the default is 2.5, but expected to move to 3.0 in the
+            near future.  These are the only valid options.
 
     :return: pandas.DataFrame:
             A dataframe with select fitACF parameters.
     """
 
-    # loc_root = "/data/fitacf_30"  # fitACF 3.0
-    loc_root = "/data/fitacf_25"  # fitACF 2.5
+    if fitACF_version == 3.0:
+        loc_root = "/data/fitacf_30"
+    elif fitACF_version == 2.5:
+        loc_root = "/data/fitacf_25"
+    else:
+        raise Exception("get_data(): fitACF_version " + str(fitACF_version) +
+                        " not recognized.  Right now only versions 2.5 and 3.0 are recognized.")
 
     # Create empty arrays for the parameters we need
     epoch, date_time = [], []

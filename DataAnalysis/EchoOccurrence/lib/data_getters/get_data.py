@@ -10,7 +10,8 @@ import pandas as pd
 import datetime as datetime
 
 
-def get_data(station, year_range, month_range, day_range, gate_range, beam_range, freq_range):
+def get_data(station, year_range, month_range, day_range, gate_range, beam_range, freq_range,
+             fitACF_version=2.5):
     """
     Get all of the SuperDARN data within the desired range/time, put it into a dataframe,
     and then return the dataframe for plotting/analysis
@@ -36,11 +37,21 @@ def get_data(station, year_range, month_range, day_range, gate_range, beam_range
     :param freq_range: (<float>, <float>) (optional):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
-    :return: pandas.DataFrame: A dataframe with select fitACF parameters.
+    :param fitACF_version: float: (optional):
+            The fitACF version number.  At the time of writing the default is 2.5, but expected to move to 3.0 in the
+            near future.  These are the only valid options.
+
+    :return: pandas.DataFrame:
+            A dataframe with select fitACF parameters.
     """
 
-    loc_root = "/data/fitacf_30"    # fitACF 3.0
-    # loc_root = "/data/fitacf_25"  # fitACF 2.5
+    if fitACF_version == 3.0:
+        loc_root = "/data/fitacf_30"
+    elif fitACF_version == 2.5:
+        loc_root = "/data/fitacf_25"
+    else:
+        raise Exception("get_data(): fitACF_version " + str(fitACF_version) +
+                        " not recognized.  Right now only versions 2.5 and 3.0 are recognized.")
 
     # Create empty arrays for scalar parameters
     epoch, date_time = [], []
