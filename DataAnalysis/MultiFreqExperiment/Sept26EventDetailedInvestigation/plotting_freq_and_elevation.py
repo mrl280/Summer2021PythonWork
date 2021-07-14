@@ -41,7 +41,7 @@ def plotting_freq_and_elevation(single_day_df, beam_range, gate_range):
     df = single_day_df.copy()  # Convenience
     time_units = 'ut'
     frequencies = [10, 12, 13, 14]  # MHz
-    t_diffs = [-0.003, 0.0, 0.003, 0.006, 0.009, 0.012]  # microseconds
+    t_diffs = [-0.003, 0.0, 0.001, 0.002, 0.003, 0.006]  # microseconds
     cmap = 'jet'
     zlim = (0, 35)
 
@@ -125,11 +125,13 @@ def plotting_freq_and_elevation(single_day_df, beam_range, gate_range):
     cbar.ax.tick_params(labelsize=18)
 
     """"""
-    elevation_v2(df=df, t_diff=0.003)
-    df['percent_diff'] = (df['adjElv'] - df['elv']) / df['elv']
-
+    # Just to see how extreme the difference in elevation angles is
+    # elevation_v2(df=df, t_diff=0.003)
+    # df['percent_diff'] = (df['adjElv'] - df['elv']) / df['elv']
+    #
     # print(df[['elv', 'adjElv', 'percent_diff']])
     # print(statistics.mean(df['percent_diff']))
+    """"""
 
     return fig
 
@@ -179,17 +181,18 @@ def format_subplots(axes, x_lim, y_lim, t_diffs):
             continue
         for ax_idx, ax in enumerate(ax_arr):
 
-            ax.set_title(freq + " MHz Adjusted Elv, t_diff=" + str(t_diffs[ax_idx]) + " \u03BCs", fontsize=title_font_size)
+            ax.set_title(freq + " MHz Adjusted Elv, t_diff=" + str(t_diffs[ax_idx]) + " \u03BCs",
+                         fontsize=title_font_size)
 
             if freq == "14":
                 ax.set_xlabel("UT Time [hour]", fontsize=label_font_size)
-                if ax == ax_arr[0]:
-                    ax.set_ylabel("Range Gate", fontsize=label_font_size)
             else:
                 ax.set_xticklabels([])
 
             if ax != ax_arr[0]:
                 ax.set_yticklabels([])
+            else:
+                ax.set_ylabel("Range Gate", fontsize=label_font_size)
 
             ax.set_ylim(y_lim)
             ax.set_xlim(x_lim)
