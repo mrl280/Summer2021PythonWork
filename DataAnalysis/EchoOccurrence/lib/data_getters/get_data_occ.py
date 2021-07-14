@@ -11,7 +11,8 @@ import pandas as pd
 import numpy as np
 
 
-def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_range, freq_range):
+def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_range, freq_range,
+                 print_timing_info=False):
     """
     Take a fitACF file and for each possible echo, record whether or not there was a good echo there
     Note: occurrence rate is not actually computed here, but all the data required to compute it is put into the df
@@ -25,20 +26,24 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
     :param year_range: (<int>, <int>):
             Inclusive. The year range to consider.
-    :param month_range: (<int>, <int>) (optional):
+    :param month_range: (<int>, <int>):
             Inclusive. The months of the year to consider.  If omitted (or None), then all days will be considered.
-    :param day_range: (<int>, <int>) (optional):
+    :param day_range: (<int>, <int>):
             Inclusive. The days of the month to consider.  If omitted (or None), then all days will be considered.
-    :param gate_range: (<int>, <int>) (optional):
+    :param gate_range: (<int>, <int>):
             Inclusive. The gate range to consider.  If omitted (or None), then all the gates will be considered.
             Note that gates start at 0, so gates (0, 3) is 4 gates.
-    :param beam_range: (<int>, <int>) (optional):
+    :param beam_range: (<int>, <int>):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
-    :param freq_range: (<float>, <float>) (optional):
+    :param freq_range: (<float>, <float>):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
-    :return: pandas.DataFrame: A dataframe with select fitACF parameters.
+    :param print_timing_info: bool (optional; default is False)
+            Print out some time information for performance testing
+
+    :return: pandas.DataFrame:
+            A dataframe with select fitACF parameters.
     """
 
     # loc_root = "/data/fitacf_30"  # fitACF 3.0
@@ -64,13 +69,17 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
                         day_here = int(os.path.basename(in_file)[6:8])
 
                         if day_range[0] <= day_here <= day_range[1]:
-                            # We will read in the whole day, and worry about hour restrictions later
+                            # We will read in the whole day, hour restrictions are left to the caller encase the care
+                            #  to restrict based on something other than UT
                             print("    Reading: " + str(in_file))
                             try:
+                                t0 = time.time()
                                 with bz2.open(in_file) as fp:
                                     fitacf_stream = fp.read()
+                                t1 = time.time()
                                 sdarn_read = pydarn.SuperDARNRead(fitacf_stream, True)
                                 fitacf_data = sdarn_read.read_fitacf()  # this is
+                                t2 = time.time()
                             except BaseException:
                                 # Sometimes files are corrupted, or there is something wrong with them
                                 pass
@@ -130,6 +139,12 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
                                     except BaseException as e:
                                         print(e)
 
+                            t3 = time.time()
+                            if print_timing_info:
+                                print("Time for unzip: " + str(t1-t0))
+                                print("Time for SuperDARN read: " + str(t2 - t1))
+                                print("Time for my stuff: " + str(t3 - t2))
+
     if len(epoch) == 0:
         # We have found no data, panic
         warnings.warn("get_data_occ() found no data matching the provided criteria.  "
@@ -144,9 +159,9 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
                        'good_iono_echo': good_iono_echo,            'good_grndscat_echo': good_grndscat_echo
                        })
 
-    # Filter the data for the needed beam, gate, and freq ranges
-    df = df.loc[(df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
-                (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1]) &
+    # Ensure data is filtered for the the needed beam, gate, and freq ranges
+    df = df.loc[(df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &  # Redundant - just to be safe
+                (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1]) &  # Redundant - just to be safe
 
                 # Note: freq_range is in MHz while data in 'tfreq' is in kHz
                 (df['tfreq'] >= freq_range[0] * 1000) & (df['tfreq'] <= freq_range[1] * 1000)]
@@ -180,6 +195,7 @@ def build_datetime_epoch_local(year, month, day, hour, minute, second):
 if __name__ == '__main__':
     """ Testing """
     df = get_data_occ("sas", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1),
-                      gate_range=(0, 99), beam_range=(6, 7), freq_range=(5, 25))
+                      gate_range=(0, 99), beam_range=(6, 7), freq_range=(5, 25),
+                      print_timing_info=True)
 
     print(df.head())
