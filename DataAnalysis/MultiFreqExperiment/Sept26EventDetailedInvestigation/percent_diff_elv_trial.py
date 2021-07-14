@@ -20,7 +20,7 @@ def percent_diff_elv_trial(single_day_df, beam_range, gate_range):
     Find the optimal t_diff for multi-frequency events
 
     The idea: An artificial time difference is used to adjust elevation angles, and, for a given band of echoes,
-    elevation angle should decrease with range.
+    elevation angle should not increase with range.
 
     Adding in this correctional time difference causes elevation angles near the end of the bands to wrap back
     around. This wrapping results in a large percent difference change - maybe we can use this percent difference to

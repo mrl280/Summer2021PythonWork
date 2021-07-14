@@ -78,8 +78,9 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
                                     fitacf_stream = fp.read()
                                 t1 = time.time()
                                 sdarn_read = pydarn.SuperDARNRead(fitacf_stream, True)
-                                fitacf_data = sdarn_read.read_fitacf()  # this is
                                 t2 = time.time()
+                                fitacf_data = sdarn_read.read_fitacf()  # this is
+                                t3 = time.time()
                             except BaseException:
                                 # Sometimes files are corrupted, or there is something wrong with them
                                 pass
@@ -139,11 +140,12 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
                                     except BaseException as e:
                                         print(e)
 
-                            t3 = time.time()
+                            t4 = time.time()
                             if print_timing_info:
                                 print("Time for unzip: " + str(t1-t0))
                                 print("Time for SuperDARN read: " + str(t2 - t1))
-                                print("Time for my stuff: " + str(t3 - t2))
+                                print("Time for fitacf conversion: " + str(t3 - t2))
+                                print("Time for my stuff: " + str(t4 - t3))
 
     if len(epoch) == 0:
         # We have found no data, panic
