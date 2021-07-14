@@ -21,7 +21,7 @@ def get_LISIRD_data(dataset_name):
 
     # Read in the data from csv
     root = str((pathlib.Path().parent.absolute()))
-    in_dir = root + "/data"
+    in_dir = root + "/data/lisird"
     in_file = in_dir + "/" + dataset_name + ".csv"
     try:
         df = pd.read_csv(in_file)
