@@ -9,7 +9,6 @@ import pandas as pd
 
 from matplotlib import pyplot as plt
 from scipy import stats
-from pydarn import SuperDARNRadars
 
 from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
 from DataAnalysis.EchoOccurrence.lib.add_decimal_hour_to_df import add_decimal_hour_to_df
@@ -52,9 +51,7 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diff=0.0
     print("Filtering data..")
     # Get some information about the station we are working with
     station = df['station'].iat[0]
-    all_radars_info = SuperDARNRadars()
-    this_radars_info = all_radars_info.radars[pydarn.read_hdw_file(station).stid]  # Grab radar info
-    radar_id = this_radars_info.hardware_info.stid
+    radar_id = pydarn.read_hdw_file(station).stid
 
     # Make sure all of the data is of the same spatial resolution
     spatial_resolution = df['rangeSep'].iat[0]
@@ -76,9 +73,6 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diff=0.0
     print("Recomputing Elevation Angles")
     # TODO: Do different frequencies require different elevation angle adjustments
     elevation_v2(df=df, t_diff=t_diff)  # tdiff is in microseconds
-
-    print("Tdiff = " + str(t_diff))
-    print(df[['elv', 'adjElv']])
 
     # Put frequencies in MHz and round, this makes them easier to compare
     df['transFreq'] = round(df['transFreq'] * 1e-3, 0)
