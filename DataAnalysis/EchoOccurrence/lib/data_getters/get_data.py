@@ -2,6 +2,7 @@ import bz2
 import glob
 import math
 import os
+import pathlib
 import pydarn
 import time
 import calendar
@@ -144,15 +145,15 @@ def get_data(station, year_range, month_range, day_range, gate_range, beam_range
         # We have found no data, panic
         raise Exception("get_data() found no data matching the provided criteria.")
 
-    df = pd.DataFrame({'epoch': epoch,      'datetime': date_time,
+    df = pd.DataFrame({'epoch': epoch, 'datetime': date_time,
                        'bmnum': bmnum,
                        'tfreq': tfreq,
-                       'frang': frang,      'rsep': rsep,
+                       'frang': frang, 'rsep': rsep,
 
                        'slist': slist,
-                       'qflg': qflg,        'gflg': gflg,
-                       'v': v,              'p_l': p_l,                 'w_l': w_l,
-                       'phi0': phi0,        'elv': elv
+                       'qflg': qflg, 'gflg': gflg,
+                       'v': v, 'p_l': p_l, 'w_l': w_l,
+                       'phi0': phi0, 'elv': elv
                        })
 
     # Filter the data for the needed time, beam, gate, and freq ranges
@@ -194,8 +195,47 @@ def build_datetime_epoch_local(year, month, day, hour, minute, second):
 
 
 if __name__ == '__main__':
-    """ Testing """
-    df = get_data("rkn", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1),
-                  gate_range=(0, 99), beam_range=(0, 15), freq_range=(5, 25))
+    """ 
+    Testing
+    
+    Also, to prebuild and pickle occurrence files for each reading
+    When pre-building, it is best to use all of everything: all gates, beams, frequencies, months, and day
+    """
 
-    print(df.head())
+    testing = False
+
+    station = "dcn"
+    year_range = (2019, 2021)
+    month_range = (1, 12)
+    day_range = (1, 31)
+    gate_range = (0, 74)
+    beam_range = (0, 15)
+    freq_range = (5, 25)
+    fitACF_version = 2.5
+
+    df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
+                  gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+                  fitACF_version=fitACF_version)
+
+    # df = get_data("rkn", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1),
+    #               gate_range=(0, 99), beam_range=(0, 15), freq_range=(5, 25))
+
+    if testing:
+        print(df.head())
+
+    else:
+        # Go ahead and pickle the dataframe for later
+        if fitACF_version == 3.0:
+            fitACT_string = "fitacf_30"
+        elif fitACF_version == 2.5:
+            fitACT_string = "fitacf_25"
+        else:
+            raise Exception("fitACF_version " + str(fitACF_version) + " not recognized.")
+
+        loc_root = str((pathlib.Path().parent.absolute().parent.absolute().parent.absolute()))
+        out_dir = loc_root + "/data/" + station
+        out_file = out_dir + "/" + station + "_" + str(year_range[0]) + "_" + str(year_range[1]) + \
+                   "_" + fitACT_string + ".pkl"
+
+        print("     Pickling as " + out_file + "...")
+        df.to_pickle(out_file)

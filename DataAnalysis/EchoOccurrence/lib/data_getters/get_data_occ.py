@@ -2,6 +2,7 @@ import bz2
 import glob
 import os
 import calendar
+import pathlib
 import time
 import warnings
 import pydarn
@@ -150,7 +151,7 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
 
                             t4 = time.time()
                             if print_timing_info:
-                                print("Time for unzip: " + str(t1-t0))
+                                print("Time for unzip: " + str(t1 - t0))
                                 print("Time for SuperDARN read: " + str(t2 - t1))
                                 print("Time for fitacf conversion: " + str(t3 - t2))
                                 print("Time for my stuff: " + str(t4 - t3))
@@ -158,15 +159,15 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
     if len(epoch) == 0:
         # We have found no data, panic
         warnings.warn("get_data_occ() found no data matching the provided criteria.  "
-                        "year_range: " + str(year_range) + ", month_range:" + str(month_range) +
-                        ", day_range" + str(day_range), category=Warning)
+                      "year_range: " + str(year_range) + ", month_range:" + str(month_range) +
+                      ", day_range" + str(day_range), category=Warning)
 
     # Put the data into a dataframe
     print("     Building the data frame...")
-    df = pd.DataFrame({'epoch': epoch, 'datetime': date_time,
-                       'slist': slist, 'bmnum': beam,
-                       'frang': frang, 'rsep': rsep, 'tfreq': tfreq,
-                       'good_iono_echo': good_iono_echo,            'good_grndscat_echo': good_grndscat_echo
+    df = pd.DataFrame({'epoch': epoch,      'datetime': date_time,
+                       'slist': slist,      'bmnum': beam,
+                       'frang': frang,      'rsep': rsep,       'tfreq': tfreq,
+                       'good_iono_echo': good_iono_echo,        'good_grndscat_echo': good_grndscat_echo
                        })
 
     # Ensure data is filtered for the the needed beam, gate, and freq ranges
@@ -203,9 +204,48 @@ def build_datetime_epoch_local(year, month, day, hour, minute, second):
 
 
 if __name__ == '__main__':
-    """ Testing """
-    df = get_data_occ("sas", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1),
-                      gate_range=(0, 99), beam_range=(6, 7), freq_range=(5, 25),
-                      print_timing_info=True)
+    """ 
+    Testing
+    
+    Also, to prebuild and pickle occurrence files for each reading
+    When pre-building, it is best to use all of everything: all gates, beams, frequencies, months, and day
+    """
 
-    print(df.head())
+    testing = False
+
+    station = "dcn"
+    year_range = (2019, 2021)
+    month_range = (1, 12)
+    day_range = (1, 31)
+    gate_range = (0, 74)
+    beam_range = (0, 15)
+    freq_range = (5, 25)
+    fitACF_version = 2.5
+
+    df = get_data_occ(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
+                      gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+                      fitACF_version=fitACF_version, print_timing_info=False)
+
+    # df = get_data_occ("sas", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1),
+    #                   gate_range=(0, 99), beam_range=(6, 7), freq_range=(5, 25),
+    #                   print_timing_info=True)
+
+    if testing:
+        print(df.head())
+
+    else:
+        # Go ahead and pickle the dataframe for later
+        if fitACF_version == 3.0:
+            fitACT_string = "fitacf_30"
+        elif fitACF_version == 2.5:
+            fitACT_string = "fitacf_25"
+        else:
+            raise Exception("fitACF_version " + str(fitACF_version) + " not recognized.")
+
+        loc_root = str((pathlib.Path().parent.absolute().parent.absolute().parent.absolute()))
+        out_dir = loc_root + "/data/" + station
+        out_file = out_dir + "/" + station + "_" + str(year_range[0]) + "_" + str(year_range[1]) + \
+                   "_" + fitACT_string + "_occ" + ".pkl"
+
+        print("     Pickling as " + out_file + "...")
+        df.to_pickle(out_file)
