@@ -86,6 +86,7 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
     beam_range = check_beam_range(beam_range, this_radars_info.hardware_info)
 
     beam_string = "Beams " + str(beam_range[0]) + "-" + str(beam_range[1])
+    gate_string = "Gates " + str(gate_range[0]) + "-" + str(gate_range[1])
     freq_string = "Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz"
 
     print("     Retrieving data...")
@@ -124,7 +125,7 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
     lat_extreme = 69  # TODO: Adjust lat extreme based on the radar (use the most extreme point in the fan)
     month_axes, season_axes, cbar_axes = add_axes(fig=fig, radar_info=this_radars_info, lat_extreme=lat_extreme)
     fig.suptitle(str(year) + " at " + station.upper() + "; " + beam_string + "; " + freq_string +
-                 "\n Data Plotted in AACGM Latitudes and " + time_units.upper() +
+                 "\n" + gate_string + "; Data Plotted in AACGM Latitudes and " + time_units.upper() +
                  "\nProduced by " + str(os.path.basename(__file__)), fontsize=18)
 
     # Compute mlt edges
@@ -498,7 +499,7 @@ def south_hemi_season(north_hemi_season):
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = False
+    local_testing = True
 
     if local_testing:
         station = "dce"
