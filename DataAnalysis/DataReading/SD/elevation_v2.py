@@ -7,6 +7,9 @@ import numpy as np
 
 def elevation_v2(df, t_diff=0.0):
     """
+
+    Adjusted elevation angles are computed and added to the dataframe.  Operation is done inplace.
+
     This function is based on the rst code found here:
         https://github.com/SuperDARN/rst/blob/master/codebase/superdarn/src.lib/tk/elevation.1.0/src/elevation_v2.c
     The method is based on 'Elevation angle determination for SuperDARN HF radar layouts' by S. G. Shepherd
@@ -20,6 +23,7 @@ def elevation_v2(df, t_diff=0.0):
         SuperDARN data frame.  Must contain the following standard parameters: 'transFreq', 'phase', 'station', 'bmnum'
     :param t_diff: float: (Optional, default is 0.0)
         The extra time delay to add in, in microseconds.
+
     :return: pandas.DataFrame:
         The input dataframe, but with the added parameters: 'adjPhase', 'adjElv'
     """
