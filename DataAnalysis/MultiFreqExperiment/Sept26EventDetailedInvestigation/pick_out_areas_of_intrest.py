@@ -349,22 +349,70 @@ def pick_out_area_of_interest_5(df, time_units):
 
     # Break it into frequencies and handle them each individually
     df10_1 = df[(df['transFreq_MHz'] == 10)].copy()
-    df10_1 = df10_1.loc[(df10_1['gate'] >= 40) & (df10_1['gate'] <= 53)]
-    df10_1 = df10_1.loc[(df10_1[time_units] >= 3.1) & (df10_1[time_units] <= 3.5)]
+    df10_1 = df10_1.loc[(df10_1[time_units] >= 0.5) & (df10_1[time_units] <= 0.6)]
+    df10_1 = df10_1.loc[(df10_1['gate'] >= 10) & (df10_1['gate'] <= 22)]
 
     df10_2 = df[(df['transFreq_MHz'] == 10)].copy()
-    df10_2 = df10_2.loc[(df10_2['gate'] >= 30) & (df10_2['gate'] < 40)]
-    df10_2 = df10_2.loc[(df10_2[time_units] >= 3.2) & (df10_2[time_units] <= 3.7)]
+    df10_2 = df10_2.loc[(df10_2[time_units] > 0.6) & (df10_2[time_units] <= 1.0)]
+    df10_2 = df10_2.loc[(df10_2['gate'] >= 5) & (df10_2['gate'] <= 23)]
 
     df10_3 = df[(df['transFreq_MHz'] == 10)].copy()
-    df10_3 = df10_3.loc[(df10_3['gate'] >= 17) & (df10_3['gate'] < 30)]
-    df10_3 = df10_3.loc[(df10_3[time_units] >= 3.45) & (df10_3[time_units] <= 3.9)]
+    df10_3 = df10_3.loc[(df10_3[time_units] > 1.0) & (df10_3[time_units] <= 1.1)]
+    df10_3 = df10_3.loc[(df10_3['gate'] >= 5) & (df10_3['gate'] < 12)]
 
     df10 = pd.concat([df10_1, df10_2, df10_3])
 
     """"""
 
-    df = pd.concat([df10])
+    df12_1 = df[(df['transFreq_MHz'] == 12)].copy()
+    df12_1 = df12_1.loc[(df12_1[time_units] >= 0.5) & (df12_1[time_units] <= 0.6)]
+    df12_1 = df12_1.loc[(df12_1['gate'] >= 11) & (df12_1['gate'] <= 21)]
+
+    df12_2 = df[(df['transFreq_MHz'] == 12)].copy()
+    df12_2 = df12_2.loc[(df12_2[time_units] > 0.6) & (df12_2[time_units] <= 1.0)]
+    df12_2 = df12_2.loc[(df12_2['gate'] >= 5) & (df12_2['gate'] <= 20)]
+
+    df12_3 = df[(df['transFreq_MHz'] == 12)].copy()
+    df12_3 = df12_3.loc[(df12_3[time_units] > 1.0) & (df12_3[time_units] <= 1.1)]
+    df12_3 = df12_3.loc[(df12_3['gate'] >= 5) & (df12_3['gate'] < 13)]
+
+    df12 = pd.concat([df12_1, df12_2, df12_3])
+
+    """"""
+
+    df13_1 = df[(df['transFreq_MHz'] == 13)].copy()
+    df13_1 = df13_1.loc[(df13_1[time_units] >= 0.5) & (df13_1[time_units] <= 0.6)]
+    df13_1 = df13_1.loc[(df13_1['gate'] >= 10) & (df13_1['gate'] <= 21)]
+
+    df13_2 = df[(df['transFreq_MHz'] == 13)].copy()
+    df13_2 = df13_2.loc[(df13_2[time_units] > 0.6) & (df13_2[time_units] <= 0.95)]
+    df13_2 = df13_2.loc[(df13_2['gate'] >= 5) & (df13_2['gate'] <= 21)]
+
+    df13_3 = df[(df['transFreq_MHz'] == 13)].copy()
+    df13_3 = df13_3.loc[(df13_3[time_units] > 0.95) & (df13_3[time_units] <= 1.1)]
+    df13_3 = df13_3.loc[(df13_3['gate'] >= 5) & (df13_3['gate'] < 13)]
+
+    df13 = pd.concat([df13_1, df13_2, df13_3])
+
+    """"""
+
+    df14_1 = df[(df['transFreq_MHz'] == 14)].copy()
+    df14_1 = df14_1.loc[(df14_1[time_units] >= 0.45) & (df14_1[time_units] <= 0.6)]
+    df14_1 = df14_1.loc[(df14_1['gate'] >= 10) & (df14_1['gate'] <= 23)]
+
+    df14_2 = df[(df['transFreq_MHz'] == 14)].copy()
+    df14_2 = df14_2.loc[(df14_2[time_units] > 0.6) & (df14_2[time_units] <= 0.95)]
+    df14_2 = df14_2.loc[(df14_2['gate'] >= 5) & (df14_2['gate'] <= 22)]
+
+    df14_3 = df[(df['transFreq_MHz'] == 14)].copy()
+    df14_3 = df14_3.loc[(df14_3[time_units] > 0.95) & (df14_3[time_units] <= 1.1)]
+    df14_3 = df14_3.loc[(df14_3['gate'] >= 5) & (df14_3['gate'] <= 13)]
+
+    df14 = pd.concat([df14_1, df14_2, df14_3])
+
+    """"""
+
+    df = pd.concat([df10, df12, df13, df14])
 
     return df
 
