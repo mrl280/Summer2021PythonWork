@@ -34,10 +34,11 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs, h
             Note that beams start at 0, so beams (0, 3) is 4 beams.
     :param t_diffs: dictionary of floats keyed by integer frequencies:
             The extra time delays to add in when adjusting elevation angles, in microseconds.
-    :param hour_range: (<int>, <int>) (optional):
+    :param hour_range: (<int>, <int>) (optional, default is None):
             The hour range to consider.  If omitted (or None), then all hours will be considered.
             Not quite inclusive: if you pass in (0, 5) you will get from 0:00-4:59 UT
-    :param area: int:
+            If None, then hour range is determined automatically from the data
+    :param area: int: (optional, default is None)
             The numbered area of interest.
 
     :return: matplotlib.pyplot.figure:
@@ -94,7 +95,6 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs, h
     else:
         beam_string = "Beams " + str(beam_range[0]) + "-" + str(beam_range[1])
     gate_string = "Gates " + str(gate_range[0]) + "-" + str(gate_range[1])
-    # t_diff_string = "tdiff: " + str(t_diff) + " \u03BCs"
 
     fig = plt.figure(figsize=[12, 12], constrained_layout=True, dpi=300)
     data_axes = add_axes(fig=fig)
@@ -156,9 +156,10 @@ def add_axes(fig):
 
     Create a sets of exes for the data.
 
-    :param matplotlib.pyplot.figure: The figure to draw the axes on
-    :return: Dictionary, matplotlib.pyplot.axis:
-        A dictionary of data axes, and a colour bar axis
+    :param matplotlib.pyplot.figure:
+        The figure to draw the axes on
+    :return: Dictionary of matplotlib.pyplot.axis:
+        A dictionary of data axes
     """
 
     gs = fig.add_gridspec(ncols=7, nrows=9)
