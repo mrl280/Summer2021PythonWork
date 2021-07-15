@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from matplotlib import pyplot as plt
+from matplotlib.ticker import MultipleLocator
 from scipy import stats
 
 from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
@@ -138,7 +139,8 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs, h
                 else:
                     cbar = fig.colorbar(plot, ax=ax, orientation="vertical", format=cbar_text_format, extend='max')
 
-            ax.grid(b=True, which='both', axis='both')
+            ax.grid(b=True, which='major', axis='both', linewidth=1, linestyle='-')
+            ax.grid(b=True, which='minor', axis='both', linewidth=0.4, linestyle='--')
 
     return fig
 
@@ -185,9 +187,15 @@ def format_subplots(axes, x_lim, y_lim, t_diffs):
 
         for subplot_type in subplot_types:
             ax = axis[subplot_type]
+            ax.tick_params(labeltop=True, labelright=True)
 
             ax.set_ylim(y_lim)
+            ax.yaxis.set_major_locator(MultipleLocator(10))
+            ax.yaxis.set_minor_locator(MultipleLocator(1))
+
             ax.set_xlim(x_lim)
+            ax.xaxis.set_major_locator(MultipleLocator(0.5))
+            ax.xaxis.set_minor_locator(MultipleLocator(0.1))
 
             ax.set_ylabel("Range Gate", fontsize=label_font_size)
 
@@ -202,9 +210,9 @@ def format_subplots(axes, x_lim, y_lim, t_diffs):
 if __name__ == "__main__":
     """ Testing """
 
-    testing = True
+    testing = False
 
-    area = 1
+    area = None
 
     station = "rkn"
     year = "2016"
@@ -215,10 +223,15 @@ if __name__ == "__main__":
 
     beam_range = (7, 7)
     gate_range = (0, 74)
-    t_diffs = {10: -0.003,  # microseconds
-               12: 0.001,
-               13: 0.002,
+    t_diffs = {10: 0.003,  # microseconds
+               12: 0.003,
+               13: 0.003,
                14: 0.003}
+
+    # t_diffs = {10: -0.003,  # microseconds
+    #            12: 0.001,
+    #            13: 0.002,
+    #            14: 0.003}
 
     # Read in SuperDARN data
     if area is None:
