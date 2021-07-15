@@ -16,7 +16,7 @@ from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_
 from lib.basic_SD_df_filter import basic_SD_df_filter
 
 
-def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs):
+def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs, hour_range=None):
     """
 
     A simple single day range profiler for the multi-frequency events
@@ -33,6 +33,9 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs):
             Note that beams start at 0, so beams (0, 3) is 4 beams.
     :param t_diffs: dictionary of floats keyed by integer frequencies:
             The extra time delays to add in when adjusting elevation angles, in microseconds.
+    :param hour_range: (<int>, <int>) (optional):
+            The hour range to consider.  If omitted (or None), then all hours will be considered.
+            Not quite inclusive: if you pass in (0, 5) you will get from 0:00-4:59 UT
 
     :return: matplotlib.pyplot.figure:
             The figure, it can then be viewed, modified, or saved to file
@@ -69,7 +72,9 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs):
 
     df = add_decimal_hour_to_df(df=df, time_units=time_units, stid=radar_id,
                                 date_time_est=(df['datetime'].iat[0]).to_pydatetime())
-    hour_range = (round(df[time_units].iat[0], 2), round(df[time_units].iat[-1], 2))
+    if hour_range is None:
+        # Then infer hour range based on the available data
+        hour_range = (round(df[time_units].iat[0], 2), round(df[time_units].iat[-1], 2))
 
     # Put frequencies in MHz and round, this makes them easier to compare
     df['transFreq_MHz'] = round(df['transFreq'] * 1e-3, 0)
@@ -111,25 +116,29 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs):
     for freq in frequencies:
         for param in subplot_types:
             df_ff = df[(df['transFreq_MHz'] == freq)].copy()
-
-            if param == 'adjElv':
-                # Recompute elevation with the extra t_diff
-                print("Recomputing Elevation Angles for " + str(freq) + " MHz data - t_diff=" + str(t_diffs[freq]))
-                elevation_v2(df=df_ff, t_diff=t_diffs[freq])  # t_diff is in microseconds
-
             ax = data_axes[freq][param]
 
-            result, _, _, _ = stats.binned_statistic_2d(df_ff[time_units], df_ff['gate'], values=df_ff[param],
-                                                        bins=[hour_edges, gate_edges])
-
-            plot = ax.pcolormesh(hour_edges, gate_edges, result.transpose(),
-                                 cmap=color_maps[param], vmin=zlims[param][0], vmax=zlims[param][1], zorder=0)
-
-            cbar_text_format = '%d'
-            if param == 'vel':
-                cbar = fig.colorbar(plot, ax=ax, orientation="vertical", format=cbar_text_format, extend='both')
+            if len(df_ff) <= 0:
+                continue
             else:
-                cbar = fig.colorbar(plot, ax=ax, orientation="vertical", format=cbar_text_format, extend='max')
+                if param == 'adjElv':
+                    # Recompute elevation with the extra t_diff
+                    print("Recomputing Elevation Angles for " + str(freq) + " MHz data - t_diff=" + str(t_diffs[freq]))
+                    elevation_v2(df=df_ff, t_diff=t_diffs[freq])  # t_diff is in microseconds
+
+                result, _, _, _ = stats.binned_statistic_2d(df_ff[time_units], df_ff['gate'], values=df_ff[param],
+                                                            bins=[hour_edges, gate_edges])
+
+                plot = ax.pcolormesh(hour_edges, gate_edges, result.transpose(),
+                                     cmap=color_maps[param], vmin=zlims[param][0], vmax=zlims[param][1], zorder=0)
+
+                cbar_text_format = '%d'
+                if param == 'vel':
+                    cbar = fig.colorbar(plot, ax=ax, orientation="vertical", format=cbar_text_format, extend='both')
+                else:
+                    cbar = fig.colorbar(plot, ax=ax, orientation="vertical", format=cbar_text_format, extend='max')
+
+            ax.grid(b=True, which='both', axis='both')
 
     return fig
 
@@ -180,8 +189,6 @@ def format_subplots(axes, x_lim, y_lim, t_diffs):
             ax.set_ylim(y_lim)
             ax.set_xlim(x_lim)
 
-            ax.grid(b=True, which='both', axis='both')
-
             ax.set_ylabel("Range Gate", fontsize=label_font_size)
 
             if subplot_type == "vel":
@@ -195,7 +202,9 @@ def format_subplots(axes, x_lim, y_lim, t_diffs):
 if __name__ == "__main__":
     """ Testing """
 
-    testing = False
+    testing = True
+
+    area = 1
 
     station = "rkn"
     year = "2016"
@@ -212,9 +221,15 @@ if __name__ == "__main__":
                14: 0.003}
 
     # Read in SuperDARN data
-    loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
-    in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + year + month + day
-    in_file = in_dir + "/" + station + year + month + day + ".pkl"
+    if area is None:
+        loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
+        in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + year + month + day
+        in_file = in_dir + "/" + station + year + month + day + ".pkl"
+    else:
+        loc_root = str((pathlib.Path().parent.absolute()))
+        in_dir = loc_root + "/data"
+        in_file = in_dir + "/" + station + year + month + day + "_area" + str(area) + ".pkl"
+    print("Reading in file: " + in_file)
     df = pd.read_pickle(in_file)
 
     # Restrict data to within the desired hour range
@@ -222,14 +237,18 @@ if __name__ == "__main__":
     _, end_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=end_hour)
     df = df.loc[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)]
 
-    fig = simple_range_time_profiler(single_day_df=df, beam_range=beam_range, gate_range=gate_range, t_diffs=t_diffs)
+    fig = simple_range_time_profiler(single_day_df=df, beam_range=beam_range, gate_range=gate_range,
+                                     hour_range=(start_hour, end_hour), t_diffs=t_diffs)
 
     if testing:
         plt.show()
     else:
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
-        out_fig = out_dir + "/" + "simple_range_time_profile-" + station + year + month + day
+        if area is None:
+            out_fig = out_dir + "/" + "simple_range_time_profile-" + station + year + month + day
+        else:
+            out_fig = out_dir + "/" + "simple_range_time_profile-" + station + year + month + day + "_area" + str(area)
 
         print("Saving plot as " + out_fig)
         fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
