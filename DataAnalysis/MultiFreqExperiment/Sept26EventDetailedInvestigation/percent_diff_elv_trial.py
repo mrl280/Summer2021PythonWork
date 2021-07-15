@@ -172,13 +172,20 @@ def plot_percent_diff_data(axes, df_ff, tdiffs_in_us, color, label):
     # Smooth the derivative
     smoothed_mean_percent_change_diff = np.convolve(mean_percent_change_diff, kernel, mode='same')
 
-    # Plot the smoothed signal
-    axes[1].plot(tdiffs_for_plotting_diff, smoothed_mean_percent_change_diff, color=color, linewidth=1, label=label)
-
     # Find the minimum of this derivative, it may be a good estimate of the required adjustment
-    min_y = np.min(smoothed_mean_percent_change_diff)
-    x_index = np.where(smoothed_mean_percent_change_diff == min_y)
-    min_x = tdiffs_for_plotting_diff[x_index]
+    # Make sure we are not way off base be restricting the candidates
+    likely_candidates = np.where((tdiffs_for_plotting_diff > -0.01) &
+                                 (tdiffs_for_plotting_diff < 0.01))
+    min_candidates_y = smoothed_mean_percent_change_diff[likely_candidates]
+    min_candidates_x = tdiffs_for_plotting_diff[likely_candidates]
+
+    min_y = np.min(min_candidates_y)
+    x_index = np.where(min_candidates_y == min_y)
+    min_x = min_candidates_x[x_index]
+
+    # Plot the smoothed signal
+    axes[1].plot(tdiffs_for_plotting_diff, smoothed_mean_percent_change_diff, color=color, linewidth=1,
+                 label=label + " - min=" + str(min_x))
 
     return min_x
 
@@ -186,15 +193,16 @@ def plot_percent_diff_data(axes, df_ff, tdiffs_in_us, color, label):
 if __name__ == "__main__":
     """ Testing """
 
-    testing = True
+    testing = False
 
-    # station = "rkn"
-    # year = "2016"
-    # month = "09"
-    # day = "26"
-    # start_hour = 0
-    # end_hour = 4
-    # gate_range = (0, 55)
+    station = "rkn"
+    year = "2016"
+    month = "09"
+    day = "26"
+    start_hour = 0
+    end_hour = 4
+    gate_range = (0, 74)
+    area = 5
 
     # station = "rkn"
     # year = "2017"
@@ -204,25 +212,39 @@ if __name__ == "__main__":
     # end_hour = 4
     # gate_range = (0, 40)
 
-    station = "rkn"
-    year = "2017"
-    month = "02"
-    day = "04"
-    start_hour = 4
-    end_hour = 7
-    gate_range = (0, 74)
+    # station = "rkn"
+    # year = "2017"
+    # month = "02"
+    # day = "04"
+    # start_hour = 4
+    # end_hour = 7
+    # gate_range = (0, 74)
 
     beam_range = (7, 7)
 
-    # Read in SuperDARN data
-    loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
-    in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + year + month + day
-    in_file = in_dir + "/" + station + year + month + day + ".pkl"
-    df = pd.read_pickle(in_file)
+    read_area_specific_df = False
 
-    _, start_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=start_hour)
-    _, end_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=end_hour)
-    df = df.loc[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)]
+    if station == "rkn" and year == "2016" and month == "09" and day == "26":
+        # There there is a chance we want area specific data
+        if area is not None:
+            read_area_specific_df = True
+
+    if read_area_specific_df:
+        loc_root = str((pathlib.Path().parent.absolute()))
+        in_dir = loc_root + "/data"
+        in_file = in_dir + "/" + station + year + month + day + "_area" + str(area) + ".pkl"
+        print("Reading in file: " + in_file)
+        df = pd.read_pickle(in_file)
+    else:
+        loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
+        in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + year + month + day
+        in_file = in_dir + "/" + station + year + month + day + ".pkl"
+        print("Reading in file: " + in_file)
+        df = pd.read_pickle(in_file)
+
+        _, start_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=start_hour)
+        _, end_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=end_hour)
+        df = df.loc[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)]
 
     fig = percent_diff_elv_trial(single_day_df=df, beam_range=beam_range, gate_range=gate_range)
 
@@ -231,7 +253,10 @@ if __name__ == "__main__":
     else:
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
-        out_fig = out_dir + "/" + "perc_diff_analysis-" + station + year + month + day
+        if area is None:
+            out_fig = out_dir + "/" + "perc_diff_analysis-" + station + year + month + day
+        else:
+            out_fig = out_dir + "/" + "perc_diff_analysis-" + station + year + month + day + "_area" + str(area)
 
         print("Saving plot as " + out_fig)
         fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
