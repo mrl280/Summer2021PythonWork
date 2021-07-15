@@ -194,7 +194,7 @@ def format_subplots(axes, x_lim, y_lim, t_diffs):
 
         for subplot_type in subplot_types:
             ax = axis[subplot_type]
-            ax.tick_params(labeltop=True, labelright=True)
+            # ax.tick_params(labeltop=True, labelright=True)
 
             ax.set_ylim(y_lim)
             ax.yaxis.set_major_locator(MultipleLocator(10))
@@ -219,7 +219,7 @@ if __name__ == "__main__":
 
     testing = False
 
-    area = None
+    area = 5
 
     station = "rkn"
     year = "2016"
