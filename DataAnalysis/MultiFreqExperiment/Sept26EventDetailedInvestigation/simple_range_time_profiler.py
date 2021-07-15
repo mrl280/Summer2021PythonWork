@@ -17,7 +17,7 @@ from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_
 from lib.basic_SD_df_filter import basic_SD_df_filter
 
 
-def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs, hour_range=None):
+def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs, hour_range=None, area=None):
     """
 
     A simple single day range profiler for the multi-frequency events
@@ -98,8 +98,12 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs, h
     data_axes = add_axes(fig=fig)
     format_subplots(axes=data_axes, x_lim=hour_range, y_lim=gate_range, t_diffs=t_diffs)
 
-    fig.suptitle(date_string + " at " + station.upper() + "; " + beam_string + "; " + gate_string
-                 + "\n" + resolution_string + "; " + "Produced by " + str(os.path.basename(__file__)), fontsize=18)
+    if area is None:
+        fig.suptitle(date_string + " at " + station.upper() + "; " + beam_string + "; " + gate_string
+                     + "\n" + resolution_string + "; " + "Produced by " + str(os.path.basename(__file__)), fontsize=18)
+    else:
+        fig.suptitle(date_string + " at " + station.upper() + "; Area " + str(area)
+                     + "\n" + resolution_string + "; " + "Produced by " + str(os.path.basename(__file__)), fontsize=18)
 
     print("Computing and plotting binned occurrence rates...")
 
@@ -251,7 +255,7 @@ if __name__ == "__main__":
     df = df.loc[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)]
 
     fig = simple_range_time_profiler(single_day_df=df, beam_range=beam_range, gate_range=gate_range,
-                                     hour_range=(start_hour, end_hour), t_diffs=t_diffs)
+                                     hour_range=(start_hour, end_hour), t_diffs=t_diffs, area=area)
 
     if testing:
         plt.show()
