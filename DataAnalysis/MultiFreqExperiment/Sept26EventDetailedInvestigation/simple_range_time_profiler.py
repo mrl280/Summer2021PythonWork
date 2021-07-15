@@ -37,6 +37,8 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs, h
     :param hour_range: (<int>, <int>) (optional):
             The hour range to consider.  If omitted (or None), then all hours will be considered.
             Not quite inclusive: if you pass in (0, 5) you will get from 0:00-4:59 UT
+    :param area: int:
+            The numbered area of interest.
 
     :return: matplotlib.pyplot.figure:
             The figure, it can then be viewed, modified, or saved to file
