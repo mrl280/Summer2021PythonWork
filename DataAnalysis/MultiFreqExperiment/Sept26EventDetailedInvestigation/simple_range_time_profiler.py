@@ -16,24 +16,24 @@ from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_
 from lib.basic_SD_df_filter import basic_SD_df_filter
 
 
-def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diff=0.0):
+def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs):
     """
 
-    A simple single day range profiler
+    A simple single day range profiler for the multi-frequency events
 
-    One set of subplots for each frequency
-     - plot for velocities and plot for elevations
+    Plot velocity and elevation angle profiles for each frequency
 
     :param single_day_df: pandas.Data_Frame:
             A single days worth of data that we want to range profile
-    :param gate_range: (<int>, <int>) (optional):
+    :param gate_range: (<int>, <int>):
             Inclusive. The gate range to consider.  If omitted (or None), then all the gates will be considered.
             Note that gates start at 0, so gates (0, 3) is 4 gates.
-    :param beam_range: (<int>, <int>) (optional):
+    :param beam_range: (<int>, <int>):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
-    :param t_diff: float: (Optional, default is 0.0)
-        The extra time delay to add in, in microseconds.
+    :param t_diffs: dictionary of floats keyed by integer frequencies:
+            The extra time delays to add in when adjusting elevation angles, in microseconds.
+
     :return: matplotlib.pyplot.figure:
             The figure, it can then be viewed, modified, or saved to file
     """
@@ -44,9 +44,11 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diff=0.0
     df = single_day_df.copy()  # Convenience
     time_units = 'ut'
     frequencies = [10, 12, 13, 14]
-    color_maps = {'vel': 'seismic_r', 'adjElv': 'jet'}
-    zlims = {'vel': (-600, 600), 'adjElv': (0, 30)}
     subplot_types = ["vel", "adjElv"]
+    color_maps = {'vel': 'seismic_r',
+                  'adjElv': 'jet'}
+    zlims = {'vel': (-600, 600),
+             'adjElv': (0, 30)}
 
     print("Filtering data..")
     # Get some information about the station we are working with
@@ -69,14 +71,9 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diff=0.0
                                 date_time_est=(df['datetime'].iat[0]).to_pydatetime())
     hour_range = (round(df[time_units].iat[0], 2), round(df[time_units].iat[-1], 2))
 
-    # Recompute elevation with an extra t_diff (this has to be done before modifying transFreq)
-    print("Recomputing Elevation Angles")
-    # TODO: Do different frequencies require different elevation angle adjustments
-    elevation_v2(df=df, t_diff=t_diff)  # tdiff is in microseconds
-
     # Put frequencies in MHz and round, this makes them easier to compare
-    df['transFreq'] = round(df['transFreq'] * 1e-3, 0)
-    df = df.loc[np.isin(df['transFreq'], frequencies)]  # drop any rows with unrecognized frequencies
+    df['transFreq_MHz'] = round(df['transFreq'] * 1e-3, 0)
+    df = df.loc[np.isin(df['transFreq_MHz'], frequencies)]  # drop any rows with unrecognized frequencies
     df.reset_index(drop=True, inplace=True)
 
     date = df['datetime'].iat[0]
@@ -89,13 +86,13 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diff=0.0
     else:
         beam_string = "Beams " + str(beam_range[0]) + "-" + str(beam_range[1])
     gate_string = "Gates " + str(gate_range[0]) + "-" + str(gate_range[1])
-    t_diff_string = "tdiff: " + str(t_diff) + " \u03BCs"
+    # t_diff_string = "tdiff: " + str(t_diff) + " \u03BCs"
 
     fig = plt.figure(figsize=[12, 12], constrained_layout=True, dpi=300)
     data_axes = add_axes(fig=fig)
-    format_subplots(axes=data_axes, x_lim=hour_range, y_lim=gate_range)
+    format_subplots(axes=data_axes, x_lim=hour_range, y_lim=gate_range, t_diffs=t_diffs)
 
-    fig.suptitle(date_string + " at " + station.upper() + "; " + beam_string + "; " + gate_string + "; " + t_diff_string
+    fig.suptitle(date_string + " at " + station.upper() + "; " + beam_string + "; " + gate_string
                  + "\n" + resolution_string + "; " + "Produced by " + str(os.path.basename(__file__)), fontsize=18)
 
     print("Computing and plotting binned occurrence rates...")
@@ -113,14 +110,20 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diff=0.0
     # Look though all of the frequencies and plot the data
     for freq in frequencies:
         for param in subplot_types:
-            df_ff = df[(df['transFreq'] == freq)]
-            ax = data_axes[str(freq)][param]
+            df_ff = df[(df['transFreq_MHz'] == freq)].copy()
+
+            if param == 'adjElv':
+                # Recompute elevation with the extra t_diff
+                print("Recomputing Elevation Angles for " + str(freq) + " MHz data - t_diff=" + str(t_diffs[freq]))
+                elevation_v2(df=df_ff, t_diff=t_diffs[freq])  # t_diff is in microseconds
+
+            ax = data_axes[freq][param]
 
             result, _, _, _ = stats.binned_statistic_2d(df_ff[time_units], df_ff['gate'], values=df_ff[param],
                                                         bins=[hour_edges, gate_edges])
 
             plot = ax.pcolormesh(hour_edges, gate_edges, result.transpose(),
-                                   cmap=color_maps[param], vmin=zlims[param][0], vmax=zlims[param][1], zorder=0)
+                                 cmap=color_maps[param], vmin=zlims[param][0], vmax=zlims[param][1], zorder=0)
 
             cbar_text_format = '%d'
             if param == 'vel':
@@ -145,19 +148,24 @@ def add_axes(fig):
 
     # Remember that splices don't include last index
     data_axes = dict()
-    data_axes["10"] = {"vel": fig.add_subplot(gs[0:2, 0:3]), "adjElv": fig.add_subplot(gs[2:4, 0:3])}
-    data_axes["12"] = {"vel": fig.add_subplot(gs[5:7, 0:3]), "adjElv": fig.add_subplot(gs[7:9, 0:3])}
-    data_axes["13"] = {"vel": fig.add_subplot(gs[0:2, 4:7]), "adjElv": fig.add_subplot(gs[2:4, 4:7])}
-    data_axes["14"] = {"vel": fig.add_subplot(gs[5:7, 4:7]), "adjElv": fig.add_subplot(gs[7:9, 4:7])}
+    data_axes[10] = {"vel": fig.add_subplot(gs[0:2, 0:3]), "adjElv": fig.add_subplot(gs[2:4, 0:3])}
+    data_axes[12] = {"vel": fig.add_subplot(gs[5:7, 0:3]), "adjElv": fig.add_subplot(gs[7:9, 0:3])}
+    data_axes[13] = {"vel": fig.add_subplot(gs[0:2, 4:7]), "adjElv": fig.add_subplot(gs[2:4, 4:7])}
+    data_axes[14] = {"vel": fig.add_subplot(gs[5:7, 4:7]), "adjElv": fig.add_subplot(gs[7:9, 4:7])}
 
     return data_axes
 
 
-def format_subplots(axes, x_lim, y_lim):
+def format_subplots(axes, x_lim, y_lim, t_diffs):
     """
-    :param axes: matplotlib.axes: The axes to format
-    :param x_lim: str: x label text
-    :param y_lim: str: y label text
+    :param axes: matplotlib.axes:
+            The axes to format
+    :param x_lim: str:
+            x label text
+    :param y_lim: str:
+            y label text
+    :param t_diffs: dictionary of floats keyed by integer frequencies:
+            The extra time delays to add in when adjusting elevation angles, in microseconds.
     """
 
     subplot_types = ["vel", "adjElv"]
@@ -179,7 +187,8 @@ def format_subplots(axes, x_lim, y_lim):
             if subplot_type == "vel":
                 ax.set_title(str(freq) + " MHz Velocities", fontsize=title_font_size)
             elif subplot_type == "adjElv":
-                ax.set_title(str(freq) + " MHz Adjusted Elevation Angles", fontsize=title_font_size)
+                ax.set_title(str(freq) + " MHz Adjusted Elevation Angles, tdiff=" + str(t_diffs[freq]) + " \u03BCs",
+                             fontsize=title_font_size)
                 ax.set_xlabel("UT Time [hour]", fontsize=label_font_size)
 
 
@@ -192,10 +201,15 @@ if __name__ == "__main__":
     year = "2016"
     month = "09"
     day = "26"
+    start_hour = 0
+    end_hour = 4
 
     beam_range = (7, 7)
     gate_range = (0, 74)
-    t_diff = 0.003
+    t_diffs = {10: -0.003,  # microseconds
+               12: 0.001,
+               13: 0.002,
+               14: 0.003}
 
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
@@ -203,13 +217,12 @@ if __name__ == "__main__":
     in_file = in_dir + "/" + station + year + month + day + ".pkl"
     df = pd.read_pickle(in_file)
 
-    if testing:
-        # Arbitrary restriction, speeds things up
-        _, start_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=0)
-        _, end_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=4)
-        df = df.loc[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)]
+    # Restrict data to within the desired hour range
+    _, start_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=start_hour)
+    _, end_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=end_hour)
+    df = df.loc[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)]
 
-    fig = simple_range_time_profiler(single_day_df=df, beam_range=beam_range, gate_range=gate_range, t_diff=t_diff)
+    fig = simple_range_time_profiler(single_day_df=df, beam_range=beam_range, gate_range=gate_range, t_diffs=t_diffs)
 
     if testing:
         plt.show()
