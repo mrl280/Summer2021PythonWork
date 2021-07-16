@@ -14,7 +14,7 @@ from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_
 from lib.basic_SD_df_filter import basic_SD_df_filter
 
 
-def percent_diff_elv_trial(single_day_df, beam_range, gate_range):
+def percent_diff_elv_trial(single_day_df, beam_range, gate_range, area=None):
     """
 
     Find the optimal t_diff for multi-frequency events
@@ -36,6 +36,11 @@ def percent_diff_elv_trial(single_day_df, beam_range, gate_range):
     :param gate_range: (<int>, <int>):
             Inclusive. The gate range to consider.  If omitted (or None), then all the gates will be considered.
             Note that gates start at 0, so gates (0, 3) is 4 gates.
+    :param area: int:
+            The numbered area of interest.
+
+    :return: matplotlib.pyplot.figure:
+            The figure, it can then be viewed, modified, or saved to file
     """
 
     if len(single_day_df) <= 0:
@@ -84,8 +89,12 @@ def percent_diff_elv_trial(single_day_df, beam_range, gate_range):
 
     print("Preparing the plot...")
     fig, axes = plt.subplots(figsize=[10, 8], dpi=300, nrows=1, ncols=2, constrained_layout=True)
-    fig.suptitle(date_string + " at " + station.upper() + "; " + beam_string + "; " + gate_string +
-                 "; " + resolution_string + "\n" + "Produced by " + str(os.path.basename(__file__)), fontsize=18)
+    if area is None:
+        fig.suptitle(date_string + " at " + station.upper() + "; " + beam_string + "; " + gate_string
+                     + "\n" + resolution_string + "; " + "Produced by " + str(os.path.basename(__file__)), fontsize=18)
+    else:
+        fig.suptitle(date_string + " at " + station.upper() + "; Area " + str(area)
+                     + "\n" + resolution_string + "; " + "Produced by " + str(os.path.basename(__file__)), fontsize=18)
 
     axes[0].set_ylabel("Percent Change [%]")
     axes[1].set_ylabel("First Derivative of Percent Change")
@@ -211,6 +220,7 @@ if __name__ == "__main__":
     # start_hour = 1
     # end_hour = 4
     # gate_range = (0, 40)
+    # area = None
 
     # station = "rkn"
     # year = "2017"
@@ -219,17 +229,11 @@ if __name__ == "__main__":
     # start_hour = 4
     # end_hour = 7
     # gate_range = (0, 74)
+    # area = None
 
     beam_range = (7, 7)
 
-    read_area_specific_df = False
-
-    if station == "rkn" and year == "2016" and month == "09" and day == "26":
-        # There there is a chance we want area specific data
-        if area is not None:
-            read_area_specific_df = True
-
-    if read_area_specific_df:
+    if area is not None:
         loc_root = str((pathlib.Path().parent.absolute()))
         in_dir = loc_root + "/data"
         in_file = in_dir + "/" + station + year + month + day + "_area" + str(area) + ".pkl"
@@ -246,7 +250,7 @@ if __name__ == "__main__":
         _, end_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=end_hour)
         df = df.loc[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)]
 
-    fig = percent_diff_elv_trial(single_day_df=df, beam_range=beam_range, gate_range=gate_range)
+    fig = percent_diff_elv_trial(single_day_df=df, beam_range=beam_range, gate_range=gate_range, area=area)
 
     if testing:
         plt.show()
