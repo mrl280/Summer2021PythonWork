@@ -112,19 +112,29 @@ def convex_hull_test(single_day_df, beam_range, gate_range, hour_range=None, are
 
         df_ff = df_ff.loc[(df_ff['pwr'] >= pwr_median) & (df_ff['pwr'] <= Q3)]
 
+        if area == 5:
+            # There is an outlier that we need to get rid of
+            df_ff = df_ff.loc[(df_ff['gate'] <= 18)]
+
         points = np.vstack((df_ff[time_units], df_ff['gate'])).T
 
-        # Build and plot the convex hull
-        hull = ConvexHull(points)
-        # _ = convex_hull_plot_2d(hull)
+        try:
+            # Build and plot the convex hull
+            hull = ConvexHull(points)
+            # _ = convex_hull_plot_2d(hull)
 
-        for i, simplex in enumerate(hull.simplices):
-            ax.plot(points[simplex, 0], points[simplex, 1], linewidth=1, color=hull_colours[freq])
+            for i, simplex in enumerate(hull.simplices):
+                ax.plot(points[simplex, 0], points[simplex, 1], linewidth=1, color=hull_colours[freq])
 
-            if i == 0:
-                # Over-plot one to provide a legend handle
-                ax.plot(points[simplex, 0], points[simplex, 1], linewidth=1, color=hull_colours[freq],
-                        label=str(freq) + " MHz")
+                if i == 0:
+                    # Over-plot one to provide a legend handle
+                    ax.plot(points[simplex, 0], points[simplex, 1], linewidth=1, color=hull_colours[freq],
+                            label=str(freq) + " MHz")
+        except ValueError:
+            # There is no enough data
+            pass
+        except BaseException as e:
+            raise e
 
     ax.legend(loc='upper right')
 
@@ -165,7 +175,7 @@ if __name__ == "__main__":
 
     testing = True
 
-    area = 2
+    area = 5
 
     station = "rkn"
     year = "2016"
@@ -203,9 +213,9 @@ if __name__ == "__main__":
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
         if area is None:
-            out_fig = out_dir + "/" + "watermann-" + station + year + month + day
+            out_fig = out_dir + "/" + "convex_hull_wrap-" + station + year + month + day
         else:
-            out_fig = out_dir + "/" + "watermann-" + station + year + month + day + "_area" + str(area)
+            out_fig = out_dir + "/" + "convex_hull_wrap-" + station + year + month + day + "_area" + str(area)
 
         print("Saving plot as " + out_fig)
         fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
