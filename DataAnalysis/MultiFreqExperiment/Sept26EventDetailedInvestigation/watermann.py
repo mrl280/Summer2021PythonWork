@@ -2,7 +2,6 @@ import calendar
 import os
 import pathlib
 import warnings
-import pydarn
 
 import numpy as np
 import pandas as pd
@@ -11,24 +10,26 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, NullFormatter
 from scipy import stats
 
-from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
-from DataAnalysis.EchoOccurrence.lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_epoch
 from lib.basic_SD_df_filter import basic_SD_df_filter
 
 
-def watermann(single_day_df, axes_vlimits, area=None):
+def watermann(single_day_df, axes_limits, axes_vlimits, bin_widths, area=None):
     """
 
     Produce three plots:
-        - normalized echo count vs doppler histogram
+        - echo count vs doppler histogram
         - width vs doppler
         - power vs doppler
 
     :param single_day_df: pandas.Data_Frame:
             A single days worth of data that we want to range profile
+    :param axes_limits: dict:
+            Dictionary of axis limits keyed by parameter.
     :param axes_vlimits: dict:
             Dictionary of vlim (zlim) ranges keyed by plot type.
+    :param bin_widths: dict:
+            Dictionary of bin widths for contours keyed by plot type.
     :param area: int:
             The numbered area of interest.
 
@@ -41,21 +42,13 @@ def watermann(single_day_df, axes_vlimits, area=None):
 
     df = single_day_df.copy()  # Convenience
     frequencies = [10, 12, 13, 14]
-    axes_limits = {'vel': (-600, 600),
-                   'count': (0, 1.0),
-                   'wdt': (0, 200),
-                   'pwr': (0, 50)}
     axes_labels = {'vel': "Velocities [m/s]",
-                   'count': "Normalized Echo Count",
+                   'count': "Echo Count",
                    'wdt': "Spectral Width [m/s]",
                    'pwr': "Power [dB]"}
     cbar_labelsize = 12
 
     print("Filtering data..")
-    # Get some information about the station we are working with
-    station = df['station'].iat[0]
-    radar_id = pydarn.read_hdw_file(station).stid
-
     # Make sure all of the data is of the same spatial resolution
     spatial_resolution = df['rangeSep'].iat[0]
     df = df.loc[(df['rangeSep'] == spatial_resolution)]
@@ -98,26 +91,56 @@ def watermann(single_day_df, axes_vlimits, area=None):
     for freq in frequencies:
         df_ff = df[(df['transFreq_MHz'] == freq)].copy()
 
+        # Add in normalized echo count vs doppler histogram
         add_in_count_data(ax=axes[freq]['count'], df_ff=df_ff)
 
         # Add width contours
-        wdt_reference_plot = add_in_wdt_data(ax=axes[freq]['wdt'], df_ff=df_ff, vlims=axes_vlimits['wdt'])
+        wdt_reference_plot = add_in_wdt_data(ax=axes[freq]['wdt'], df_ff=df_ff, vlims=axes_vlimits['wdt'],
+                                             vel_bin_width=bin_widths['vel'], wdt_bin_width=bin_widths['wdt'])
         cbar_wdt = fig.colorbar(wdt_reference_plot, cax=axes['cbar']['wdt'], shrink=0.75, format='%d')
         cbar_wdt.ax.tick_params(labelsize=cbar_labelsize)
 
         # Add power contours
-        pwr_reference_plot = add_in_pwr_data(ax=axes[freq]['pwr'], df_ff=df_ff, vlims=axes_vlimits['pwr'])
+        pwr_reference_plot = add_in_pwr_data(ax=axes[freq]['pwr'], df_ff=df_ff, vlims=axes_vlimits['pwr'],
+                                             vel_bin_width=bin_widths['vel'], pwr_bin_width=bin_widths['pwr'])
         cbar_pwr = fig.colorbar(pwr_reference_plot, cax=axes['cbar']['pwr'], shrink=0.75, format='%d')
         cbar_pwr.ax.tick_params(labelsize=cbar_labelsize)
 
         # Add in gridlines
         for keys, ax in axes[freq].items():
             ax.grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.7, zorder=4)
+            ax.grid(b=True, which='minor', axis='both', linestyle='--', linewidth=0.4, zorder=4)
 
     return fig
 
 
-def add_in_pwr_data(ax, df_ff, vlims):
+def add_in_count_data(ax, df_ff):
+    """
+
+    Plot normalized echo count vs doppler
+
+    :param ax: matplotlib.axes:
+            The axes to draw on
+    :param df_ff: pandas.DataFrame:
+            The frequency restricted dataframe to use
+    """
+
+    if len(df_ff) <= 0:
+        return
+
+    vel_range = ax.get_xlim()
+
+    # Compute velocity edges
+    vel_bin_width = 20  # m/s
+    n_bins_vel = int((vel_range[1] - vel_range[0]) / vel_bin_width)
+    vel_edges = np.linspace(vel_range[0], vel_range[1], num=(n_bins_vel + 1))
+
+    n, bins, patches = ax.hist(df_ff['vel'], bins=vel_edges, align='mid', histtype='step', zorder=3)
+
+    pass
+
+
+def add_in_pwr_data(ax, df_ff, vlims, vel_bin_width, pwr_bin_width):
     """
     Plot width vs doppler
 
@@ -144,12 +167,10 @@ def add_in_pwr_data(ax, df_ff, vlims):
     levels = np.linspace(start=vlims[0], stop=vlims[1], num=(n_levels + 1))
 
     # Compute velocity edges
-    vel_bin_width = 10  # m/s
     n_bins_vel = int((vel_range[1] - vel_range[0]) / vel_bin_width)
     vel_edges = np.linspace(vel_range[0], vel_range[1], num=(n_bins_vel + 1))
 
     # Compute power edges
-    pwr_bin_width = 2
     n_bins_y = int((pwr_range[1] - pwr_range[0]) / pwr_bin_width)
     pwr_edges = np.linspace(pwr_range[0], pwr_range[1], num=(n_bins_y + 1))
 
@@ -173,7 +194,7 @@ def add_in_pwr_data(ax, df_ff, vlims):
     return plot
 
 
-def add_in_wdt_data(ax, df_ff, vlims):
+def add_in_wdt_data(ax, df_ff, vlims, vel_bin_width, wdt_bin_width):
     """
     Plot width vs doppler
 
@@ -200,12 +221,10 @@ def add_in_wdt_data(ax, df_ff, vlims):
     levels = np.linspace(start=vlims[0], stop=vlims[1], num=(n_levels + 1))
 
     # Compute velocity edges
-    vel_bin_width = 10  # m/s
     n_bins_vel = int((vel_range[1] - vel_range[0]) / vel_bin_width)
     vel_edges = np.linspace(vel_range[0], vel_range[1], num=(n_bins_vel + 1))
 
     # Compute width edges
-    wdt_bin_width = 5
     n_bins_y = int((wdt_range[1] - wdt_range[0]) / wdt_bin_width)
     wdt_edges = np.linspace(wdt_range[0], wdt_range[1], num=(n_bins_y + 1))
 
@@ -224,20 +243,6 @@ def add_in_wdt_data(ax, df_ff, vlims):
     plot = ax.contourf(binned_xcenters, binned_ycenters, result.transpose(), cmap='jet', levels=levels, extend='max')
 
     return plot
-
-
-def add_in_count_data(ax, df_ff):
-    """
-
-    Plot normalized echo count vs doppler
-
-    :param ax: matplotlib.axes:
-            The axes to draw or
-    :param df_ff: pandas.DataFrame:
-            The frequency restricted dataframe to use
-    """
-
-    pass
 
 
 def add_axes(fig):
@@ -297,6 +302,8 @@ def format_subplots(axes, axes_limits, axes_labels):
         for subplot_type in subplot_types:
             ax = axis[subplot_type]
 
+            plt.setp(ax.xaxis.get_majorticklabels(), rotation=30)
+
             y_lim = axes_limits[subplot_type]
             ax.set_ylim(y_lim)
             # ax.yaxis.set_major_locator(MultipleLocator(10))
@@ -329,8 +336,70 @@ if __name__ == "__main__":
     testing = True
 
     area = None
-    axes_vlimits = {'wdt': (0, 25),
-                    'pwr': (0, 50)}
+    axes_vlimits = {'wdt': (0, 25),  # Change
+                    'pwr': (0, 50)}  # Change
+    axes_limits = {'vel': (-600, 600),
+                   'count': (0, 1700),  # Change
+                   'wdt': (0, 200),
+                   'pwr': (0, 50)}
+    bin_widths = {'vel': 20,
+                  'wdt': 8,
+                  'pwr': 2}
+
+    # area = 1
+    # axes_vlimits = {'wdt': (0, 25),     # Change
+    #                 'pwr': (0, 35)}     # Change
+    # axes_limits = {'vel': (-600, 600),
+    #                'count': (0, 400),   # Change
+    #                'wdt': (0, 200),
+    #                'pwr': (0, 50)}
+    # bin_widths = {'vel': 20,
+    #               'wdt': 8,
+    #               'pwr': 2}
+
+    # area = 2
+    # axes_vlimits = {'wdt': (0, 10),  # Change
+    #                 'pwr': (0, 18)}  # Change
+    # axes_limits = {'vel': (-600, 600),
+    #                'count': (0, 150),  # Change
+    #                'wdt': (0, 200),
+    #                'pwr': (0, 50)}
+    # bin_widths = {'vel': 20,
+    #                'wdt': 8,
+    #                'pwr': 2}
+
+    # area = 3
+    # axes_vlimits = {'wdt': (0, 20),  # Change
+    #                 'pwr': (0, 25)}  # Change
+    # axes_limits = {'vel': (-600, 600),
+    #                'count': (0, 700),  # Change
+    #                'wdt': (0, 200),
+    #                'pwr': (0, 50)}
+    # bin_widths = {'vel': 10,
+    #                'wdt': 8,
+    #                'pwr': 2}
+
+    # area = 4
+    # axes_vlimits = {'wdt': (0, 18),  # Change
+    #                 'pwr': (0, 40)}  # Change
+    # axes_limits = {'vel': (-600, 600),
+    #                'count': (0, 250),  # Change
+    #                'wdt': (0, 200),
+    #                'pwr': (0, 50)}
+    # bin_widths = {'vel': 20,
+    #               'wdt': 8,
+    #               'pwr': 2}
+
+    # area = 5
+    # axes_vlimits = {'wdt': (0, 30),  # Change
+    #                 'pwr': (0, 18)}  # Change
+    # axes_limits = {'vel': (-600, 600),
+    #                'count': (0, 200),  # Change
+    #                'wdt': (0, 200),
+    #                'pwr': (0, 50)}
+    # bin_widths = {'vel': 20,
+    #               'wdt': 8,
+    #               'pwr': 2}
 
     station = "rkn"
     year = "2016"
@@ -359,7 +428,8 @@ if __name__ == "__main__":
     _, end_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=end_hour)
     df = df.loc[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)]
 
-    fig = watermann(single_day_df=df, axes_vlimits=axes_vlimits, area=area)
+    fig = watermann(single_day_df=df, axes_limits=axes_limits, axes_vlimits=axes_vlimits, bin_widths=bin_widths,
+                    area=area)
 
     if testing:
         plt.show()
