@@ -8,9 +8,7 @@ import pandas as pd
 import numpy as np
 import _pickle as cPickle
 
-
 from DataAnalysis.DataReading.SD.PickleFITACF_occ import build_datetime_epoch
-
 
 
 def PickleFITACF(station, date):
@@ -162,28 +160,26 @@ def PickleFITACF(station, date):
     # Put the data into a dataframe
     print("     Building the data frame...")
     df = pd.DataFrame({'station': [station] * len(epoch),
-                       'datetime': date_time,
-                       'epoch': epoch,
+                       'datetime': date_time,       'epoch': epoch,
                        'decimalTime': np.asarray(hour) + np.asarray(minute) / 60.0 + np.asarray(second) / 3600.0,
-                       'year': year,    'month': month,     'day': day,
-                       'hour': hour,    'minute': minute,   'second': second,
-                       'bmnum': bmnum,  'bmazm': bmazm,
+                       'year': year,            'month': month,         'day': day,
+                       'hour': hour,            'minute': minute,       'second': second,
+                       'bmnum': bmnum,          'bmazm': bmazm,
                        'intt': intt,
                        'gate': slist,
                        'transFreq': tfreq,
-                       'firstRang': frang,
-                       'rangeSep': rsep,
+                        'firstRang': frang,     'rangeSep': rsep,
                        'fitACFRev': fitACF_rev,
                        'CtrlPrgrm': combf,
                        'qflg': qflg,
                        'gflg': gflg,
-                       'vel': v,        'velErr': v_e,
-                       'pwr': p_l,      'pwrErr': p_l_e,
-                       'wdt': w_l,      'wdtErr': w_l_e,
-                       'phase': phi0,   'phaseErr': phi0_e,
+                       'vel': v,            'velErr': v_e,
+                       'pwr': p_l,          'pwrErr': p_l_e,
+                       'wdt': w_l,          'wdtErr': w_l_e,
+                       'phase': phi0,       'phaseErr': phi0_e,
                        'stdDevLambda': sd_l,
                        'stdDevPhase': sd_phi,
-                       'elv': elv,      'elvLow': elv_low,  'elvHigh': elv_high
+                       'elv': elv,          'elvLow': elv_low,          'elvHigh': elv_high
                        })
 
     # Compress and save
