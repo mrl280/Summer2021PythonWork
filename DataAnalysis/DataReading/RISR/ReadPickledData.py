@@ -1,6 +1,9 @@
+import bz2
+
 import statistics as stat
 import time
 import pandas as pd
+import _pickle as cPickle
 
 if __name__ == '__main__':
     """
@@ -8,11 +11,14 @@ if __name__ == '__main__':
     """
 
     station = "ran"
-    date = "20140302"
+    date = "20101105"
 
     in_dir = "data/" + station + "/" + station + date + "/"
-    in_file = in_dir + station + date + ".5min.pkl"
-    df = pd.read_pickle(in_file)
+    in_file = in_dir + station + date + ".1min.pbz2"
+
+    data_stream = bz2.BZ2File(in_file, "rb")
+    df = cPickle.load(data_stream)
+
     print(df.head())
 
     # Grab start and end times
@@ -21,8 +27,8 @@ if __name__ == '__main__':
     print("\nData start time: " + date_time)
     print("Data end time: " + time.strftime(pattern, time.gmtime(df['epoch'].iloc[df.shape[0] - 1])))
 
-    print(df['dateTime'].iloc[0])
-    print(df['dateTime'].iloc[df.shape[0] - 1])
+    print(df['datetime'].iloc[0])
+    print(df['datetime'].iloc[df.shape[0] - 1])
     print("\n")
 
     df = df.loc[df['wdBmnum'] == 2]

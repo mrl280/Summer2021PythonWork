@@ -1,7 +1,8 @@
+import bz2
 import time
 
 import numpy as np
-import pandas as pd
+import _pickle as cPickle
 
 if __name__ == '__main__':
     """
@@ -10,11 +11,13 @@ if __name__ == '__main__':
     """
 
     station = "rkn"
-    date = "20160925"
+    date = "20111112"
 
     in_dir = "data/" + station + "/" + station + date
-    in_file = in_dir + "/" + station + date + ".pkl"
-    df = pd.read_pickle(in_file)
+    in_file = in_dir + "/" + station + date + ".pbz2"
+
+    data_stream = bz2.BZ2File(in_file, "rb")
+    df = cPickle.load(data_stream)
 
     # pd.set_option('display.max_columns', None)
     print(df.head())

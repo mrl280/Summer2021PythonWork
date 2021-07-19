@@ -1,13 +1,16 @@
 import math
-
 import pydarn
 import bz2
-import pandas as pd
-import numpy as np
 import glob
 import os
 
+import pandas as pd
+import numpy as np
+import _pickle as cPickle
+
+
 from DataAnalysis.DataReading.SD.PickleFITACF_occ import build_datetime_epoch
+
 
 
 def PickleFITACF(station, date):
@@ -183,10 +186,11 @@ def PickleFITACF(station, date):
                        'elv': elv,      'elvLow': elv_low,  'elvHigh': elv_high
                        })
 
-    # Save to file
-    out_file = in_dir + "/" + station + date + ".pkl"
+    # Compress and save
+    out_file = in_dir + "/" + station + date + ".pbz2"
     print("     Pickling as " + out_file + "...")
-    df.to_pickle(out_file)
+    with bz2.BZ2File(out_file, "w") as file:
+        cPickle.dump(df, file)
 
 
 if __name__ == '__main__':

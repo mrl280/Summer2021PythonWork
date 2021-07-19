@@ -1,8 +1,10 @@
+import bz2
 import os
 import glob
 
 import pandas as pd
 import numpy as np
+import _pickle as cPickle
 
 from DataAnalysis.DataReading.RISR_HDF5.wd_beam_num import wd_beam_num
 from DataAnalysis.DataReading.SD.PickleFITACF_occ import build_datetime_epoch
@@ -121,10 +123,11 @@ def PickleRISR(station, date):
         resolution = int((temp_df['minute'].iat[1] + temp_df['second'].iat[1] / 60.0)
                          - (temp_df['minute'].iat[0] + temp_df['second'].iat[0] / 60.0))
 
-        # Save to file
-        out_file = in_file[:len(in_file) - 8] + "." + str(resolution) + "min.pkl"
+        # Compress and save
+        out_file = in_file[:len(in_file) - 8] + "." + str(resolution) + "min.pbz2"
         print("     Pickling as " + out_file + "...")
-        adjusted_df.to_pickle(out_file)
+        with bz2.BZ2File(out_file, "w") as file:
+            cPickle.dump(adjusted_df, file)
 
         # Remove the temporary temp file
         for file in glob.iglob(in_dir + "/temp*.txt"):
@@ -135,7 +138,7 @@ if __name__ == '__main__':
     """
     Handler to call PickleRISR on RISR txt data files
     """
-    PICKLE_ALL = True  # To prevent accidentally pickling all data
+    PICKLE_ALL = False  # To prevent accidentally pickling all data
 
     if PICKLE_ALL:
         print("Pickling all downloaded RISR data...")
@@ -145,6 +148,6 @@ if __name__ == '__main__':
                 PickleRISR(station, in_dir[3:])
     else:
         station = "ran"
-        date = "20101106"
+        date = "20101105"
         print("Pickling " + station + date + "...")
         PickleRISR(station, date)
