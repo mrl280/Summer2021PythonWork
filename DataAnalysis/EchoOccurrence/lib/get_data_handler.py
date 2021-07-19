@@ -4,7 +4,6 @@ import os
 import pathlib
 import pydarn
 
-import pandas as pd
 import _pickle as cPickle
 
 try:

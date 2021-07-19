@@ -1,12 +1,14 @@
 import calendar
 import pydarn
 import bz2
-import pandas as pd
-import numpy as np
 import time
 import glob
 import os
+
+import pandas as pd
+import numpy as np
 import datetime as datetime
+import _pickle as cPickle
 
 
 def PickleFITACF_occ(station, date, beam_range):
@@ -122,9 +124,10 @@ def PickleFITACF_occ(station, date, beam_range):
                        })
 
     # Save to file
-    out_file = in_dir + "/" + station + date + "_occ.pkl"
+    out_file = in_dir + "/" + station + date + "_occ.pbz2"
     print("     Pickling as " + out_file + "...")
-    df.to_pickle(out_file)
+    with bz2.BZ2File(out_file, "w") as file:
+        cPickle.dump(df, file)
 
 
 def build_datetime_epoch(year, month, day, hour, minute, second):
@@ -162,7 +165,7 @@ if __name__ == '__main__':
                 print("\nStarting " + in_dir)
                 PickleFITACF_occ(station, in_dir[3:], (0, 16))
     else:
-        station = "rkn"
-        date = "20111112"
+        station = "dce"
+        date = "20190303"
         print("Occ Pickling " + station + date + "...")
         PickleFITACF_occ(station, date, (0, 16))
