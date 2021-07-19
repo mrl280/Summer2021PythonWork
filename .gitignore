@@ -1,24 +1,37 @@
-/DataAnalysis/DataReading/RISR_HDF5/data/
 /DataAnalysis/DataReading/SD/data/
+/DataAnalysis/DataReading/RISR/data/
+/DataAnalysis/DataReading/RISR_HDF5/data/
+
+
+/DataAnalysis/OneAndOneHalfHop/VelocityAnalysis/out/
 /DataAnalysis/OneAndOneHalfHop/out/
-/OlderWork/Data
+/DataAnalysis/OneAndOneHalfHop/List of Events - From Koustov on May 14.xlsx
+
+/DataAnalysis/OneAndOneHalfHop/Project decription.pdf
+/DataAnalysis/OneAndOneHalfHop/data/
 
 /OlderWork/March6Event/Data/
 /OlderWork/March6Event/Processed_data/
-/DataAnalysis/OneAndOneHalfHop/VelocityAnalysis/out/
-/DataAnalysis/DataReading/RISR_HDF5/data/ras/
-/DataAnalysis/MultiFreqExperiment/RatioAnalysis/data/
-/DataAnalysis/MultiFreqExperiment/RatioAnalysis/out/
-/DataAnalysis/OneAndOneHalfHop/List of Events - From Koustov on May 14.xlsx
-/DataAnalysis/DataReading/RISR/data/
-/DataAnalysis/OneAndOneHalfHop/Project decription.pdf
-/DataAnalysis/OneAndOneHalfHop/data/
-/DataAnalysis/MultiFreqExperiment/OccRates/data/
-/DataAnalysis/MultiFreqExperiment/OccRates/out/
+
+
 /DataAnalysis/MultiFreqExperiment/list_of_events.txt
 /DataAnalysis/MultiFreqExperiment/data/
-/DataAnalysis/EchoOccurrence/out/
-/DataAnalysis/EchoOccurrence/data/
-/DataAnalysis/Testing/out/
+
+/DataAnalysis/MultiFreqExperiment/RatioAnalysis/data/
+/DataAnalysis/MultiFreqExperiment/RatioAnalysis/out/
+
 /DataAnalysis/MultiFreqExperiment/Sept26EventDetailedInvestigation/out/
 /DataAnalysis/MultiFreqExperiment/Sept26EventDetailedInvestigation/data/
+
+/DataAnalysis/MultiFreqExperiment/OccRates/data/
+/DataAnalysis/MultiFreqExperiment/OccRates/out/
+
+
+/DataAnalysis/EchoOccurrence/out/
+/DataAnalysis/EchoOccurrence/data/
+
+
+/DataAnalysis/Testing/out/
+
+
+/OlderWork/Data/
