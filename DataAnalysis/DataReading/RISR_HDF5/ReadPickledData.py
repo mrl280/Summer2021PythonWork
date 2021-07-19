@@ -3,6 +3,9 @@ import pandas as pd
 
 if __name__ == '__main__':
     """
+    
+    ### DEPRECATED ###
+    
     Read in pickled HDF5 RISR Data
     """
 

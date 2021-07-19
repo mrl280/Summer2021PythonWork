@@ -6,12 +6,15 @@ import h5py
 
 import pandas as pd
 import numpy as np
+import deprecation
 
 from wd_beam_num import wd_beam_num
 
 
+@deprecation.deprecated()
 def PickleLongPulse(station, date):
     """
+
     Take a RISR_HDF5 long pulse file and pickle it
     Works for both RISR_HDF5-N and RISR_HDF5-C, although some RISR_HDF5-C files seem not to have altitude data
     
