@@ -202,7 +202,7 @@ if __name__ == '__main__':
                 print("\nStarting " + in_dir)
                 PickleFITACF(station, in_dir[3:])
     else:
-        station = "sas"
-        date = "20010101"
+        station = "rkn"
+        date = "20111112"
         print("Pickling " + station + date + "...")
         PickleFITACF(station, date)
