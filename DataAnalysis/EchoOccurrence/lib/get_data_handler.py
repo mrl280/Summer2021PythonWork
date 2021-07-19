@@ -156,8 +156,10 @@ def look_for_pickle(station, year_range, occ_data, fitACF_version):
     """
 
     Try to find a pickled datafile that will do the trick.
-    Pickled datafiles should always be for all months, days, gates, and beams.  So we just need to consider the year
-     range.
+
+    Unfortunately, pickle files would take up too much space if they are for all months, days, gates, and beams.
+    Therefore, the pickle file might not have everything you are looking for
+
 
     :param station: str:
             The radar station to consider, a 3 character string (e.g. "rkn").
@@ -210,19 +212,22 @@ def look_for_pickle(station, year_range, occ_data, fitACF_version):
                 if file_name[24:27] == 'occ':
                     # It is an occ_file
                     if occ_data:
-                        print("Using data from " + in_file)
+                        warnings.warn("Using data from " + in_file + ".  This file might not have data for all months, "
+                                                                     "days, gates, and beams", category=Warning)
                         return pd.read_pickle(in_file)
                     else:
                         continue
 
                 else:
                     # It is not an occ file
-                    print("Using data from " + in_file)
+                    warnings.warn("Using data from " + in_file + ".  This file might not have data for all months, "
+                                                                 "days, gates, and beams", category=Warning)
                     return pd.read_pickle(in_file)
 
             else:
                 continue  # This file is not what we are looking for
         except BaseException as e:
+            # print(e)
             pass
 
     # If we didn't find anything, then we can just go ahead and return None
