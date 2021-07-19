@@ -1,9 +1,11 @@
+import bz2
 import glob
 import os
 import pathlib
 import pydarn
 
 import pandas as pd
+import _pickle as cPickle
 
 try:
     from .data_getters.get_data import get_data
@@ -230,7 +232,8 @@ def look_for_pickle(station, year_range, occ_data, fitACF_version):
                     if occ_data:
                         warnings.warn("Using data from " + in_file + ".  This file might not have data for all months, "
                                                                      "days, gates, and beams", category=Warning)
-                        return pd.read_pickle(in_file)
+                        data_stream = bz2.BZ2File(in_file, "rb")
+                        return cPickle.load(data_stream)
                     else:
                         continue
 
@@ -238,7 +241,8 @@ def look_for_pickle(station, year_range, occ_data, fitACF_version):
                     # It is not an occ file
                     warnings.warn("Using data from " + in_file + ".  This file might not have data for all months, "
                                                                  "days, gates, and beams", category=Warning)
-                    return pd.read_pickle(in_file)
+                    data_stream = bz2.BZ2File(in_file, "rb")
+                    return cPickle.load(data_stream)
 
             else:
                 continue  # This file is not what we are looking for

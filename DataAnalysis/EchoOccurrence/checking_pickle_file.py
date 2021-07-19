@@ -10,13 +10,15 @@ if __name__ == '__main__':
     """
 
     station = "dcn"
-    year_range = (2019, 2019)
+    year_range = (2019, 2021)
     local_testing = False
 
     df = get_data_handler(station, year_range=year_range, month_range=None, day_range=None,
                           gate_range=None, beam_range=None, freq_range=None, occ_data=True, local_testing=local_testing)
 
     print(df.keys())
+
+    print(df.head())
 
     starting_datetime = df['datetime'].iat[0]
     print("The first datetime in the df is:")

@@ -10,6 +10,7 @@ import pydarn
 import datetime as datetime
 import pandas as pd
 import numpy as np
+import _pickle as cPickle
 
 
 def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_range, freq_range,
@@ -186,10 +187,10 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
 
     # Put the data into a dataframe
     print("     Building the data frame...")
-    df = pd.DataFrame({'epoch': epoch,      'datetime': date_time,
-                       'slist': slist,      'bmnum': beam,
-                       'frang': frang,      'rsep': rsep,       'tfreq': tfreq,
-                       'good_iono_echo': good_iono_echo,        'good_grndscat_echo': good_grndscat_echo
+    df = pd.DataFrame({'epoch': epoch, 'datetime': date_time,
+                       'slist': slist, 'bmnum': beam,
+                       'frang': frang, 'rsep': rsep, 'tfreq': tfreq,
+                       'good_iono_echo': good_iono_echo, 'good_grndscat_echo': good_grndscat_echo
                        })
 
     # Ensure data is filtered for the the needed beam, gate, and freq ranges
@@ -243,13 +244,13 @@ if __name__ == '__main__':
     testing = False
     station = "dcn"
     freq_range = (8, 10)
-    year_range = (2019, 2019)
+    year_range = (2019, 2021)
     beam_range = (6, 8)
     gate_range = (10, 30)
     fitACF_version = 2.5
     even_odd_days = 'odd'
-    month_range = (2, 2)
-    day_range = (1, 10)
+    month_range = (1, 1)
+    day_range = (1, 1)
 
     # testing = False
     # station = "dcn"
@@ -273,10 +274,9 @@ if __name__ == '__main__':
     #                   gate_range=(0, 99), beam_range=(6, 7), freq_range=(5, 25),
     #                   print_timing_info=True)
 
-    if testing:
-        print(df.head())
+    print(df.head())
 
-    else:
+    if not testing:
         # Go ahead and pickle the dataframe for later
         if fitACF_version == 3.0:
             fitACT_string = "fitacf_30"
@@ -287,8 +287,9 @@ if __name__ == '__main__':
 
         loc_root = str((pathlib.Path().parent.absolute().parent.absolute().parent.absolute()))
         out_dir = loc_root + "/data/" + station
-        out_file = out_dir + "/" + station + "_" + str(year_range[0]) + "_" + str(year_range[1]) + \
-                   "_" + fitACT_string + "_occ" + ".pkl"
+        out_file = out_dir + "/" + station + "_" + str(year_range[0]) + "_" + str(year_range[1]) + "_" + fitACT_string \
+                   + "_occ" + ".pbz2"
 
         print("     Pickling as " + out_file + "...")
-        df.to_pickle(out_file)
+        with bz2.BZ2File(out_file, "w") as file:
+            cPickle.dump(df, file)

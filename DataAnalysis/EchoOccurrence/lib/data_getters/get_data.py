@@ -11,6 +11,7 @@ import calendar
 
 import pandas as pd
 import datetime as datetime
+import _pickle as cPickle
 
 
 def get_data(station, year_range, month_range, day_range, gate_range, beam_range, freq_range,
@@ -259,7 +260,8 @@ if __name__ == '__main__':
         loc_root = str((pathlib.Path().parent.absolute().parent.absolute().parent.absolute()))
         out_dir = loc_root + "/data/" + station
         out_file = out_dir + "/" + station + "_" + str(year_range[0]) + "_" + str(year_range[1]) + \
-                   "_" + fitACT_string + ".pkl"
+                   "_" + fitACT_string + ".pbz2"
 
         print("     Pickling as " + out_file + "...")
-        df.to_pickle(out_file)
+        with bz2.BZ2File(out_file, "w") as file:
+            cPickle.dump(df, file)
