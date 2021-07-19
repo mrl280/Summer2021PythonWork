@@ -95,9 +95,10 @@ def occ_clock_diagram(station, year, month_range=None, day_range=None, gate_rang
     freq_string = "Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz"
 
     print("     Retrieving data...")
+    # We will force build a new dataframe because the pickled one probably won't be for all beams/gates
     df = get_data_handler(station, year_range=(year, year), month_range=month_range, day_range=day_range,
                           gate_range=gate_range, beam_range=beam_range, freq_range=freq_range, occ_data=True,
-                          local_testing=local_testing)
+                          force_build=True, local_testing=local_testing)
     df = only_keep_45km_res_data(df)
 
     if month_range[0] == month_range[1]:

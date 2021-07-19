@@ -90,9 +90,10 @@ def occ_clock_diagram_full_year(station, year, day_range=None, gate_range=None, 
     freq_string = "Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz"
 
     print("     Retrieving data...")
+    # We will force build a new dataframe because the pickled one probably won't be for all beams/gates
     df = get_data_handler(station, year_range=(year, year), month_range=None, day_range=day_range,
                           gate_range=gate_range, beam_range=beam_range, freq_range=freq_range, occ_data=True,
-                          local_testing=local_testing)
+                          force_build=True, local_testing=local_testing)
     df = only_keep_45km_res_data(df)
 
     print("     Computing MLTs...")
@@ -499,7 +500,7 @@ def south_hemi_season(north_hemi_season):
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "dce"
@@ -512,22 +513,21 @@ if __name__ == '__main__':
 
 
     else:
-        stations = ["dcn", "dce"]
-        freq_range = (8, 18)
+        station = "dce"
+        freq_range = (11, 14)
         plot_type = 'pixel'
-        time_units = 'mlt'
+        time_units = 'lt'
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        for station in stations:
-            for year in range(2019, 2022, 1):
-                _, fig = occ_clock_diagram_full_year(station=station, year=year, day_range=None,
-                                                     gate_range=(0, 74), beam_range=None, freq_range=freq_range,
-                                                     time_units=time_units, plot_type=plot_type,
-                                                     local_testing=local_testing)
+        for year in range(2019, 2022, 1):
+            _, fig = occ_clock_diagram_full_year(station=station, year=year, day_range=None,
+                                                 gate_range=(0, 74), beam_range=None, freq_range=freq_range,
+                                                 time_units=time_units, plot_type=plot_type,
+                                                 local_testing=local_testing)
 
-                out_fig = out_dir + "/occ_clock_diagram_full_year_" + station + "_" + str(year) + "_" + \
-                          str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz" + "_" + plot_type + "_" + time_units
-                print("Saving plot as " + out_fig)
-                fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+            out_fig = out_dir + "/occ_clock_diagram_full_year_" + station + "_" + str(year) + "_" + \
+                      str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz" + "_" + plot_type + "_" + time_units
+            print("Saving plot as " + out_fig)
+            fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
