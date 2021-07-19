@@ -137,16 +137,32 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
                     month.append(datetime_obj.month)
                     day.append(datetime_obj.day)
 
-                df = df.loc[((year >= year_range[0]) & (year <= year_range[1])) &
-                            ((month >= month_range[0]) & (month <= month_range[1]))
-                            ((day >= day_range[0]) & (day <= day_range[1]))]
+                df['year'] = year
+                df['month'] = month
+                df['day'] = day
+
+                df = df.loc[(df['year'] >= year_range[0]) & (df['year'] <= year_range[1]) &
+                            (df['month'] >= month_range[0]) & (df['month'] <= month_range[1]) &
+                            (df['day'] >= day_range[0]) & (df['day'] <= day_range[1])]
+
+                # Drop these so this df has the same keys as newly build dataframes
+                df.drop(columns=['year', 'month', 'day'], inplace=True)
 
     # Always make sure we are providing data within the desired range, no matter where it is coming from
     df = df.loc[(df['bmnum'] >= beam_range[0]) & (df['bmnum'] <= beam_range[1]) &
-                (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1]) &
+                (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1])]
 
-                # Note: freq_range is in MHz while data in 'tfreq' is in kHz
-                (df['tfreq'] >= freq_range[0] * 1000) & (df['tfreq'] <= freq_range[1] * 1000)]
+    try:
+        # Some minimalist pickle files might not have frequency data
+        # Note: freq_range is in MHz while data in 'tfreq' is in kHz
+        df = df.loc[(df['tfreq'] >= freq_range[0] * 1000) & (df['tfreq'] <= freq_range[1] * 1000)]
+    except KeyError:
+        warnings.warn("We were unable to confirm the frequency range becuase we read in a pickle file that didn't have "
+                      "frequency information.", category=Warning)
+        pass
+    except BaseException as e:
+        raise e
+
     df.reset_index(drop=True, inplace=True)
 
     return df
