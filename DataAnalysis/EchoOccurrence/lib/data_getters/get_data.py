@@ -3,6 +3,8 @@ import glob
 import math
 import os
 import pathlib
+import warnings
+
 import pydarn
 import time
 import calendar
@@ -12,7 +14,7 @@ import datetime as datetime
 
 
 def get_data(station, year_range, month_range, day_range, gate_range, beam_range, freq_range,
-             fitACF_version=2.5):
+             fitACF_version=2.5, even_odd_days=None):
     """
     Get all of the SuperDARN data within the desired range/time, put it into a dataframe,
     and then return the dataframe for plotting/analysis
@@ -23,27 +25,32 @@ def get_data(station, year_range, month_range, day_range, gate_range, beam_range
     :param station: str:
             The radar station to consider, as a 3 character string (e.g. "rkn").
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
-    :param year_range: (<int>, <int>):
+    :param year_range: (int, int):
             Inclusive. The year range to consider.
-    :param month_range: (<int>, <int>) (optional):
+    :param month_range: (int, int):
             Inclusive. The months of the year to consider.  If omitted (or None), then all days will be considered.
-    :param day_range: (<int>, <int>) (optional):
+    :param day_range: (int, int):
             Inclusive. The days of the month to consider.  If omitted (or None), then all days will be considered.
-    :param gate_range: (<int>, <int>) (optional):
+    :param gate_range: (int, int):
             Inclusive. The gate range to consider.  If omitted (or None), then all the gates will be considered.
             Note that gates start at 0, so gates (0, 3) is 4 gates.
-    :param beam_range: (<int>, <int>) (optional):
+    :param beam_range: (int, int):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
-    :param freq_range: (<float>, <float>) (optional):
+    :param freq_range: (float, float):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
-    :param fitACF_version: float: (optional):
+
+    :param fitACF_version: float: (optional; default is 2.5):
             The fitACF version number.  At the time of writing the default is 2.5, but expected to move to 3.0 in the
             near future.  These are the only valid options.
+    :param even_odd_days: (optional; default is None)
+            'even': only even days are read in
+            'odd': only odd days are read in
+            None: all days are read in
 
     :return: pandas.DataFrame:
-            A dataframe with select fitACF parameters.
+            A dataframe with select fitACF data.
     """
 
     if fitACF_version == 3.0:
@@ -53,6 +60,15 @@ def get_data(station, year_range, month_range, day_range, gate_range, beam_range
     else:
         raise Exception("get_data(): fitACF_version " + str(fitACF_version) +
                         " not recognized.  Right now only versions 2.5 and 3.0 are recognized.")
+
+    if even_odd_days is not None:
+        if even_odd_days == "even":
+            warnings.warn("get_data_occ() is only considering even days of the month", category=Warning)
+        elif even_odd_days == "odd":
+            warnings.warn("get_data_occ() is only considering odd days of the month", category=Warning)
+        else:
+            raise Exception("get_data_occ(): even_odd_days: " + str(even_odd_days) +
+                            " not recognized.  Options are 'even', 'odd', or None.")
 
     # Create empty arrays for scalar parameters
     epoch, date_time = [], []
@@ -80,6 +96,14 @@ def get_data(station, year_range, month_range, day_range, gate_range, beam_range
                         day_here = int(os.path.basename(in_file)[6:8])
 
                         if day_range[0] <= day_here <= day_range[1]:
+                            if even_odd_days is not None:
+                                if even_odd_days == "even" and day_here % 2 == 1:
+                                    # We only want even days, but this day is odd
+                                    continue
+                                elif even_odd_days == "odd" and day_here % 2 == 0:
+                                    # We only want odd days, but this day is even
+                                    continue
+
                             # We will read in the whole day, and worry about hour restrictions later
                             print("    Reading: " + str(in_file))
                             try:

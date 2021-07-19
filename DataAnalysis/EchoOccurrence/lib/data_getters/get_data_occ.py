@@ -13,7 +13,7 @@ import numpy as np
 
 
 def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_range, freq_range,
-                 fitACF_version=2.5, print_timing_info=False):
+                 fitACF_version=2.5, even_odd_days=None, print_timing_info=False):
     """
     Take a fitACF file and for each possible echo, record whether or not there was a good echo there
     Note: occurrence rate is not actually computed here, but all the data required to compute it is put into the df
@@ -25,29 +25,34 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
     :param station: str:
             The radar station to consider, as a 3 character string (e.g. "rkn").
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
-    :param year_range: (<int>, <int>):
+    :param year_range: (int, int):
             Inclusive. The year range to consider.
-    :param month_range: (<int>, <int>):
+    :param month_range: (int, int):
             Inclusive. The months of the year to consider.  If omitted (or None), then all days will be considered.
-    :param day_range: (<int>, <int>):
+    :param day_range: (int, int):
             Inclusive. The days of the month to consider.  If omitted (or None), then all days will be considered.
-    :param gate_range: (<int>, <int>):
+    :param gate_range: (int, int):
             Inclusive. The gate range to consider.  If omitted (or None), then all the gates will be considered.
             Note that gates start at 0, so gates (0, 3) is 4 gates.
-    :param beam_range: (<int>, <int>):
+    :param beam_range: (int, int):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
-    :param freq_range: (<float>, <float>):
+    :param freq_range: (float, float):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
-    :param print_timing_info: bool (optional; default is False)
-            Print out some time information for performance testing
-    :param fitACF_version: float: (optional):
+
+    :param fitACF_version: float: (optional; default is 2.5):
             The fitACF version number.  At the time of writing the default is 2.5, but expected to move to 3.0 in the
             near future.  These are the only valid options.
+    :param print_timing_info: bool (optional; default is False)
+            Print out some time information for performance testing
+    :param even_odd_days: (optional; default is None)
+            'even': only even days are read in
+            'odd': only odd days are read in
+            None: all days are read in
 
     :return: pandas.DataFrame:
-            A dataframe with select fitACF parameters.
+            A dataframe with select fitACF data.
     """
 
     if fitACF_version == 3.0:
@@ -55,8 +60,17 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
     elif fitACF_version == 2.5:
         loc_root = "/data/fitacf_25"
     else:
-        raise Exception("get_data(): fitACF_version " + str(fitACF_version) +
+        raise Exception("get_data_occ(): fitACF_version " + str(fitACF_version) +
                         " not recognized.  Right now only versions 2.5 and 3.0 are recognized.")
+
+    if even_odd_days is not None:
+        if even_odd_days == "even":
+            warnings.warn("get_data_occ() is only considering even days of the month", category=Warning)
+        elif even_odd_days == "odd":
+            warnings.warn("get_data_occ() is only considering odd days of the month", category=Warning)
+        else:
+            raise Exception("get_data_occ(): even_odd_days: " + str(even_odd_days) +
+                            " not recognized.  Options are 'even', 'odd', or None.")
 
     # Create empty arrays for the parameters we need
     epoch, date_time = [], []
@@ -78,6 +92,14 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
                         day_here = int(os.path.basename(in_file)[6:8])
 
                         if day_range[0] <= day_here <= day_range[1]:
+                            if even_odd_days is not None:
+                                if even_odd_days == "even" and day_here % 2 == 1:
+                                    # We only want even days, but this day is odd
+                                    continue
+                                elif even_odd_days == "odd" and day_here % 2 == 0:
+                                    # We only want odd days, but this day is even
+                                    continue
+
                             # We will read in the whole day, hour restrictions are left to the caller encase the care
                             #  to restrict based on something other than UT
                             print("    Reading: " + str(in_file))
@@ -175,7 +197,14 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
                 (df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1]) &  # Redundant - just to be safe
 
                 # Note: freq_range is in MHz while data in 'tfreq' is in kHz
-                (df['tfreq'] >= freq_range[0] * 1000) & (df['tfreq'] <= freq_range[1] * 1000)]
+                (df['tfreq'] >= freq_range[0] * 1000) & (df['tfreq'] <= freq_range[1] * 1000) &
+
+                # Only keep 45 km resolution data
+                (df['frang'] == 180) & (df['rsep'] == 45)]
+
+    # Remove everything we can
+    df.drop(columns=['frang', 'rsep', 'tfreq'], inplace=True)
+
     df.reset_index(drop=True, inplace=True)
 
     return df
@@ -212,19 +241,33 @@ if __name__ == '__main__':
     """
 
     testing = False
-
     station = "dcn"
-    year_range = (2019, 2021)
-    month_range = (1, 12)
-    day_range = (1, 31)
-    gate_range = (0, 74)
-    beam_range = (0, 15)
-    freq_range = (5, 25)
+    freq_range = (8, 10)
+    year_range = (2019, 2019)
+    beam_range = (6, 8)
+    gate_range = (10, 30)
     fitACF_version = 2.5
+    even_odd_days = 'odd'
+    month_range = (2, 2)
+    day_range = (1, 10)
+
+    # testing = False
+    # station = "dcn"
+    # freq_range = (8, 10)
+    # year_range = (2019, 2021)
+    # beam_range = (6, 8)
+    # gate_range = (10, 30)
+    # fitACF_version = 2.5
+    # even_odd_days = 'odd'
+    # month_range = (1, 12)
+    # day_range = (1, 31)
+
+    # station = "dce"
+    # freq_range = (5, 25)
 
     df = get_data_occ(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
                       gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
-                      fitACF_version=fitACF_version, print_timing_info=False)
+                      fitACF_version=fitACF_version, even_odd_days=even_odd_days, print_timing_info=False)
 
     # df = get_data_occ("sas", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1),
     #                   gate_range=(0, 99), beam_range=(6, 7), freq_range=(5, 25),
