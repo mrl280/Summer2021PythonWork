@@ -2,6 +2,9 @@ import pandas as pd
 import pathlib
 import calendar
 import time
+import bz2
+
+import _pickle as cPickle
 
 from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
 
@@ -18,22 +21,25 @@ def get_df_multi_event(file_name=None, flag=None, include_adj_elv=False):
 
     # Check the file_name
     if file_name is None or not isinstance(file_name, str):
-        print("No file name given, so we are using get_df_multi_event() is using event_summary.pkl")
-        file_name = "event_summary.pkl"
+        print("No file name given, so we are using get_df_multi_event() is using event_summary.pbz2")
+        file_name = "event_summary.pbz2"
 
     # Read in the data
     try:
         # This works if it is called from the same level
         loc_root = pathlib.Path().absolute()
         event_summary_dir = str(loc_root) + "/data"
-        event_summary_path = event_summary_dir + "/" + file_name + ".pkl"
-        event_summary = pd.read_pickle(event_summary_path)
+        event_summary_path = event_summary_dir + "/" + file_name + ".pbz2"
+        data_stream = bz2.BZ2File(event_summary_path, "rb")
+        event_summary = cPickle.load(data_stream)
+
     except:
         # This works if we are calling from a sub-folder
         loc_root = pathlib.Path().absolute().parent
         event_summary_dir = str(loc_root) + "/data"
-        event_summary_path = event_summary_dir + "/" + file_name + ".pkl"
-        event_summary = pd.read_pickle(event_summary_path)
+        event_summary_path = event_summary_dir + "/" + file_name + ".pbz2"
+        data_stream = bz2.BZ2File(event_summary_path, "rb")
+        event_summary = cPickle.load(data_stream)
 
     if flag is not None:
         # Only keep the rows that are flagged
@@ -75,8 +81,10 @@ def get_df_multi_event(file_name=None, flag=None, include_adj_elv=False):
         end_epoch = calendar.timegm(time.strptime(end_date_time, pattern))
 
         in_dir = str(loc_root.parent) + "/DataReading/SD/data/" + station + "/" + station + year + month + day
-        in_file = in_dir + "/" + station + year + month + day + ".pkl"
-        df = pd.read_pickle(in_file)
+        in_file = in_dir + "/" + station + year + month + day + ".pbz2"
+        data_stream = bz2.BZ2File(in_file, "rb")
+        df = cPickle.load(data_stream)
+
         df = df.loc[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)]
         df.reset_index(drop=True, inplace=True)
         if include_adj_elv:
@@ -111,8 +119,11 @@ def get_df_multi_event(file_name=None, flag=None, include_adj_elv=False):
             end_epoch = calendar.timegm(time.strptime(end_date_time, pattern))
 
             in_dir = str(loc_root.parent) + "/DataReading/SD/data/" + station + "/" + station + year + month + day
-            in_file = in_dir + "/" + station + year + month + day + ".pkl"
-            next_df = pd.read_pickle(in_file)
+            in_file = in_dir + "/" + station + year + month + day + ".pbz2"
+
+            data_stream = bz2.BZ2File(in_file, "rb")
+            next_df = cPickle.load(data_stream)
+
             next_df = next_df.loc[(next_df['epoch'] >= start_epoch) & (next_df['epoch'] <= end_epoch)]
             next_df.reset_index(drop=True, inplace=True)
             if include_adj_elv:

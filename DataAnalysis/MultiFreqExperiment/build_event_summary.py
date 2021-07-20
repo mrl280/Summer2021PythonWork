@@ -1,6 +1,9 @@
+import bz2
+import pathlib
+
+import _pickle as cPickle
 import pandas as pd
 
-import pathlib
 
 if __name__ == '__main__':
     """
@@ -101,8 +104,10 @@ if __name__ == '__main__':
     # Save the dataframe to file
     loc_root = str(pathlib.Path().absolute())
     out_dir = loc_root + "/data"
-    out_file = out_dir + "/" + file_name + ".pkl"
+    out_file = out_dir + "/" + file_name + ".pbz2"
     print("Saving event summary as " + out_file)
     print(df)
-    df.to_pickle(out_file)
+
+    with bz2.BZ2File(out_file, "w") as file:
+        cPickle.dump(df, file)
 

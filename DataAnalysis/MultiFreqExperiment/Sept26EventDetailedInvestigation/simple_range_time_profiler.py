@@ -3,9 +3,10 @@ import os
 import pathlib
 import warnings
 import pydarn
+import bz2
 
 import numpy as np
-import pandas as pd
+import _pickle as cPickle
 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
@@ -244,13 +245,14 @@ if __name__ == "__main__":
     if area is None:
         loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
         in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + year + month + day
-        in_file = in_dir + "/" + station + year + month + day + ".pkl"
+        in_file = in_dir + "/" + station + year + month + day + ".pbz2"
     else:
         loc_root = str((pathlib.Path().parent.absolute()))
         in_dir = loc_root + "/data"
-        in_file = in_dir + "/" + station + year + month + day + "_area" + str(area) + ".pkl"
+        in_file = in_dir + "/" + station + year + month + day + "_area" + str(area) + ".pbz2"
     print("Reading in file: " + in_file)
-    df = pd.read_pickle(in_file)
+    data_stream = bz2.BZ2File(in_file, "rb")
+    df = cPickle.load(data_stream)
 
     # Restrict data to within the desired hour range
     _, start_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=start_hour)

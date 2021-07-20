@@ -4,7 +4,9 @@ import os
 import time
 import pathlib
 import statistics
+import bz2
 
+import _pickle as cPickle
 import numpy as np
 import pandas as pd
 
@@ -44,8 +46,9 @@ if __name__ == '__main__':
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
     in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + year + month + day
-    in_file = in_dir + "/" + station + year + month + day + ".pkl"
-    df = pd.read_pickle(in_file)
+    in_file = in_dir + "/" + station + year + month + day + ".pbz2"
+    data_stream = bz2.BZ2File(in_file, "rb")
+    df = cPickle.load(data_stream)
 
     # We are only interested in 15 km resolution data (from the multi-freq analysis)
     # This double filter should be redundant but better to be safe
@@ -276,6 +279,8 @@ if __name__ == '__main__':
         os.makedirs(out_dir)
 
     # Save the data for later
-    out_file = out_dir + "/" + station + year + month + day + ".MedianMatchedData.1gg" + str(time_interval_s) + "s.pkl"
+    out_file = out_dir + "/" + station + year + month + day + ".MedianMatchedData.1gg" + str(time_interval_s) + "s.pbz2"
     print("Pickling as " + out_file + "...")
-    matched_data.to_pickle(out_file)
+
+    with bz2.BZ2File(out_file, "w") as file:
+        cPickle.dump(matched_data, file)

@@ -1,9 +1,10 @@
 import glob
 import os
 import pathlib
+import bz2
 
+import _pickle as cPickle
 import matplotlib.pyplot as plt
-import pandas as pd
 import numpy as np
 import matplotlib.cm as cm
 
@@ -48,8 +49,9 @@ if __name__ == '__main__':
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
     in_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/data/" + station + "/" + station + year + month + day
     in_file = in_dir + "/" + station + year + month + day + "." + \
-              data_match_type + "MatchedData.1gg" + str(second_resolution) + "s.pkl"
-    df = pd.read_pickle(in_file)
+              data_match_type + "MatchedData.1gg" + str(second_resolution) + "s.pbz2"
+    data_stream = bz2.BZ2File(in_file, "rb")
+    df = cPickle.load(data_stream)
 
     # Filter the data based on the expected gate range of the region of interest
     df = df.loc[(df['gate'] >= gates[0]) & (df['gate'] <= gates[1])]

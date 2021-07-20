@@ -1,5 +1,7 @@
 import time
-import pandas as pd
+import bz2
+
+import _pickle as cPickle
 
 if __name__ == '__main__':
     """
@@ -14,8 +16,9 @@ if __name__ == '__main__':
     time_interval = '5min'
 
     in_dir = "data/" + station + "/" + station + date + "/"
-    in_file = in_dir + station + date + "." + time_interval + ".LongPulse.pkl"
-    df = pd.read_pickle(in_file)
+    in_file = in_dir + station + date + "." + time_interval + ".LongPulse.pbz2"
+    data_stream = bz2.BZ2File(in_file, "rb")
+    df = cPickle.load(data_stream)
     print(df.head())
 
     # Grab start and end times

@@ -4,9 +4,11 @@ import pathlib
 import statistics
 import warnings
 import pydarn
+import bz2
 
 import numpy as np
 import pandas as pd
+import _pickle as cPickle
 
 from matplotlib import pyplot as plt
 from scipy import stats
@@ -228,8 +230,9 @@ if __name__ == "__main__":
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
     in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + year + month + day
-    in_file = in_dir + "/" + station + year + month + day + ".pkl"
-    df = pd.read_pickle(in_file)
+    in_file = in_dir + "/" + station + year + month + day + ".pbz2"
+    data_stream = bz2.BZ2File(in_file, "rb")
+    df = cPickle.load(data_stream)
 
     _, start_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=start_hour)
     _, end_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=end_hour)

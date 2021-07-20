@@ -1,9 +1,10 @@
 import pathlib
+import bz2
 
+import _pickle as cPickle
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import cartopy.feature as cfeature
-import pandas as pd
 
 from datetime import datetime
 from cartopy.feature.nightshade import Nightshade
@@ -104,8 +105,9 @@ if __name__ == '__main__':
 
     loc_root = str(pathlib.Path().absolute().parent.absolute())
     in_dir = loc_root + "/DataReading/RISR/data/" + station + "/" + station + str(year) + str(month) + str(day)
-    in_file = in_dir + "/" + station + str(year) + str(month) + str(day) + "." + str(resolution) + "min.pkl"
-    df = pd.read_pickle(in_file)
+    in_file = in_dir + "/" + station + str(year) + str(month) + str(day) + "." + str(resolution) + "min.pbz2"
+    data_stream = bz2.BZ2File(in_file, "rb")
+    df = cPickle.load(data_stream)
 
     print(df.keys())
 

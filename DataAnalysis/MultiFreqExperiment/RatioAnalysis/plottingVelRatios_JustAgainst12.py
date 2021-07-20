@@ -1,10 +1,13 @@
 import glob
 import os
 import pathlib
+import bz2
+
+import _pickle as cPickle
 import matplotlib.pyplot as plt
+
 from matplotlib.ticker import MultipleLocator
 from PyPDF2 import PdfFileMerger
-import pandas as pd
 
 
 if __name__ == '__main__':
@@ -30,8 +33,9 @@ if __name__ == '__main__':
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
     in_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/data/" + station
-    in_file = in_dir + "/" + station + year + month + day + ".MatchedData.1gg60s.pkl"
-    df = pd.read_pickle(in_file)
+    in_file = in_dir + "/" + station + year + month + day + ".MatchedData.1gg60s.pbz2"
+    data_stream = bz2.BZ2File(in_file, "rb")
+    df = cPickle.load(data_stream)
 
     out_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/out/"
 

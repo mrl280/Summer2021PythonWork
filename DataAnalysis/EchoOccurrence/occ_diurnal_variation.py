@@ -365,6 +365,3 @@ if __name__ == '__main__':
 
             print("Saving plot as " + out_fig)
             fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
-
-            # print("Saving df as " + out_fig)
-            # df.to_pickle(out_fig + ".pkl")

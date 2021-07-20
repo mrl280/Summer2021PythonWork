@@ -3,7 +3,9 @@ import os
 import time
 import glob
 import h5py
+import bz2
 
+import _pickle as cPickle
 import pandas as pd
 import numpy as np
 import deprecation
@@ -82,8 +84,8 @@ def PickleLongPulse(station, date):
                 raise Exception("Error: no keys found, unable to obtain data resolution")
             resolution = int((data_time[1] - data_time[0]) / 60)
             print("         Data time resolution: " + str(resolution) + " minute data")
-            # Strip the "x.h5" and replace with data resolution and "LongPulse.pkl"
-            out_file = in_file[:len(in_file) - 4] + str(resolution) + "min.LongPulse.pkl"
+            # Strip the "x.h5" and replace with data resolution and "LongPulse.pbz2"
+            out_file = in_file[:len(in_file) - 4] + str(resolution) + "min.LongPulse.pbz2"
 
             # Pre-allocate list for 1D parameters (only vary with time)
             epoch = []
@@ -200,7 +202,9 @@ def PickleLongPulse(station, date):
 
             # Save to file
             print("     Pickling as " + out_file + "...")
-            df.to_pickle(out_file)
+
+            with bz2.BZ2File(out_file, "w") as file:
+                cPickle.dump(df, file)
 
         file.close()
 

@@ -2,10 +2,10 @@ import glob
 import os
 import pathlib
 import warnings
+import bz2
 
+import _pickle as cPickle
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 
 from matplotlib.ticker import MultipleLocator
 from PyPDF2 import PdfFileMerger
@@ -144,8 +144,9 @@ def plottingVelRatios(station, year, month, day, gate_range, data_match_type, st
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
     in_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/data/" + station + "/" + station + year + month + day
     in_file = in_dir + "/" + station + year + month + day + "." + \
-              data_match_type + "MatchedData.1gg" + str(second_resolution) + "s.pkl"
-    df = pd.read_pickle(in_file)
+              data_match_type + "MatchedData.1gg" + str(second_resolution) + "s.pbz2"
+    data_stream = bz2.BZ2File(in_file, "rb")
+    df = cPickle.load(data_stream)
 
     # Filter the data based on the expected gate range of the region of interest
     df = df.loc[(df['gate'] >= gate_range[0]) & (df['gate'] <= gate_range[1])]

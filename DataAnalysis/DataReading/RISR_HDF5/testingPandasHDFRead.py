@@ -43,8 +43,8 @@ if __name__ == '__main__':
                 raise Exception("Error: no keys found, unable to obtain data resolution")
             resolution = int((data_time[1] - data_time[0]) / 60)
             print("Data time resolution: " + str(resolution) + " minute data")
-            # Strip the "x.h5" and replace with data resolution and "LongPulse.pkl"
-            out_file = in_file[:len(in_file) - 4] + str(resolution) + "min.LongPulse.pkl"
+            # Strip the "x.h5" and replace with data resolution and "LongPulse.pbz2"
+            out_file = in_file[:len(in_file) - 4] + str(resolution) + "min.LongPulse.pbz2"
 
             data = pd.HDFStore(in_file, mode='r')
             # print(type(data))

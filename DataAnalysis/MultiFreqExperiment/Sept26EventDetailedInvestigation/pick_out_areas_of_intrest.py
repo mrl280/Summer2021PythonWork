@@ -1,7 +1,9 @@
 import pathlib
+import bz2
 
 import pandas as pd
 import pydarn
+import _pickle as cPickle
 
 from DataAnalysis.EchoOccurrence.lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.basic_SD_df_filter import basic_SD_df_filter
@@ -432,8 +434,9 @@ if __name__ == "__main__":
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
     in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + year + month + day
-    in_file = in_dir + "/" + station + year + month + day + ".pkl"
-    df = pd.read_pickle(in_file)
+    in_file = in_dir + "/" + station + year + month + day + ".pbz2"
+    data_stream = bz2.BZ2File(in_file, "rb")
+    df = cPickle.load(data_stream)
 
     # Restrict data to within the desired hour range
     _, start_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=start_hour)
@@ -474,7 +477,8 @@ if __name__ == "__main__":
     for area in areas:
         limited_df = handler(df=df, time_units=time_units, area=area)
 
-        out_file = out_dir + "/" + station + year + month + day + "_area" + str(area) + ".pkl"
+        out_file = out_dir + "/" + station + year + month + day + "_area" + str(area) + ".pbz2"
 
         print("Saving dataframe as " + out_file)
-        limited_df.to_pickle(out_file)
+        with bz2.BZ2File(out_file, "w") as file:
+            cPickle.dump(limited_df, file)

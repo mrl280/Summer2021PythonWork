@@ -1,7 +1,8 @@
 import math
 import pydarn
+import bz2
 
-import pandas as pd
+import _pickle as cPickle
 import numpy as np
 
 
@@ -111,8 +112,9 @@ if __name__ == '__main__':
     date = "20160926"
 
     in_dir = "data/" + station + "/" + station + date
-    in_file = in_dir + "/" + station + date + ".pkl"
-    df = pd.read_pickle(in_file)
+    in_file = in_dir + "/" + station + date + ".pbz2"
+    data_stream = bz2.BZ2File(in_file, "rb")
+    df = cPickle.load(data_stream)
 
     t_diff = 0.0003  # Time delay in microseconds
 

@@ -1,16 +1,19 @@
 import calendar
 import glob
-import numpy as np
+import bz2
 import time
 import os
 import pathlib
+
+import _pickle as cPickle
+import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+
 from matplotlib.ticker import FormatStrFormatter
 from scipy import stats
 from PyPDF2 import PdfFileMerger
 from matplotlib.ticker import MultipleLocator
-
-import pandas as pd
 
 from lib.basic_SD_df_filter import basic_SD_df_filter
 
@@ -53,13 +56,15 @@ if __name__ == '__main__':
     # Read in SuperDARN data
     loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
     SD_in_dir = loc_root + "/DataReading/SD/data/" + SD_station + "/" + SD_station + year + month + day
-    SD_in_file = SD_in_dir + "/" + SD_station + year + month + day + ".pkl"
-    SD_df = pd.read_pickle(SD_in_file)
+    SD_in_file = SD_in_dir + "/" + SD_station + year + month + day + ".pbz2"
+    data_stream = bz2.BZ2File(SD_in_file, "rb")
+    SD_df = cPickle.load(data_stream)
 
     # Read in RISR data
     RISR_in_dir = loc_root + "/DataReading/RISR/data/" + RISR_station + "/" + RISR_station + year + month + day
-    RISR_in_file = RISR_in_dir + "/" + RISR_station + year + month + day + "." + str(resolution) + "min.pkl"
-    RISR_df = pd.read_pickle(RISR_in_file)
+    RISR_in_file = RISR_in_dir + "/" + RISR_station + year + month + day + "." + str(resolution) + "min.pbz2"
+    data_stream = bz2.BZ2File(RISR_in_file, "rb")
+    RISR_df = cPickle.load(data_stream)
 
     # Filter SuperDARN data
     SD_df = basic_SD_df_filter(SD_df)
