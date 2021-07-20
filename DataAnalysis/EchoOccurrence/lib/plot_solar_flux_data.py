@@ -5,7 +5,7 @@ from .boxcar_smooth import boxcar_smooth
 from .data_getters.get_LISIRD_data import get_LISIRD_data
 
 
-def plot_solar_flux_data(ax, year_range, smoothing_window_size_in_days):
+def plot_solar_flux_data(ax, year_range, smoothing_window_size_in_days, fontsize=12):
     """
 
     Plot solar flux data on the provided axes.
@@ -16,6 +16,9 @@ def plot_solar_flux_data(ax, year_range, smoothing_window_size_in_days):
             Inclusive. The year range to consider. If omitted (or None), then all years will be considered.
     :param smoothing_window_size_in_days:
             This size of the window to use when boxcar smoothing the data
+    :param fontsize: int:
+            Label fontsize
+
     :return: pandas.Date_Frame:
             A dataframe containing the solar flux data, it can then be further investigated as required.
     """
@@ -36,8 +39,8 @@ def plot_solar_flux_data(ax, year_range, smoothing_window_size_in_days):
     ax.grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5, color='black')
     ax.grid(b=True, which='minor', axis='both', linestyle='--', linewidth=0.2, color='black')
 
-    ax.set_xlabel("Year", fontsize=14)
-    ax.set_ylabel("f10.7 cm Radio Flux - Observed [SFU]", fontsize=14)
+    ax.set_xlabel("Year", fontsize=fontsize)
+    ax.set_ylabel("f10.7 cm Radio Flux \n(Observed) [SFU]", fontsize=fontsize)
 
     # Get the data
     df = get_LISIRD_data(dataset_name=flux_dataset)
