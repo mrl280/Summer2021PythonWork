@@ -338,13 +338,13 @@ if __name__ == "__main__":
     testing = True
 
     area = None
-    axes_vlimits = {'wdt': (0, 25),  # Change
+    axes_vlimits = {'wdt': (0, 35),  # Change
                     'pwr': (0, 50)}  # Change
     axes_limits = {'vel': (-600, 600),
                    'count': (0, 1700),  # Change
                    'wdt': (0, 200),
                    'pwr': (0, 50)}
-    bin_widths = {'vel': 20,
+    bin_widths = {'vel': 10,
                   'wdt': 8,
                   'pwr': 2}
 
