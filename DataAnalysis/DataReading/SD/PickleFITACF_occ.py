@@ -26,7 +26,7 @@ def PickleFITACF_occ(station, date, beam_range):
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
     :param date: str:
             The date as a string of the form 'yyyymmdd'.  Single digit months and days need to be zero padded.
-    :param beam_range: (<int>, <int>) (optional):
+    :param beam_range: (int, int) (optional):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
 
@@ -163,9 +163,9 @@ if __name__ == '__main__':
         for station in os.listdir("data/"):
             for in_dir in os.listdir("data/" + station):
                 print("\nStarting " + in_dir)
-                PickleFITACF_occ(station, in_dir[3:], (0, 16))
+                PickleFITACF_occ(station, in_dir[3:], (0, 15))
     else:
         station = "dce"
         date = "20190303"
         print("Occ Pickling " + station + date + "...")
-        PickleFITACF_occ(station, date, (0, 16))
+        PickleFITACF_occ(station, date, (0, 15))
