@@ -18,17 +18,18 @@ if __name__ == '__main__':
     Use raw matching - it is thought that median filtering smooths out velocity differences
     """
 
+    station = "rkn"
     year = "2016"  # yyyy
     month = "09"  # mm
     day = "26"  # dd
-
-    station = "rkn"
-    start_hour = 0
+    area = 5
+    start_hour = 0  # Start and end times must be integer values for the loop
     end_hour = 4
+    time_interval_s = 60  # seconds
+    t_diff = 0.003  # Elevation angle correction in microseconds
 
     h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range, it is flagged
     elv_ratio_limits = [0.88, 1.12]  # Elv ratio limits.  If an elev ratio is outside of this range, it is flagged
-    t_diff = 0.003  # Elevation angle correction in microseconds
 
     start_date_time = year + "-" + month + "-" + day + " " + str(start_hour) + ":00:00"
     end_date_time = year + "-" + month + "-" + day + " " + str(end_hour) + ":00:00"
@@ -42,9 +43,17 @@ if __name__ == '__main__':
     end_epoch = calendar.timegm(time.strptime(end_date_time, pattern))
 
     # Read in SuperDARN data
-    loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
-    in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + year + month + day
-    in_file = in_dir + "/" + station + year + month + day + ".pbz2"
+    if area is None:
+        loc_root = str(((pathlib.Path().parent.absolute()).parent.absolute()).parent.absolute())
+        in_dir = loc_root + "/DataReading/SD/data/" + station + "/" + station + year + month + day
+        in_file = in_dir + "/" + station + year + month + day + ".pbz2"
+    else:
+        # We are looking at area sectioned data for Sept 26, 2016
+        loc_root = str((pathlib.Path().parent.absolute()).parent.absolute())
+        in_dir = loc_root + "/Sept26EventDetailedInvestigation/data"
+        in_file = in_dir + "/" + station + year + month + day + "_area" + str(area) + ".pbz2"
+
+    print("Reading in file: " + in_file)
     data_stream = bz2.BZ2File(in_file, "rb")
     df = cPickle.load(data_stream)
 
@@ -80,8 +89,10 @@ if __name__ == '__main__':
     vel13, elv13, height13 = [], [], []
     vel14, elv14, height14 = [], [], []
 
+    gate_resolution = 1  # We need to maintain 15 km resolution
+
     # Loop through all the gates
-    for start_gate in range(gates[0], gates[1] + 1, 1):
+    for start_gate in range(gates[0], gates[1] + 1, gate_resolution):
         print("Looking at gate " + str(start_gate))
 
         # Build a gate restricted data frame
@@ -300,12 +311,20 @@ if __name__ == '__main__':
                                                            elv_ratio_14over10 <= elv_ratio_limits[1])
 
     # Ensure out directory
-    out_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/data/" + station + "/" + station + year + month + day
+    loc_root = str(pathlib.Path().parent.absolute())
+    out_dir = loc_root + "/data/" + station + "/" + station + year + month + day
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
     # Save the data for later
-    out_file = out_dir + "/" + station + year + month + day + ".RawMatchedData.1gg" + str(time_interval_s) + "s.pbz2"
+    if area is None:
+        out_file = out_dir + "/" + station + year + month + day + ".RawMatchedData." + str(gate_resolution) + "gg" \
+                   + str(time_interval_s) + "s.pbz2"
+    else:
+        out_file = out_dir + "/" + station + year + month + day + ".RawMatchedData." + str(gate_resolution) + "gg" \
+                   + str(time_interval_s) + "s_area" + str(area) + ".pbz2"
+
     print("Pickling as " + out_file + "...")
+
     with bz2.BZ2File(out_file, "w") as file:
         cPickle.dump(matched_data, file)
