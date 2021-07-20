@@ -204,7 +204,7 @@ def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_r
                 (df['frang'] == 180) & (df['rsep'] == 45)]
 
     # Remove everything we can
-    df.drop(columns=['frang', 'rsep', 'tfreq'], inplace=True)
+    df.drop(columns=['frang', 'rsep'], inplace=True)
 
     df.reset_index(drop=True, inplace=True)
 
@@ -241,14 +241,36 @@ if __name__ == '__main__':
     When pre-building, it is best to use all of everything: all gates, beams, frequencies, months, and day
     """
 
+    # testing = False
+    # station = "dcn"
+    # freq_range = (5, 25)
+    # year_range = (2019, 2021)
+    # beam_range = (6, 8)
+    # gate_range = (10, 30)
+    # fitACF_version = 2.5
+    # even_odd_days = None
+    # month_range = (1, 12)
+    # day_range = (1, 31)
+
+    # testing = False
+    # station = "dce"
+    # freq_range = (5, 25)
+    # year_range = (2013, 2021)
+    # beam_range = (6, 8)
+    # gate_range = (10, 30)
+    # fitACF_version = 2.5
+    # even_odd_days = None
+    # month_range = (1, 12)
+    # day_range = (1, 31)
+
     testing = False
-    station = "dcn"
-    freq_range = (8, 10)
-    year_range = (2019, 2021)
+    station = "mcm"
+    freq_range = (5, 25)
+    year_range = (2013, 2021)
     beam_range = (6, 8)
     gate_range = (10, 30)
     fitACF_version = 2.5
-    even_odd_days = 'odd'
+    even_odd_days = None
     month_range = (1, 12)
     day_range = (1, 31)
 
