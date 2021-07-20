@@ -514,6 +514,7 @@ if __name__ == '__main__':
 
     else:
         station = "dce"
+        # freq_range = (8, 11)
         freq_range = (11, 14)
         plot_type = 'pixel'
         time_units = 'lt'
