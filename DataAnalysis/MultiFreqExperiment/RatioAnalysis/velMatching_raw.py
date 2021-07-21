@@ -25,7 +25,6 @@ if __name__ == '__main__':
     area = 5
     start_hour = 0  # Start and end times must be integer values for the loop
     end_hour = 4
-    time_interval_s = 60  # seconds
     t_diff = 0.003  # Elevation angle correction in microseconds
 
     h_ratio_limits = [0.92, 1.08]  # Height ratio limits.  If a height ratio is outside of this range, it is flagged
@@ -72,11 +71,14 @@ if __name__ == '__main__':
     # Drop points with |velocity| < 100 m/s
     df = df.loc[(df['vel'] > 100) | (df['vel'] < -100)]
 
+    # The different frequencies might be clumped together - so lets sort by epoch to make sure they are all mixed up
+    df.sort_values(by='epoch', ascending=True, inplace=True)
     df.reset_index(drop=True, inplace=True)
+
     elevation_v2(df, t_diff)  # Compute adjusted elevation angle
 
     # Put frequencies in MHz and round, this makes them easier to compare
-    df['transFreq'] = round(df['transFreq'] * 1e-3, 0)
+    df['transFreq_MHz'] = round(df['transFreq'] * 1e-3, 0)
 
     # print(df[['epoch', 'minute', 'second', 'gate', 'transFreq', 'vel', 'adjElv']].head())
     time_interval_s = 14  # Max allowed separation between points
@@ -116,25 +118,25 @@ if __name__ == '__main__':
             found10, found12, found13, found14 = False, False, False, False
 
             # Find out what frequency our point is, and put it in it's place
-            if gg_df['transFreq'][t] == 10:
+            if gg_df['transFreq_MHz'][t] == 10:
                 vel10.append(gg_df['vel'][t])
                 elv10.append(gg_df['adjElv'][t])
                 height10.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                         * np.sin(np.radians(np.asarray(gg_df['adjElv'][t])))) - Re)
                 found10 = True
-            elif gg_df['transFreq'][t] == 12:
+            elif gg_df['transFreq_MHz'][t] == 12:
                 vel12.append(gg_df['vel'][t])
                 elv12.append(gg_df['adjElv'][t])
                 height12.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                         * np.sin(np.radians(np.asarray(gg_df['adjElv'][t])))) - Re)
                 found12 = True
-            elif gg_df['transFreq'][t] == 13:
+            elif gg_df['transFreq_MHz'][t] == 13:
                 vel13.append(gg_df['vel'][t])
                 elv13.append(gg_df['adjElv'][t])
                 height13.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                         * np.sin(np.radians(np.asarray(gg_df['adjElv'][t])))) - Re)
                 found13 = True
-            elif gg_df['transFreq'][t] == 14:
+            elif gg_df['transFreq_MHz'][t] == 14:
                 vel14.append(gg_df['vel'][t])
                 elv14.append(gg_df['adjElv'][t])
                 height14.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
@@ -143,35 +145,35 @@ if __name__ == '__main__':
             else:
                 raise Exception("Error: found a point with an unrecognized frequency: " + str(gg_df['transFreq'][t]))
 
-            # Look at the next three points (i=1, 2, 3), we might use them
+            # Look at the next three points (dt=1, 2, 3), we might use them
             for dt in range(1, 4):
                 if t + dt < len(gg_df['epoch']):  # So as to not run off the edge
 
                     if (abs(gg_df['epoch'][t + dt] - gg_df['epoch'][t]) < time_interval_s) \
-                            and (gg_df['transFreq'][t + dt] != gg_df['transFreq'][t]):
+                            and (gg_df['transFreq_MHz'][t + dt] != gg_df['transFreq_MHz'][t]):
 
                         used[t + dt] = True  # The point is close by and of a different frequency, it is a match, use it
 
                         # Find out what frequency it is, and put it in it's place
-                        if gg_df['transFreq'][t + dt] == 10 and not found10:
+                        if gg_df['transFreq_MHz'][t + dt] == 10 and not found10:
                             vel10.append(gg_df['vel'][t + dt])
                             elv10.append(gg_df['adjElv'][t + dt])
                             height10.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                     * np.sin(np.radians(np.asarray(gg_df['adjElv'][t + dt])))) - Re)
                             found10 = True
-                        elif gg_df['transFreq'][t + dt] == 12 and not found12:
+                        elif gg_df['transFreq_MHz'][t + dt] == 12 and not found12:
                             vel12.append(gg_df['vel'][t + dt])
                             elv12.append(gg_df['adjElv'][t + dt])
                             height12.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                     * np.sin(np.radians(np.asarray(gg_df['adjElv'][t + dt])))) - Re)
                             found12 = True
-                        elif gg_df['transFreq'][t + dt] == 13 and not found13:
+                        elif gg_df['transFreq_MHz'][t + dt] == 13 and not found13:
                             vel13.append(gg_df['vel'][t + dt])
                             elv13.append(gg_df['adjElv'][t + dt])
                             height13.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here
                                                     * np.sin(np.radians(np.asarray(gg_df['adjElv'][t + dt])))) - Re)
                             found13 = True
-                        elif gg_df['transFreq'][t + dt] == 14 and not found14:
+                        elif gg_df['transFreq_MHz'][t + dt] == 14 and not found14:
                             vel14.append(gg_df['vel'][t + dt])
                             elv14.append(gg_df['adjElv'][t + dt])
                             height14.append(np.sqrt(Re * Re + range_here * range_here + 2 * Re * range_here

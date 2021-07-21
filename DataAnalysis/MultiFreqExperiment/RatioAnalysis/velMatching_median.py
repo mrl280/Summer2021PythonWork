@@ -73,7 +73,10 @@ if __name__ == '__main__':
     # Drop points with |velocity| < 100 m/s
     df = df.loc[(df['vel'] > 100) | (df['vel'] < -100)]
 
+    # The different frequencies might be clumped together - so lets sort by epoch to make sure they are all mixed up
+    df.sort_values(by='epoch', ascending=True, inplace=True)
     df.reset_index(drop=True, inplace=True)
+
     elevation_v2(df, t_diff)  # Compute adjusted elevation angle
 
     print("Number of points in the data frame: " + str(len(df['epoch'])))
