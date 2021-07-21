@@ -12,7 +12,8 @@ from PyPDF2 import PdfFileMerger
 
 
 def add_data_to_plot(ax, time_restricted_df, freq_x, freq_y, data_match_type,
-                     plot_similar_heights, plot_y_larger_than_x, plot_x_larger_than_y):
+                     plot_similar_heights, plot_y_larger_than_x, plot_x_larger_than_y,
+                     count_min=4):
     """
 
     Add the scatter data to vel vs vel plot.
@@ -28,9 +29,11 @@ def add_data_to_plot(ax, time_restricted_df, freq_x, freq_y, data_match_type,
         If True, velocity scatter where y heights are larger than x heights is added to the plot
     :param plot_similar_heights:
         If True, velocity scatter where both frequencies see about the same heights is added to the plot
+
+    :param count_min: int (optional):
+        the minimum number of raw points required for a median point to be considered.
     """
 
-    count_min = 4  # Only used for median matched data
     height_max = 180  # km  All points from heights above this are not considered
 
     similar_ratio_c = "black"
@@ -56,13 +59,15 @@ def add_data_to_plot(ax, time_restricted_df, freq_x, freq_y, data_match_type,
         df = time_restricted_df[(time_restricted_df['count' + freq_y] >= count_min)
                                 & (time_restricted_df['count' + freq_x] >= count_min)
                                 & (time_restricted_df[freq_y + 'over' + freq_x].notna())]
+
     elif data_match_type == "Raw":
         df = time_restricted_df[time_restricted_df[freq_y + 'over' + freq_x].notna()]
+
     else:
         raise Exception("Error: data match type " + data_match_type + " not recognized.")
 
     # Remove points that are above the height maximum
-    df = df.loc[(df['height' + freq_y] <= height_max) & (df['height' + freq_x] <= height_max)]
+    # df = df.loc[(df['height' + freq_y] <= height_max) & (df['height' + freq_x] <= height_max)]
     df.reset_index(drop=True, inplace=True)
 
     # Go ahead and add the data to the plot
@@ -331,18 +336,18 @@ def plottingVelRatios(station, year, month, day, gate_range, data_match_type, st
 if __name__ == '__main__':
     """ Testing and running """
 
-    testing = False
+    testing = True
 
-    year = "2017"  # yyyy
-    month = "10"  # mm
-    day = "23"  # dd
+    year = "2016"  # yyyy
+    month = "09"  # mm
+    day = "26"  # dd
 
     station = "rkn"
-    gate_range = [10, 30]
+    gate_range = [10, 40]
     data_match_type = "Raw"  # "Median" or "Raw"
 
-    start_hour = 4
-    end_hour = 8
+    start_hour = 0
+    end_hour = 4
 
     print("Running for just similar heights - just black dots")
     plottingVelRatios(station=station, year=year, month=month, day=day, gate_range=gate_range,
