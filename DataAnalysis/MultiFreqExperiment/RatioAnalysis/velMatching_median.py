@@ -73,6 +73,9 @@ if __name__ == '__main__':
     # Drop points with |velocity| < 100 m/s
     df = df.loc[(df['vel'] > 100) | (df['vel'] < -100)]
 
+    # Remove extreme values
+    df = df.loc[(df['vel'] > -1000) & (df['vel'] < 1000)]
+
     # The different frequencies might be clumped together - so lets sort by epoch to make sure they are all mixed up
     df.sort_values(by='epoch', ascending=True, inplace=True)
     df.reset_index(drop=True, inplace=True)
