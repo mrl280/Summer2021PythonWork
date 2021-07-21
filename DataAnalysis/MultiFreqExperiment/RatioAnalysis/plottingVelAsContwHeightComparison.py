@@ -18,12 +18,12 @@ if __name__ == '__main__':
     Plot velocity comparison (as contour) beside height comparison
     """
 
-    SAVE_PLOTS = True
-    SHOW_PLOTS = False
+    SAVE_PLOTS = False
+    SHOW_PLOTS = True
 
     year = "2016"  # yyyy
     month = "09"  # mm
-    day = "05"  # dd
+    day = "26"  # dd
 
     station = "rkn"
     gates = [10, 40]
