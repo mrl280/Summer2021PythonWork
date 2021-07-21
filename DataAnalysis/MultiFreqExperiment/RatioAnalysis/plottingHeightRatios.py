@@ -14,12 +14,12 @@ if __name__ == '__main__':
     Create scatter plots comparing virtual height at one frequency to virtual height at another frequency
     """
 
-    SAVE_PLOTS = True
-    SHOW_PLOTS = False
+    SAVE_PLOTS = False
+    SHOW_PLOTS = True
 
     year = "2016"  # yyyy
-    month = "11"  # mm
-    day = "05"  # dd
+    month = "09"  # mm
+    day = "26"  # dd
 
     station = "rkn"
     gates = [10, 40]
