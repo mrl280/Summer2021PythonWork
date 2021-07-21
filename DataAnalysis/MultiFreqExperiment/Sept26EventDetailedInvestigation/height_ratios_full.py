@@ -11,7 +11,7 @@ import numpy as np
 from matplotlib.ticker import MultipleLocator
 
 
-def height_ratios_scatter(single_day_df, beam_range, gate_range, hour_range, area=None):
+def height_ratios_scatter(single_day_df, beam_range, gate_range, hour_range, count_min=4, area=None):
     """
 
     Create scatter plots comparing virtual height at one frequency to virtual height at another frequency
@@ -29,6 +29,9 @@ def height_ratios_scatter(single_day_df, beam_range, gate_range, hour_range, are
     :param hour_range: (int, int) (optional):
             The hour range to consider.  If omitted (or None), then all hours will be considered.
             Not quite inclusive: if you pass in (0, 5) you will get from 0:00-4:59 UT
+    :param count_min: int (optional):
+            The minimum number of points required to count a median match.
+            This parameter has no effect on raw matched data
     :param area: int:
             The numbered area of interest.
 
@@ -291,7 +294,7 @@ if __name__ == '__main__':
     df = cPickle.load(data_stream)
 
     fig = height_ratios_scatter(single_day_df=df, gate_range=gate_range, beam_range=beam_range,
-                                hour_range=(start_hour, end_hour), area=area)
+                                hour_range=(start_hour, end_hour), count_min=count_min, area=area)
 
     if testing:
         plt.show()
