@@ -260,7 +260,7 @@ if __name__ == '__main__':
     # end_hour = 4
 
     station = "rkn"
-    area = 5
+    area = 5  # options: [1, 2, 3, 4, 5, "3a", "3b", "3c"]
     year = "2016"  # yyyy
     month = "09"  # mm
     day = "26"  # dd

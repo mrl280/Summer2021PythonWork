@@ -22,7 +22,7 @@ if __name__ == '__main__':
     year = "2016"  # yyyy
     month = "09"  # mm
     day = "26"  # dd
-    area = 5
+    area = "3c"  # options: None, 1, 2, 3, 4, 5, "3a", "3b", "3c"
     start_hour = 0  # Start and end times must be integer values for the loop
     end_hour = 4
     t_diff = 0.003  # Elevation angle correction in microseconds
