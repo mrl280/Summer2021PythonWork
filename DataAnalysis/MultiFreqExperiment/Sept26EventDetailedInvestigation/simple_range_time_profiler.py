@@ -53,10 +53,14 @@ def simple_range_time_profiler(single_day_df, beam_range, gate_range, t_diffs, h
     time_units = 'ut'
     frequencies = [10, 12, 13, 14]
     subplot_types = ["vel", "adjElv"]
-    color_maps = {'vel': 'seismic_r',
-                  'adjElv': 'jet'}
     zlims = {'vel': (-600, 600),
              'adjElv': (0, 30)}
+
+    # color_maps = {'vel': 'seismic_r',  # Originally I was using this map for velocities, but it is hard to see details
+    #               'adjElv': 'jet'}
+
+    color_maps = {'vel': 'gist_rainbow',
+                  'adjElv': 'jet'}
 
     print("Filtering data..")
     # Get some information about the station we are working with
@@ -218,9 +222,9 @@ def format_subplots(axes, x_lim, y_lim, t_diffs):
 if __name__ == "__main__":
     """ Testing """
 
-    testing = False
+    testing = True
 
-    area = 5
+    area = 5  # options: [1, 2, 3, 4, 5, "3a", "3b", "3c"]
 
     station = "rkn"
     year = "2016"
