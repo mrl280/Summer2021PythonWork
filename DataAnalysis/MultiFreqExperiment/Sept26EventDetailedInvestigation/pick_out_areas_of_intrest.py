@@ -32,6 +32,16 @@ def handler(df, time_units, area):
         return pick_out_area_of_interest_4(df=df.copy(), time_units=time_units)
     elif area == 5:
         return pick_out_area_of_interest_5(df=df.copy(), time_units=time_units)
+
+    # After the first 5 areas were cut out and considered individually, it was decided that the third area should be
+    #  further split into 3 subareas.
+    elif area == "3a":
+        return pick_out_area_of_interest_3a(df=df.copy(), time_units=time_units)
+    elif area == "3b":
+        return pick_out_area_of_interest_3b(df=df.copy(), time_units=time_units)
+    elif area == "3c":
+        return pick_out_area_of_interest_3c(df=df.copy(), time_units=time_units)
+
     else:
         raise Exception("Area not recognized, the handler doesn't know who to call")
 
@@ -419,6 +429,169 @@ def pick_out_area_of_interest_5(df, time_units):
     return df
 
 
+def pick_out_area_of_interest_3a(df, time_units):
+    """
+
+    Pick out area 3a from the Sept 26, 2106 event.
+    This area is characterized by high velocity echoes
+
+    :param df: pandas.DataFrame:
+        Data for the Sept 26, 2106 event
+    :param time_units: str:
+        Time units
+
+    :return df: pandas.DataFrame:
+        Just the data for area 3a
+    """
+
+    # Break it into frequencies and handle them each individually
+    df10_1 = df[(df['transFreq_MHz'] == 10)].copy()
+    df10_1 = df10_1.loc[(df10_1[time_units] >= 1.5) & (df10_1[time_units] <= 1.65)]
+    df10_1 = df10_1.loc[(df10_1['gate'] >= 19) & (df10_1['gate'] <= 34)]
+
+    df10_2 = df[(df['transFreq_MHz'] == 10)].copy()
+    df10_2 = df10_2.loc[(df10_2[time_units] > 1.65) & (df10_2[time_units] <= 2.0)]
+    df10_2 = df10_2.loc[(df10_2['gate'] >= 7) & (df10_2['gate'] <= 30)]
+
+    df10_3 = df[(df['transFreq_MHz'] == 10)].copy()
+    df10_3 = df10_3.loc[(df10_3[time_units] > 2.0) & (df10_3[time_units] <= 2.4)]
+    df10_3 = df10_3.loc[(df10_3['gate'] >= 7) & (df10_3['gate'] <= 22)]
+
+    df10 = pd.concat([df10_1, df10_2, df10_3])
+
+    """"""
+
+    df12_1 = df[(df['transFreq_MHz'] == 12)].copy()
+    df12_1 = df12_1.loc[(df12_1[time_units] >= 1.45) & (df12_1[time_units] <= 1.6)]
+    df12_1 = df12_1.loc[(df12_1['gate'] >= 20) & (df12_1['gate'] <= 33)]
+
+    df12_2 = df[(df['transFreq_MHz'] == 12)].copy()
+    df12_2 = df12_2.loc[(df12_2[time_units] > 1.6) & (df12_2[time_units] <= 2.4)]
+    df12_2 = df12_2.loc[(df12_2['gate'] >= 8) & (df12_2['gate'] <= 27)]
+
+    df12 = pd.concat([df12_1, df12_2])
+
+    """"""
+
+    df13_1 = df[(df['transFreq_MHz'] == 13)].copy()
+    df13_1 = df13_1.loc[(df13_1[time_units] >= 1.45) & (df13_1[time_units] <= 1.6)]
+    df13_1 = df13_1.loc[(df13_1['gate'] >= 19) & (df13_1['gate'] <= 33)]
+
+    df13_2 = df[(df['transFreq_MHz'] == 13)].copy()
+    df13_2 = df13_2.loc[(df13_2[time_units] > 1.6) & (df13_2[time_units] <= 2.4)]
+    df13_2 = df13_2.loc[(df13_2['gate'] >= 8) & (df13_2['gate'] <= 28)]
+
+    df13 = pd.concat([df13_1, df13_2])
+
+    """"""
+
+    df14_1 = df[(df['transFreq_MHz'] == 14)].copy()
+    df14_1 = df14_1.loc[(df14_1[time_units] >= 1.45) & (df14_1[time_units] <= 1.6)]
+    df14_1 = df14_1.loc[(df14_1['gate'] >= 19) & (df14_1['gate'] <= 36)]
+
+    df14_2 = df[(df['transFreq_MHz'] == 14)].copy()
+    df14_2 = df14_2.loc[(df14_2[time_units] > 1.6) & (df14_2[time_units] <= 2.4)]
+    df14_2 = df14_2.loc[(df14_2['gate'] >= 8) & (df14_2['gate'] <= 28)]
+
+    df14 = pd.concat([df14_1, df14_2])
+
+    """"""
+
+    df = pd.concat([df10, df12, df13, df14])
+
+    return df
+
+
+def pick_out_area_of_interest_3b(df, time_units):
+    """
+
+    Pick out area 3b from the Sept 26, 2106 event.
+    This area is characterized by lower velocity echoes
+
+    :param df: pandas.DataFrame:
+        Data for the Sept 26, 2106 event
+    :param time_units: str:
+        Time units
+
+    :return df: pandas.DataFrame:
+        Just the data for area 3b
+    """
+
+    # Break it into frequencies and handle them each individually
+    df10_1 = df[(df['transFreq_MHz'] == 10)].copy()
+    df10_1 = df10_1.loc[(df10_1[time_units] >= 2.5) & (df10_1[time_units] < 2.85)]
+    df10_1 = df10_1.loc[(df10_1['gate'] >= 5) & (df10_1['gate'] <= 25)]
+
+    """"""
+
+    df12_1 = df[(df['transFreq_MHz'] == 12)].copy()
+    df12_1 = df12_1.loc[(df12_1[time_units] >= 2.5) & (df12_1[time_units] < 2.85)]
+    df12_1 = df12_1.loc[(df12_1['gate'] >= 5) & (df12_1['gate'] <= 30)]
+
+    """"""
+
+    df13_1 = df[(df['transFreq_MHz'] == 13)].copy()
+    df13_1 = df13_1.loc[(df13_1[time_units] >= 2.5) & (df13_1[time_units] < 2.8)]
+    df13_1 = df13_1.loc[(df13_1['gate'] >= 7) & (df13_1['gate'] <= 35)]
+
+    """"""
+
+    df14_1 = df[(df['transFreq_MHz'] == 14)].copy()
+    df14_1 = df14_1.loc[(df14_1[time_units] >= 2.45) & (df14_1[time_units] < 2.8)]
+    df14_1 = df14_1.loc[(df14_1['gate'] >= 7) & (df14_1['gate'] <= 35)]
+
+    """"""
+
+    df = pd.concat([df10_1, df12_1, df13_1, df14_1])
+
+    return df
+
+
+def pick_out_area_of_interest_3c(df, time_units):
+    """
+
+    Pick out area 3c from the Sept 26, 2106 event.
+    This area is characterized by high velocity echoes
+
+    :param df: pandas.DataFrame:
+        Data for the Sept 26, 2106 event
+    :param time_units: str:
+        Time units
+
+    :return df: pandas.DataFrame:
+        Just the data for area 3c
+    """
+
+    # Break it into frequencies and handle them each individually
+    df10_1 = df[(df['transFreq_MHz'] == 10)].copy()
+    df10_1 = df10_1.loc[(df10_1[time_units] >= 3.0) & (df10_1[time_units] < 3.5)]
+    df10_1 = df10_1.loc[(df10_1['gate'] >= 6) & (df10_1['gate'] <= 29)]
+
+    """"""
+
+    df12_1 = df[(df['transFreq_MHz'] == 12)].copy()
+    df12_1 = df12_1.loc[(df12_1[time_units] >= 2.95) & (df12_1[time_units] < 3.5)]
+    df12_1 = df12_1.loc[(df12_1['gate'] >= 7) & (df12_1['gate'] <= 29)]
+
+    """"""
+
+    df13_1 = df[(df['transFreq_MHz'] == 13)].copy()
+    df13_1 = df13_1.loc[(df13_1[time_units] >= 2.95) & (df13_1[time_units] < 3.5)]
+    df13_1 = df13_1.loc[(df13_1['gate'] >= 7) & (df13_1['gate'] <= 30)]
+
+    """"""
+
+    df14_1 = df[(df['transFreq_MHz'] == 14)].copy()
+    df14_1 = df14_1.loc[(df14_1[time_units] >= 2.9) & (df14_1[time_units] < 3.5)]
+    df14_1 = df14_1.loc[(df14_1['gate'] >= 7) & (df14_1['gate'] <= 30)]
+
+    """"""
+
+    df = pd.concat([df10_1, df12_1, df13_1, df14_1])
+
+    return df
+
+
 if __name__ == "__main__":
     """ Testing/Running """
 
@@ -472,7 +645,7 @@ if __name__ == "__main__":
     out_dir = loc_root + "/data"
 
     # Go through each area, cutting them out and saving to file
-    areas = [1, 2, 3, 4, 5]
+    areas = [1, 2, 3, 4, 5, "3a", "3b", "3c"]
     dfs = dict()
     for area in areas:
         limited_df = handler(df=df, time_units=time_units, area=area)
