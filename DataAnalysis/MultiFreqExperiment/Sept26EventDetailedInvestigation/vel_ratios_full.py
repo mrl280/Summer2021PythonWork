@@ -187,13 +187,13 @@ if __name__ == '__main__':
     # end_hour = 4
 
     station = "rkn"
-    area = 5
+    area = "3c"  # options: [1, 2, 3, 4, 5, "3a", "3b", "3c"]
     year = "2016"  # yyyy
     month = "09"  # mm
     day = "26"  # dd
     gate_range = (0, 74)
     beam_range = (7, 7)
-    data_match_type = "Median"  # "Median" or "Raw"
+    data_match_type = "Raw"  # "Median" or "Raw"
     count_min = 4  # Only used for median matched data
     start_hour = 0
     end_hour = 4
@@ -223,10 +223,10 @@ if __name__ == '__main__':
     loc_root = str((pathlib.Path().parent.absolute()))
     out_dir = loc_root + "/out"
     if area is None:
-        out_fig_base = out_dir + "/" + "height_ratios_full-" + station + year + month + day \
+        out_fig_base = out_dir + "/" + "vel_ratios_full-" + station + year + month + day \
                   + "-" + data_match_type + "MatchedData"
     else:
-        out_fig_base = out_dir + "/" + "height_ratios_full-" + station + year + month + day \
+        out_fig_base = out_dir + "/" + "vel_ratios_full-" + station + year + month + day \
                   + "-" + data_match_type + "MatchedData" + "_area" + str(area)
 
     """ RUN SIMILAR HEIGHTS """
