@@ -348,6 +348,8 @@ if __name__ == "__main__":
                   'wdt': 8,
                   'pwr': 2}
 
+    # area options: [1, 2, 3, 4, 5, "3a", "3b", "3c"]
+
     # area = 1
     # axes_vlimits = {'wdt': (0, 25),     # Change
     #                 'pwr': (0, 35)}     # Change
@@ -402,6 +404,40 @@ if __name__ == "__main__":
     # bin_widths = {'vel': 20,
     #               'wdt': 8,
     #               'pwr': 2}
+
+    # area = "3a"
+    # axes_vlimits = {'wdt': (0, 30),  # Change
+    #                 'pwr': (0, 40)}  # Change
+    # axes_limits = {'vel': (-600, 600),
+    #                'count': (0, 500),  # Change
+    #                'wdt': (0, 200),
+    #                'pwr': (0, 50)}
+    # bin_widths = {'vel': 20,
+    #               'wdt': 8,
+    #               'pwr': 2}
+
+    # area = "3b"
+    # axes_vlimits = {'wdt': (0, 20),  # Change
+    #                 'pwr': (0, 20)}  # Change
+    # axes_limits = {'vel': (-600, 600),
+    #                'count': (0, 250),  # Change
+    #                'wdt': (0, 200),
+    #                'pwr': (0, 50)}
+    # bin_widths = {'vel': 20,
+    #               'wdt': 8,
+    #               'pwr': 2}
+
+    # area = "3c"
+    # axes_vlimits = {'wdt': (0, 20),  # Change
+    #                 'pwr': (0, 20)}  # Change
+    # axes_limits = {'vel': (-600, 600),
+    #                'count': (0, 250),  # Change
+    #                'wdt': (0, 200),
+    #                'pwr': (0, 50)}
+    # bin_widths = {'vel': 20,
+    #               'wdt': 8,
+    #               'pwr': 2}
+
 
     station = "rkn"
     year = "2016"
