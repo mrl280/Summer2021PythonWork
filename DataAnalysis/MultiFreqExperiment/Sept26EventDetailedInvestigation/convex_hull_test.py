@@ -176,7 +176,7 @@ if __name__ == "__main__":
 
     testing = True
 
-    area = 5
+    area = "3a"   # options: [1, 2, 3, 4, 5, "3a", "3b", "3c"]
 
     station = "rkn"
     year = "2016"
