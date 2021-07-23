@@ -1,6 +1,7 @@
 import bz2
 import glob
 
+import numpy as np
 import pandas as pd
 import datetime as datetime
 import _pickle as cPickle
@@ -103,6 +104,9 @@ def pickle_imf(start_year=2010, end_year=2021):
     df['epoch'] = epoch
     df['month'] = month
     df['day'] = day
+
+    # OMNI uses 9's as fill values - swap them for nans
+    df.replace(to_replace={9999.99: np.nan, 999999: np.nan, 999: np.nan, 99.99: np.nan}, inplace=True)
 
     # Save to file
     out_file = in_dir + "/omni_imf_" + str(start_year) + "-" + str(end_year) + ".pbz2"
