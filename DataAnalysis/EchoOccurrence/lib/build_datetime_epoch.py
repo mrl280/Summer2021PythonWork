@@ -7,6 +7,8 @@ def build_datetime_epoch(year, month, day, hour, minute=None, second=None):
     """
     Build a datetime struct and compute epoch from raw date/time data.
 
+    # TODO: Allow vector inputs
+
     :param year: int: Y
     :param month: int: m
     :param day: d
