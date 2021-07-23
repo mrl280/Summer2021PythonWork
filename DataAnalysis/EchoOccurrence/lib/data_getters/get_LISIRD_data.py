@@ -74,38 +74,35 @@ def get_LISIRD_data(dataset_name):
     return df
 
 
-def build_datetime_epoch_local(year, month, day, hour):
+def build_datetime_epoch_local(year, month, day, hour, minute=None, second=None):
     """
-    :param year: int: the year to consider
-    :param month: int: the month to consider
-    :param day: int: the day to consider
-    :param hour: int: The hour to consider
+    Build a datetime struct and compute epoch from raw date/time data.
+
+    TODO: Use the datetime epoch builder in lib.  This local version of this function is just here because I can't
+     figure out how to import the one in lib
+
+    :param year: int: Y
+    :param month: int: m
+    :param day: d
+    :param hour: H
+    :param minute: M (optional)
+    :param second: S (optional)
+
     :return: time.struct_time, int: The datetime and epoch
     """
-    pattern = '%Y.%m.%d %H:%M:%S'
 
-    if month < 10:
-        month = "0" + str(month)
-    else:
-        month = str(month)
-    if day < 10:
-        day = "0" + str(day)
-    else:
-        day = str(day)
-    if hour < 10:
-        hour = "0" + str(hour)
-    else:
-        hour = str(hour)
+    pattern = "%Y.%m.%d %H:%M:%S"  # This is the pattern we will use to convert time info to epoch
 
-    if hour == "24":
-        date_time_str = str(year) + "." + str(month) + "." + str(day) \
-            + " " + "23:59:59"
-    else:
-        date_time_str = str(year) + "." + str(month) + "." + str(day) \
-            + " " + str(hour) + ":00:00"
-    date_time_struct = time.strptime(date_time_str, pattern)
+    if minute is None:
+        minute = "00"
+    if second is None:
+        second = "00"
+
+    datetime_here_str = str(year) + "." + str(month) + "." + str(day) + " " + \
+                        str(hour) + ":" + str(minute) + ":" + str(second)
+
+    date_time_struct = time.strptime(datetime_here_str, pattern)
     epoch = calendar.timegm(date_time_struct)
-
     date_time = datetime.datetime.fromtimestamp(time.mktime(date_time_struct))
 
     return date_time, epoch
