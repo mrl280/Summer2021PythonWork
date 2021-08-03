@@ -4,8 +4,6 @@ import calendar
 import time
 import bz2
 
-import _pickle as cPickle
-
 from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
 
 
@@ -31,7 +29,7 @@ def get_df_multi_event(file_name=None, flag=None, include_adj_elv=False):
         event_summary_dir = str(loc_root) + "/data"
         event_summary_path = event_summary_dir + "/" + file_name + ".pbz2"
         data_stream = bz2.BZ2File(event_summary_path, "rb")
-        event_summary = cPickle.load(data_stream)
+        event_summary = pd.read_pickle(data_stream)
 
     except:
         # This works if we are calling from a sub-folder
@@ -39,7 +37,7 @@ def get_df_multi_event(file_name=None, flag=None, include_adj_elv=False):
         event_summary_dir = str(loc_root) + "/data"
         event_summary_path = event_summary_dir + "/" + file_name + ".pbz2"
         data_stream = bz2.BZ2File(event_summary_path, "rb")
-        event_summary = cPickle.load(data_stream)
+        event_summary = pd.read_pickle(data_stream)
 
     if flag is not None:
         # Only keep the rows that are flagged
@@ -83,7 +81,7 @@ def get_df_multi_event(file_name=None, flag=None, include_adj_elv=False):
         in_dir = str(loc_root.parent) + "/DataReading/SD/data/" + station + "/" + station + year + month + day
         in_file = in_dir + "/" + station + year + month + day + ".pbz2"
         data_stream = bz2.BZ2File(in_file, "rb")
-        df = cPickle.load(data_stream)
+        df = pd.read_pickle(data_stream)
 
         df = df.loc[(df['epoch'] >= start_epoch) & (df['epoch'] <= end_epoch)]
         df.reset_index(drop=True, inplace=True)
@@ -122,7 +120,7 @@ def get_df_multi_event(file_name=None, flag=None, include_adj_elv=False):
             in_file = in_dir + "/" + station + year + month + day + ".pbz2"
 
             data_stream = bz2.BZ2File(in_file, "rb")
-            next_df = cPickle.load(data_stream)
+            next_df = pd.read_pickle(data_stream)
 
             next_df = next_df.loc[(next_df['epoch'] >= start_epoch) & (next_df['epoch'] <= end_epoch)]
             next_df.reset_index(drop=True, inplace=True)

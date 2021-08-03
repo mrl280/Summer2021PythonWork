@@ -3,7 +3,6 @@ import bz2
 import statistics as stat
 import time
 import pandas as pd
-import _pickle as cPickle
 
 if __name__ == '__main__':
     """
@@ -17,7 +16,7 @@ if __name__ == '__main__':
     in_file = in_dir + station + date + ".1min.pbz2"
 
     data_stream = bz2.BZ2File(in_file, "rb")
-    df = cPickle.load(data_stream)
+    df = pd.read_pickle(data_stream)
 
     print(df.head())
 

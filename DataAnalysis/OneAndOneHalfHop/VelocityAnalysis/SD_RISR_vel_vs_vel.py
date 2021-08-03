@@ -61,14 +61,14 @@ if __name__ == '__main__':
     SD_in_file = SD_in_dir + "/" + SD_station + year + month + day + ".pbz2"
 
     data_stream = bz2.BZ2File(SD_in_file, "rb")
-    SD_df = cPickle.load(data_stream)
+    SD_df = pd.read_pickle(data_stream)
 
     # Read in RISR data
     RISR_in_dir = loc_root + "/DataReading/RISR/data/" + RISR_station + "/" + RISR_station + year + month + day
     RISR_in_file = RISR_in_dir + "/" + RISR_station + year + month + day + "." + str(resolution) + "min.pbz2"
 
     data_stream = bz2.BZ2File(RISR_in_file, "rb")
-    RISR_df = cPickle.load(data_stream)
+    RISR_df = pd.read_pickle(data_stream)
 
     # Filter SuperDARN data
     SD_df = basic_SD_df_filter(SD_df)

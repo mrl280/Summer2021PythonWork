@@ -460,7 +460,7 @@ if __name__ == "__main__":
         in_file = in_dir + "/" + station + year + month + day + "_area" + str(area) + ".pbz2"
     print("Reading in file: " + in_file)
     data_stream = bz2.BZ2File(in_file, "rb")
-    df = cPickle.load(data_stream)
+    df = pd.read_pickle(data_stream)
 
     # Restrict data to within the desired hour range
     _, start_epoch = build_datetime_epoch(year=int(year), month=int(month), day=int(day), hour=start_hour)

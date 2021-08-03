@@ -4,8 +4,8 @@ import os
 import pathlib
 import warnings
 
-import _pickle as cPickle
 import numpy as np
+import pandas as pd
 
 from scipy import stats
 from matplotlib import pyplot as plt
@@ -52,7 +52,7 @@ def get_IMF_data(year_range):
 
                 warnings.warn("Using IMF data from " + in_file, category=Warning)
                 data_stream = bz2.BZ2File(in_file, "rb")
-                return cPickle.load(data_stream)
+                return pd.read_pickle(data_stream)
 
             else:
                 continue  # This file is not what we are looking for

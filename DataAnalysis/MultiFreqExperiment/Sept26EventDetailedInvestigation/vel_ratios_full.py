@@ -4,8 +4,7 @@ import bz2
 import warnings
 
 import matplotlib.pyplot as plt
-import _pickle as cPickle
-
+import pandas as pd
 from matplotlib.ticker import MultipleLocator
 
 from DataAnalysis.MultiFreqExperiment.RatioAnalysis.plottingVelRatios import add_data_to_plot
@@ -218,7 +217,7 @@ if __name__ == '__main__':
 
     print("Reading in file: " + in_file)
     data_stream = bz2.BZ2File(in_file, "rb")
-    df = cPickle.load(data_stream)
+    df = pd.read_pickle(data_stream)
 
     loc_root = str((pathlib.Path().parent.absolute()))
     out_dir = loc_root + "/out"

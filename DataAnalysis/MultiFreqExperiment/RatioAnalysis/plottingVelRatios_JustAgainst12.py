@@ -3,8 +3,8 @@ import os
 import pathlib
 import bz2
 
-import _pickle as cPickle
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from matplotlib.ticker import MultipleLocator
 from PyPDF2 import PdfFileMerger
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     in_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/data/" + station
     in_file = in_dir + "/" + station + year + month + day + ".MatchedData.1gg60s.pbz2"
     data_stream = bz2.BZ2File(in_file, "rb")
-    df = cPickle.load(data_stream)
+    df = pd.read_pickle(data_stream)
 
     out_dir = loc_root + "/MultiFreqExperiment/RatioAnalysis/out/"
 

@@ -3,7 +3,7 @@ import pathlib
 import time
 import calendar
 
-import _pickle as cPickle
+import pandas as pd
 
 
 def build_date_epoch(year, month, day, hour):
@@ -64,7 +64,7 @@ def get_local_dummy_data(station, year, month, day, start_hour_UT, end_hour_UT, 
 
     try:
         data_stream = bz2.BZ2File(in_file, "rb")
-        df = cPickle.load(data_stream)
+        df = pd.read_pickle(data_stream)
     except FileNotFoundError as e:
         # We might be calling from one level down, recompute the path and try again
         loc_root = str((((pathlib.Path().parent.absolute()).parent.absolute()).absolute()).parent.absolute())
@@ -76,7 +76,7 @@ def get_local_dummy_data(station, year, month, day, start_hour_UT, end_hour_UT, 
             in_file = in_dir + "/" + station + str(year) + month + day + ".pbz2"
 
         data_stream = bz2.BZ2File(in_file, "rb")
-        df = cPickle.load(data_stream)
+        df = pd.read_pickle(data_stream)
 
     test_start_datetime, test_start_epoch = build_date_epoch(year, int(month), int(day), start_hour_UT)
     test_end_datetime, test_end_epoch = build_date_epoch(year, int(month), int(day), end_hour_UT)

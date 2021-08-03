@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     print("Reading in file: " + in_file)
     data_stream = bz2.BZ2File(in_file, "rb")
-    df = cPickle.load(data_stream)
+    df = pd.read_pickle(data_stream)
 
     # We are only interested in 15 km resolution data (from the multi-freq analysis)
     # This double filter should be redundant but better to be safe

@@ -1,12 +1,10 @@
 import os
 import pathlib
 import bz2
-
-import _pickle as cPickle
 import warnings
 
 import matplotlib.pyplot as plt
-import numpy as np
+import pandas as pd
 
 from matplotlib.ticker import MultipleLocator
 
@@ -291,7 +289,7 @@ if __name__ == '__main__':
 
     print("Reading in file: " + in_file)
     data_stream = bz2.BZ2File(in_file, "rb")
-    df = cPickle.load(data_stream)
+    df = pd.read_pickle(data_stream)
 
     fig = height_ratios_scatter(single_day_df=df, gate_range=gate_range, beam_range=beam_range,
                                 hour_range=(start_hour, end_hour), count_min=count_min, area=area)

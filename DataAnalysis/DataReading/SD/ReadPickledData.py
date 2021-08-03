@@ -4,6 +4,8 @@ import time
 import numpy as np
 import _pickle as cPickle
 
+import pandas as pd
+
 if __name__ == '__main__':
     """
     Read in and look at pickled SuperDARN data
@@ -17,7 +19,7 @@ if __name__ == '__main__':
     in_file = in_dir + "/" + station + date + ".pbz2"
 
     data_stream = bz2.BZ2File(in_file, "rb")
-    df = cPickle.load(data_stream)
+    df = pd.read_pickle(data_stream)
 
     # pd.set_option('display.max_columns', None)
     print(df.head())

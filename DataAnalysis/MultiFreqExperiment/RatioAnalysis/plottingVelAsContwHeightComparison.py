@@ -7,6 +7,7 @@ import _pickle as cPickle
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.cm as cm
+import pandas as pd
 
 from matplotlib.colors import ListedColormap
 from matplotlib.ticker import MultipleLocator
@@ -51,7 +52,7 @@ if __name__ == '__main__':
     in_file = in_dir + "/" + station + year + month + day + "." + \
               data_match_type + "MatchedData.1gg" + str(second_resolution) + "s.pbz2"
     data_stream = bz2.BZ2File(in_file, "rb")
-    df = cPickle.load(data_stream)
+    df = pd.read_pickle(data_stream)
 
     # Filter the data based on the expected gate range of the region of interest
     df = df.loc[(df['gate'] >= gates[0]) & (df['gate'] <= gates[1])]
