@@ -4,14 +4,13 @@ import math
 import os
 import pathlib
 import warnings
-
 import pydarn
 import time
 import calendar
+import _pickle
 
 import pandas as pd
 import datetime as datetime
-import _pickle as cPickle
 
 
 def get_data(station, year_range, month_range, day_range, gate_range, beam_range, freq_range,
@@ -264,4 +263,4 @@ if __name__ == '__main__':
 
         print("     Pickling as " + out_file + "...")
         with bz2.BZ2File(out_file, "w") as file:
-            cPickle.dump(df, file)
+            _pickle.dump(df, file, protocol=_pickle.HIGHEST_PROTOCOL)

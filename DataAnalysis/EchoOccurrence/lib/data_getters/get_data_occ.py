@@ -6,11 +6,11 @@ import pathlib
 import time
 import warnings
 import pydarn
+import _pickle
 
 import datetime as datetime
 import pandas as pd
 import numpy as np
-import _pickle as cPickle
 
 
 def get_data_occ(station, year_range, month_range, day_range, gate_range, beam_range, freq_range,
@@ -292,9 +292,15 @@ if __name__ == '__main__':
                       gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
                       fitACF_version=fitACF_version, even_odd_days=even_odd_days, print_timing_info=False)
 
-    # df = get_data_occ("sas", year_range=(2001, 2001), month_range=(1, 1), day_range=(1, 1),
-    #                   gate_range=(0, 99), beam_range=(6, 7), freq_range=(5, 25),
-    #                   print_timing_info=True)
+    # # Just a quick test
+    # testing = False
+    # fitACF_version = 2.5
+    # station = "sas"
+    # freq_range = (5, 25)
+    # year_range = (2001, 2001)
+    # df = get_data_occ(station, year_range=year_range, month_range=(1, 1), day_range=(1, 1),
+    #                   gate_range=(0, 99), beam_range=(6, 7), freq_range=freq_range,
+    #                   print_timing_info=False, fitACF_version=fitACF_version)
 
     print(df.head())
 
@@ -314,4 +320,4 @@ if __name__ == '__main__':
 
         print("     Pickling as " + out_file + "...")
         with bz2.BZ2File(out_file, "w") as file:
-            cPickle.dump(df, file)
+            _pickle.dump(df, file, protocol=4)
