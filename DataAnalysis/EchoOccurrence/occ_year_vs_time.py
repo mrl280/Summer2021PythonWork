@@ -20,7 +20,7 @@ from lib.data_getters.input_checkers import *
 def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour_range=None,
                      gate_range=None, beam_range=None, freq_range=None,
                      time_units='mlt', plot_type='contour', angle_contours=None,
-                     local_testing=False):
+                     local_testing=False, even_odd_days=None):
     """
 
     Produce plots with year on the y-axis and time along the x-axis.
@@ -61,6 +61,7 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
                 'lt' for local time (based on longitude)
                 'lst' for local standard time (based on time zones)
                 'ast' for apparent solar time (based on the apparent angular motion of the sun across the sky)
+
     :param plot_type: str (optional): default is 'contour'.
             The type of plot, either 'contour' or 'pixel'.
     :param angle_contours: str (optional):
@@ -69,6 +70,11 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
                 'altitude' for solar altitude angle (the angle between the sun’s rays and a horizontal plane)
     :param local_testing: bool (optional): default is False.
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
+    :param even_odd_days: (optional; default is None)
+            'even': only even days are read in
+            'odd': only odd days are read in
+            None: all days are read in
+
     :return: pandas.DataFrame, matplotlib.pyplot.figure
             The dataframe used and the figure created.
             The figure can then be modified, added to, printed out, or saved in whichever file format is desired.
@@ -93,7 +99,7 @@ def occ_year_vs_time(station, year_range, month_range=None, day_range=None, hour
     print("Retrieving data...")
     df = get_data_handler(station, year_range=year_range, month_range=month_range, day_range=day_range,
                           gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
-                          occ_data=True, local_testing=local_testing)
+                          occ_data=True, local_testing=local_testing, even_odd_days=even_odd_days)
     df = only_keep_45km_res_data(df)
 
     # Add decimal hour to df in whatever units were requested
@@ -396,22 +402,22 @@ if __name__ == '__main__':
 
 
     else:
-        stations = ["dce", "mcm"]
-        freq_range = (8, 11)
+        station = "mcm"
+        even_odd_days = 'odd'
+        freq_range = (8, 14)
         year_range = (2013, 2021)
-        # angle_contour_types = ['zenith', 'altitude']
+        angle_contours = 'zenith'  # angle_contour_types = ['zenith', 'altitude']
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        for station in stations:
-            _, fig = occ_year_vs_time(station=station, year_range=year_range, day_range=None,
-                                      gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
-                                      time_units='lt', plot_type='contour', angle_contours='zenith',
-                                      local_testing=local_testing)
+        _, fig = occ_year_vs_time(station=station, year_range=year_range, day_range=None,
+                                  gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
+                                  time_units='lt', plot_type='contour', angle_contours=angle_contours,
+                                  local_testing=local_testing, even_odd_days=even_odd_days)
 
-            out_fig = out_dir + "/occ_yearVtime_" + station + "_" + \
-                      str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz - with_zenith_contours"
+        out_fig = out_dir + "/occ_yearVtime_" + station + "_" + \
+                  str(freq_range[0]) + "-" + str(freq_range[1]) + "MHz - with_" + angle_contours + "_contours"
 
-            print("Saving plot as " + out_fig)
-            fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+        print("Saving plot as " + out_fig)
+        fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
