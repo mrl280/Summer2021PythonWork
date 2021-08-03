@@ -24,7 +24,7 @@ from lib.data_getters.input_checkers import *
 
 def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=None,
                            gate_range=None, beam_range=None, freq_range=None,
-                           time_units='lt', local_testing=False):
+                           time_units='lt', local_testing=False, even_odd_days=None):
     """
 
     Produces an occurrence rate versus year plot that is meant to showcase the seasonal variation in echo occurrence.
@@ -70,6 +70,10 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
                 'lt' for local time (based on longitude)
                 'lst' for local standard time (based on time zones)
                 'ast' for apparent solar time (based on the apparent angular motion of the sun across the sky)
+    :param even_odd_days: (optional; default is None)
+            'even': only even days are read in
+            'odd': only odd days are read in
+            None: all days are read in
     :param local_testing: bool (optional): default is False.
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
 
@@ -95,8 +99,8 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
 
     print("Retrieving data...")
     df = get_data_handler(station, year_range=year_range, month_range=None, day_range=day_range,
-                          gate_range=gate_range, beam_range=beam_range,
-                          freq_range=freq_range, occ_data=True, local_testing=local_testing)
+                          gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+                          occ_data=True, local_testing=local_testing, even_odd_days=even_odd_days)
     df = only_keep_45km_res_data(df)
 
     # Add decimal hour to df in whatever units were requested
@@ -152,6 +156,7 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
     add_data_to_plot(df=df_custom, ax=axes['custom'], year_edges=year_slice_edges)
     title_string = "Hours " + str(hour_range[0]) + "-" + str(hour_range[1]) + " " + time_units.upper()
     axes['custom'].set_title(title_string, fontsize=title_font_size)
+    axes['custom'].legend(loc='upper right', ncol=2, prop={'size': 6})
 
     # Add in dawn data
     time_sector = 'dawn'
@@ -261,8 +266,6 @@ def add_data_to_plot(df, ax, year_edges):
         ax.plot(gs_mini_df['bin_xcenters'], gs_mini_df['occurrence_data'], linewidth=1, color="red", linestyle='-',
                 label='GS (Smoothed)')
 
-    ax.legend(loc='upper right')
-
 
 def format_subplots(axes, x_lim, y_lim):
     """
@@ -343,9 +346,10 @@ if __name__ == '__main__':
 
 
     else:
-        station = "dce"
+        station = "mcm"
+        even_odd_days = "odd"
         year_range = (2013, 2021)
-        freq_range = (8, 11)
+        freq_range = (8, 14)
 
         time_units = "lt"
 
@@ -355,7 +359,7 @@ if __name__ == '__main__':
 
         _, fig = occ_seasonal_variation(station=station, year_range=year_range, day_range=None, hour_range=None,
                                         gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
-                                        time_units=time_units, local_testing=local_testing)
+                                        time_units=time_units, local_testing=local_testing, even_odd_days=even_odd_days)
 
         out_fig = out_dir + "/occ_seasonalVariation_" + station + \
                   "_" + str(year_range[0]) + "-" + str(year_range[1]) + \
