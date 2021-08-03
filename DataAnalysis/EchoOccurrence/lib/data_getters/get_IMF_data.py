@@ -89,7 +89,15 @@ if __name__ == "__main__":
     print("Minimum Bz value: " + str(np.min(df['Bz_nT_GSM'])) + " nT (GSM)")
     print("Maximum Bz value: " + str(np.max(df['Bz_nT_GSM'])) + " nT (GSM)")
 
-    # Quickly plot the data so we can look at the spread
+    print("")
+    print("Starting datetime: " + str(df['datetime'].iat[0]))
+    print("Ending datetime: " + str(df['datetime'].iat[-1]))
+
+    print("")
+    print("Temporal data resolution is: " + str(df['datetime'].iat[1] - df['datetime'].iat[0]))
+
+
+    """ Quickly plot the data so we can look at the spread """
     fig, ax = plt.subplots(figsize=[6, 6], nrows=1, ncols=1, constrained_layout=True, dpi=300)
 
     # Compute By edges
@@ -113,3 +121,69 @@ if __name__ == "__main__":
 
     plt.show()
     plt.close(fig)
+
+
+    """ Plot year vs IMF so we can see how fast it changes """
+    x_lim = (2014, 2015)
+
+    fig, ax = plt.subplots(figsize=[6, 8], nrows=2, ncols=1, constrained_layout=True, dpi=300)
+    fig.suptitle("IMF Data Time Evolution")
+
+    # Compute decimal years to plot along x
+    print("\nComputing decimal times...")
+    hours_in_a_day = 24
+    months_in_a_year = 12
+    days_in_a_year = 365
+    hours_in_a_year = 8760
+    decimal_year, decimal_day = [], []
+    for i in range(len(df)):
+        datetime_obj_here = df['datetime'].iat[i]
+
+        decimal_day_here = datetime_obj_here.day \
+                           + (datetime_obj_here.hour + datetime_obj_here.minute / 60) / hours_in_a_day
+
+        decimal_year_here = datetime_obj_here.year + (datetime_obj_here.month - 1) / months_in_a_year \
+                            + decimal_day_here / days_in_a_year
+
+        decimal_day.append(decimal_day_here)
+        decimal_year.append(decimal_year_here)
+
+    df['decimal_day'] = np.asarray(decimal_day)
+    df['decimal_year'] = np.asarray(decimal_year)
+
+    print("Decimal year max: " + str(np.amax(df['decimal_year'])))
+    print("Decimal year min: " + str(np.amin(df['decimal_year'])))
+
+    # Plot the y-component on the first subplot
+    ax[0].set_ylabel("By [nT] (GSM)")
+    ax[0].set_xlabel("Year")
+    ax[0].set_xlim(x_lim)
+    ax[0].plot(df['decimal_year'], df['By_nT_GSM'])
+
+    # Plot the z-component on the second subplot
+    ax[1].set_ylabel("Bz [nT] (GSM)")
+    ax[1].set_xlabel("Year")
+    ax[1].set_xlim(x_lim)
+    ax[1].plot(df['decimal_year'], df['Bz_nT_GSM'])
+
+    plt.show()
+    plt.close(fig)
+
+
+    """ Plot a couple days of IMF data """
+
+    fig, ax = plt.subplots(figsize=[6, 12], nrows=8, ncols=1, constrained_layout=True, dpi=300)
+    fig.suptitle("IMF Data Time Evolution")
+
+    for i in range(ax.size):
+        ax[i].set_ylabel("Bz [nT] (GSM)")
+        ax[i].set_xlabel("Day")
+
+        df_dd = df[(df['year'] == 2016) & (df['month'] == 1) & (df['day'] == i + 1)]
+        ax[i].plot(df_dd['decimal_day'], df_dd['Bz_nT_GSM'])
+
+    plt.show()
+    plt.close(fig)
+
+
+
