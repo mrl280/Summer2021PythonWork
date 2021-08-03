@@ -4,7 +4,7 @@ import glob
 import numpy as np
 import pandas as pd
 import datetime as datetime
-import _pickle as cPickle
+import _pickle
 
 try:
     from .build_datetime_epoch import build_datetime_epoch
@@ -69,6 +69,7 @@ def pickle_imf(start_year=2010, end_year=2021):
         if start_year <= year <= end_year:
             # Then we are good to go ahead and use this file
 
+            print("     Adding in data for " + str(year))
             try:
                 # Read in the data for this year, and append it to the dataframe
                 temp_df = pd.read_csv(in_file, names=column_names, delim_whitespace=True)
@@ -98,8 +99,13 @@ def pickle_imf(start_year=2010, end_year=2021):
         month.append(helper_date.month)
         day.append(helper_date.day)
 
-        date_time, epoch = build_datetime_epoch(year=year, month=helper_date.month, day=helper_date.day,
-                                                hour=df['hour'].iat[i], minute=df['minute'].iat[i], second=None)
+        date_time_here, epoch_here = build_datetime_epoch(year=year, month=helper_date.month, day=helper_date.day,
+                                                          hour=df['hour'].iat[i], minute=df['minute'].iat[i],
+                                                          second=None)
+
+        date_time.append(date_time_here)
+        epoch.append(epoch_here)
+
     df['datetime'] = date_time
     df['epoch'] = epoch
     df['month'] = month
@@ -112,7 +118,7 @@ def pickle_imf(start_year=2010, end_year=2021):
     out_file = in_dir + "/omni_imf_" + str(start_year) + "-" + str(end_year) + ".pbz2"
     print("     Pickling as " + out_file + "...")
     with bz2.BZ2File(out_file, "w") as file:
-        cPickle.dump(df, file)
+        _pickle.dump(df, file, protocol=4)
 
 
 if __name__ == '__main__':
