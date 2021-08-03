@@ -21,7 +21,7 @@ except ImportError:
 
 def get_data_handler(station, year_range=None, month_range=None, day_range=None,
                      gate_range=None, beam_range=None, freq_range=None, occ_data=False,
-                     local_testing=False, force_build=False, fitACF_version=2.5):
+                     local_testing=False, force_build=False, fitACF_version=2.5, even_odd_days=None):
     """
 
     Get the required data.
@@ -33,21 +33,22 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
     :param station: str:
             The radar station to consider, a 3 character string (e.g. "rkn").
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
-    :param year_range: (<int>, <int>):
+    :param year_range: (int, int):
             Inclusive. The year range to consider.
-    :param month_range: (<int>, <int>) (optional):
+    :param month_range: (int, int) (optional):
             Inclusive. The months of the year to consider.  If omitted (or None), then all days will be considered.
-    :param day_range: (<int>, <int>) (optional):
+    :param day_range: (int, int) (optional):
             Inclusive. The days of the month to consider.  If omitted (or None), then all days will be considered.
-    :param gate_range: (<int>, <int>) (optional):
+    :param gate_range: (int, int) (optional):
             Inclusive. The gate range to consider.  If omitted (or None), then all the gates will be considered.
             Note that gates start at 0, so gates (0, 3) is 4 gates.
-    :param beam_range: (<int>, <int>) (optional):
+    :param beam_range: (int, int) (optional):
             Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
-    :param freq_range: (<float>, <float>) (optional):
+    :param freq_range: (float, float) (optional):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
+
     :param occ_data: bool (optional):
             Set this to true if you need echo occurrence data.
             If False, you will get normal data (basically a reduced fitACF datafile),  Default if False.
@@ -59,6 +60,10 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
     :param fitACF_version: float: (optional):
             The fitACF version number.  At the time of writing the default is 2.5, but expected to move to 3.0 in the
             near future.  These are the only valid options.
+    :param even_odd_days: (optional; default is None)
+            'even': only even days are read in
+            'odd': only odd days are read in
+            None: all days are read in
 
 
     :return: pandas.DataFrame: A dataframe with select fitACF parameters.
@@ -106,11 +111,11 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
             if occ_data:
                 df = get_data_occ(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
                                   gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
-                                  fitACF_version=fitACF_version)
+                                  fitACF_version=fitACF_version, even_odd_days=even_odd_days)
             else:
                 df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
                               gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
-                              fitACF_version=fitACF_version)
+                              fitACF_version=fitACF_version, even_odd_days=even_odd_days)
 
         else:
             # Try to just read in data from file
@@ -123,11 +128,11 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
                 if occ_data:
                     df = get_data_occ(station=station, year_range=year_range, month_range=month_range,
                                       day_range=day_range, gate_range=gate_range, beam_range=beam_range,
-                                      freq_range=freq_range, fitACF_version=fitACF_version)
+                                      freq_range=freq_range, fitACF_version=fitACF_version, even_odd_days=even_odd_days)
                 else:
                     df = get_data(station=station, year_range=year_range, month_range=month_range, day_range=day_range,
                                   gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
-                                  fitACF_version=fitACF_version)
+                                  fitACF_version=fitACF_version, even_odd_days=even_odd_days)
 
             else:
                 # We have a pickled data frame, restrict it to the day, month, and year ranges of interest
