@@ -11,25 +11,21 @@ import numpy as np
 import cartopy.feature as cfeature
 import datetime as datetime
 
-from tzwhere import tzwhere
 from aacgmv2 import convert_latlon_arr
 from matplotlib import pyplot as plt
-from matplotlib.ticker import MultipleLocator
 from pydarn import radar_fov, SuperDARNRadars
-from cartopy.io import shapereader as shpreader
-from cartopy.feature import ShapelyFeature
-import shapefile
 from timezonefinder import TimezoneFinder
 
 from DataAnalysis.EchoOccurrence.lib.add_mlt_to_df import centroid
 
+
+SAVE_PLOT = False
 loc_root = str((pathlib.Path().parent.absolute()))
 
 all_radars_info = SuperDARNRadars()
 
 # Note: Radars not in the same hemisphere will be omitted
-# stations = ["dce", "dcn"]
-stations = ["dce"]
+stations = ["mcm", "dcn"]
 reference_hemisphere = all_radars_info.radars[pydarn.read_hdw_file(stations[0]).stid].hemisphere
 
 date = datetime.datetime.now()
@@ -218,7 +214,8 @@ if reference_hemisphere.value == 1:
     out_file = out_dir + "/localTimeZones_" + "NH_" + str(stations[0])
 else:
     out_file = out_dir + "/localTimeZones_" + "SH_" + str(stations[0])
-fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
+if SAVE_PLOT:
+    fig.savefig(out_file + ".jpg", format='jpg', dpi=300)
 plt.close(fig)
 
 # # Convert aacgm lats to geo for plotting

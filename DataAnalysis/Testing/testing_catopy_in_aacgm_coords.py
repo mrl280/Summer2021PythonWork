@@ -32,11 +32,11 @@ radar_lat = this_radars_info.hardware_info.geographic.lat
 print("Radar lat: " + str(radar_lat))
 print("Radar lon: " + str(radar_lon))
 
-# Get some dummy data
-df = get_local_dummy_data(station="rkn", year=2012, month=11, day=12, start_hour_UT=0, end_hour_UT=24, occ_data=False)
-df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
-df.reset_index(drop=True, inplace=True)
-df = only_keep_45km_res_data(df)
+# # Get some dummy data
+# df = get_local_dummy_data(station="dce", year=2012, month=11, day=12, start_hour_UT=0, end_hour_UT=24, occ_data=False)
+# df = df.loc[(df['p_l'] >= 3)]  # Restrict to points with at least 3 dB
+# df.reset_index(drop=True, inplace=True)
+# df = only_keep_45km_res_data(df)
 
 date = datetime.datetime.now()
 # date = datetime.datetime(1968, 5, 17)
