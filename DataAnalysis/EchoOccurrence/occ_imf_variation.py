@@ -103,6 +103,9 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
     gate_range = check_gate_range(gate_range=gate_range, hdw_info=this_radars_info.hardware_info)
     beam_range = check_beam_range(beam_range=beam_range, hdw_info=this_radars_info.hardware_info)
 
+    print("     Retrieving IMF data...")
+    imf_df = get_IMF_data(year_range=(year, year))
+
     print("     Retrieving SuperDARN data...")
     df = get_data_handler(station, year_range=(year, year), month_range=None, day_range=day_range,
                           gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
@@ -120,9 +123,6 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
         df = add_decimal_hour_to_df(df=df, time_units=time_units, stid=radar_id, date_time_est=date_time_est)
         df = df.loc[(df[time_units] >= hour_range[0]) & (df[time_units] <= hour_range[1])]
         df.reset_index(drop=True, inplace=True)
-
-    print("     Retrieving IMF data...")
-    imf_df = get_IMF_data(year_range=(year, year))
 
     print("     Preparing the figure...")
     fig = plt.figure(figsize=[10, 14], constrained_layout=True, dpi=300)

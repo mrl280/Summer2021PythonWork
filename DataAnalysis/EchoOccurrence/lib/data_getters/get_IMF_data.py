@@ -57,7 +57,7 @@ def get_IMF_data(year_range):
             else:
                 continue  # This file is not what we are looking for
         except BaseException as e:
-            # print(e)
+            print("Base exception encountered: " + str(e))
             pass
 
     # If we didn't find anything, then we can just go ahead and return None
