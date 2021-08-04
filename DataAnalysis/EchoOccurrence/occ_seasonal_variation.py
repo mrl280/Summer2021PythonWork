@@ -271,10 +271,8 @@ def format_subplots(axes, x_lim, y_lim):
     """
     :param axes: matplotlib.axes:
             The axes to format
-    :param x_lim: str:
-            x label text
-    :param y_lim: str:
-            y label text
+    :param x_lim: (int, int): x-axis limits
+    :param y_lim: (int, int): y-axis limits
     """
 
     label_font_size = 12
