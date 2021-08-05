@@ -25,7 +25,9 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
     """
 
     Plot the y-component of the interplanetary magnetic field (By) along x, and the z-component (Bz) along y.
-      Occurrence is then plotted as contours or pixels.  One plot for every month.
+      Occurrence is then plotted as contours or pixels.
+
+    There one plot for every month, plus there are a couple of plots that summarize data for the whole year.
 
     Idea is to show that IMF drives echo occurrence rates.
 
@@ -83,11 +85,9 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
             desired.
     """
 
-    vmaxs = {"is": 0.6,  # The top of the colour bar
-             "gs": 0.2}
+    vmaxs = {"is": 0.4,  # The top of the colour bar
+             "gs": 0.1}
     title_fontsize = 18
-    cbar_label_size = 10
-    cbar_text_format = '%.2f'
     x_lim = (-10, 10)
     y_lim = (-10, 10)
 
@@ -125,9 +125,9 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
         df.reset_index(drop=True, inplace=True)
 
     print("     Preparing the figure...")
-    fig = plt.figure(figsize=[10, 14], constrained_layout=True, dpi=300)
-    month_axes, cbar_axes = add_axes(fig=fig)
-    apply_subplot_formatting(axes=month_axes, x_lim=x_lim, y_lim=y_lim)
+    fig = plt.figure(figsize=[10, 19], constrained_layout=True, dpi=300)
+    month_axes, year_axes = add_axes(fig=fig)
+    apply_subplot_formatting(month_axes=month_axes, year_axes=year_axes, x_lim=x_lim, y_lim=y_lim, year=year)
 
     title_figure(fig=fig, station=station, year=year, time_units=time_units, beam_range=beam_range,
                  gate_range=gate_range, freq_range=freq_range, hour_range=hour_range, day_range=day_range,
@@ -147,6 +147,27 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
     n_bins_Bz = 20
     Bz_edges = np.linspace(y_lim[0], y_lim[1], num=(n_bins_Bz + 1))
 
+    # We have to complete IMF assignment for the whole dataframe, even if it takes longer it is simplest to do the whole
+    # year all at once
+    print("     Assigning IMF values for " + str(year) + "...")
+    df = assign_imf_values(df=df, imf_df=imf_df)
+
+
+    """ Complete the large yearly contour plots"""
+    print("     Computing binned occ rates for the whole year...")
+    contour_data_is, contour_data_gs = bin_data(df=df, By_edges=By_edges, Bz_edges=Bz_edges)
+
+    print("     Plotting data for the whole year...")
+    plot_data(fig=fig, axes=year_axes['whole_year'], contour_data_is=contour_data_is, contour_data_gs=contour_data_gs,
+              By_edges=By_edges, Bz_edges=Bz_edges, plot_type=plot_type, cbar=True, vmaxs=vmaxs)
+
+
+    """ Complete the histogram plots"""
+    complete_hist_plot(axes=year_axes['By_hist'], df=df, param='By_nT_GSM', edges=By_edges)
+    complete_hist_plot(axes=year_axes['Bz_hist'], df=df, param='Bz_nT_GSM', edges=By_edges)
+
+
+    """ Complete all of the small monthly axes """
     for month_str, month_axis in month_axes.items():
 
         month = list(calendar.month_abbr).index(month_str[:3])  # Pull the month number from the month string
@@ -161,72 +182,143 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
             # Then there is nothing we can do here
             continue
 
-        print("     Assigning IMF values for " + month_str)
-        df_mm = assign_imf_values(df=df_mm, imf_df=imf_df_mm)
-
-        print("     Computing binned occ rates...")
+        print("     Computing binned occ rates for " + month_str + "...")
         contour_data_is, contour_data_gs = bin_data(df=df_mm, By_edges=By_edges, Bz_edges=Bz_edges)
 
-        print("     Plotting the data...")
-        if plot_type == "contour":
+        print("     Plotting data for " + month_str + "...")
+        plot_data(fig=fig, axes=month_axis, contour_data_is=contour_data_is, contour_data_gs=contour_data_gs,
+                  By_edges=By_edges, Bz_edges=Bz_edges, plot_type=plot_type, cbar=False, vmaxs=vmaxs)
 
-            delta_By = By_edges[1] - By_edges[0]
-            delta_Bz = Bz_edges[1] - Bz_edges[0]
+    return fig
 
-            # Compute bin centers
-            bin_xcenters = By_edges[1:] - delta_By / 2
-            bin_ycenters = Bz_edges[1:] - delta_Bz / 2
 
-            n_levels = 12
-            is_levels = np.linspace(start=0, stop=vmaxs['is'], num=(n_levels + 1))
-            gs_levels = np.linspace(start=0, stop=vmaxs['gs'], num=(n_levels + 1))
-            cmap = 'jet'
+def complete_hist_plot(axes, df, param, edges):
+    """
+    :param axes: dictionary of matplotlib.axes:
+            The set of axes to plot on
+    :param df: pandas.DataFrame:
+            SuperDARN occurrence dataframe
+    :param param: str:
+            The df parameter to use for binning - this should be what is plotted along the x-axis
+    :param edges: numpy.array:
+            The histogram edges
+    """
 
-            # cmap = modified_jet(levels=len(levels) - 1)
+    # We need to bin data along a single direction
+    n_bins = len(edges) - 1
+    delta = edges[1] - edges[0]
 
-            if vmaxs['is'] < 1:
-                is_plot = month_axis['is'].contourf(bin_xcenters, bin_ycenters, contour_data_is.transpose(),
-                                                    cmap=cmap, levels=is_levels, zorder=0, extend='max')
-            else:
-                is_plot = month_axis['is'].contourf(bin_xcenters, bin_ycenters, contour_data_is.transpose(),
-                                                    cmap=cmap, levels=is_levels, zorder=0)
+    hist_data_is = np.empty(shape=n_bins)
+    hist_data_is[:] = math.nan
 
-            if vmaxs['gs'] < 1:
-                gs_plot = month_axis['gs'].contourf(bin_xcenters, bin_ycenters, contour_data_gs.transpose(),
-                                                    cmap=cmap, levels=gs_levels, zorder=0, extend='max')
-            else:
-                gs_plot = month_axis['gs'].contourf(bin_xcenters, bin_ycenters, contour_data_gs.transpose(),
-                                                    cmap=cmap, levels=gs_levels, zorder=0)
+    hist_data_gs = np.empty(shape=n_bins)
+    hist_data_gs[:] = math.nan
 
-        elif plot_type == "pixel":
+    for idx, start in enumerate(edges):
+        if start == edges[-1]:
+            continue  # The last edge is not a slice start
 
-            cmap = 'jet'
-            is_plot = month_axis['is'].pcolormesh(By_edges, Bz_edges, contour_data_is.transpose(),
-                                                  cmap=cmap, vmin=0, vmax=vmaxs['is'], zorder=0)
-            gs_plot = month_axis['gs'].pcolormesh(By_edges, Bz_edges, contour_data_gs.transpose(),
-                                                  cmap=cmap, vmin=0, vmax=vmaxs['gs'], zorder=0)
+        end = start + delta
+        df_rr = df[(df[param] >= start) & (df[param] <= end)]
 
+        try:
+            hist_data_is[idx] = sum(df_rr['good_iono_echo']) / len(df_rr)
+            hist_data_gs[idx] = sum(df_rr['good_grndscat_echo']) / len(df_rr)
+        except ZeroDivisionError:
+            # There are no points in this interval
+            hist_data_is[idx] = 0
+            hist_data_gs[idx] = 0
+        except BaseException as e:
+            print("start: " + str(start))
+            raise e
+
+    bin_centers = edges[1:] - delta / 2
+    axes['is'].hist(bin_centers, weights=hist_data_is, histtype='step', align='mid', linewidth=1)
+    axes['gs'].hist(bin_centers, weights=hist_data_gs, histtype='step', align='mid', linewidth=1)
+
+
+def plot_data(fig, axes, contour_data_is, contour_data_gs, By_edges, Bz_edges, plot_type, vmaxs, cbar=True):
+    """
+    :param axes: dictionary of matplotlib.axes:
+            The set of axes to plot on
+    :param contour_data_is: 2d numpy.array:
+            Ionospheric binned data
+    :param contour_data_gs: 2d numpy.array:
+            Ground scatter binned data
+    :param By_edges: numpy.array:
+            The histogram edges along the x-direction
+    :param Bz_edges: numpy.array:
+            The histogram edges along the y-direction
+    :param plot_type: str:
+            The type of plot, either 'contour' or 'pixel'
+    :param vmaxs:
+
+    :param cbar: bool (optional; default is True):
+            Whether or not to add a colour bar to plot
+    """
+
+    print("     Plotting the data...")
+    if plot_type == "contour":
+
+        delta_By = By_edges[1] - By_edges[0]
+        delta_Bz = Bz_edges[1] - Bz_edges[0]
+
+        # Compute bin centers
+        bin_xcenters = By_edges[1:] - delta_By / 2
+        bin_ycenters = Bz_edges[1:] - delta_Bz / 2
+
+        n_levels = 12
+        is_levels = np.linspace(start=0, stop=vmaxs['is'], num=(n_levels + 1))
+        gs_levels = np.linspace(start=0, stop=vmaxs['gs'], num=(n_levels + 1))
+        cmap = 'jet'
+
+        # cmap = modified_jet(levels=len(levels) - 1)
+
+        if vmaxs['is'] < 1:
+            is_plot = axes['is'].contourf(bin_xcenters, bin_ycenters, contour_data_is.transpose(),
+                                          cmap=cmap, levels=is_levels, zorder=0, extend='max')
         else:
-            raise Exception("plot_type not recognized")
+            is_plot = axes['is'].contourf(bin_xcenters, bin_ycenters, contour_data_is.transpose(),
+                                          cmap=cmap, levels=is_levels, zorder=0)
 
-        # Add in colour bars for each plot
+        if vmaxs['gs'] < 1:
+            gs_plot = axes['gs'].contourf(bin_xcenters, bin_ycenters, contour_data_gs.transpose(),
+                                          cmap=cmap, levels=gs_levels, zorder=0, extend='max')
+        else:
+            gs_plot = axes['gs'].contourf(bin_xcenters, bin_ycenters, contour_data_gs.transpose(),
+                                          cmap=cmap, levels=gs_levels, zorder=0)
+
+    elif plot_type == "pixel":
+
+        cmap = 'jet'
+        is_plot = axes['is'].pcolormesh(By_edges, Bz_edges, contour_data_is.transpose(),
+                                        cmap=cmap, vmin=0, vmax=vmaxs['is'], zorder=0)
+        gs_plot = axes['gs'].pcolormesh(By_edges, Bz_edges, contour_data_gs.transpose(),
+                                        cmap=cmap, vmin=0, vmax=vmaxs['gs'], zorder=0)
+
+    else:
+        raise Exception("plot_type not recognized")
+
+    if cbar is True:
+
+        cbar_label_size = 10
+        cbar_text_format = '%.2f'
+
         # The extend here is needed for the pixel option, it has no effect on contours,
         #  contour extend was set when plotting
         if vmaxs['is'] < 1:
-            is_cbar = fig.colorbar(is_plot, cax=cbar_axes['is'], orientation='horizontal', format=cbar_text_format,
+            is_cbar = fig.colorbar(is_plot, ax=axes['is'], format=cbar_text_format,
                                    extend='max')
         else:
-            is_cbar = fig.colorbar(is_plot, cax=cbar_axes['is'], orientation='horizontal', format=cbar_text_format)
+            is_cbar = fig.colorbar(is_plot, ax=axes['is'], format=cbar_text_format)
         is_cbar.ax.tick_params(labelsize=cbar_label_size)
 
         if vmaxs['gs'] < 1:
-            cbar1 = fig.colorbar(gs_plot, cax=cbar_axes['gs'], orientation='horizontal', format=cbar_text_format,
+            cbar1 = fig.colorbar(gs_plot, ax=axes['gs'], format=cbar_text_format,
                                  extend='max')
         else:
-            cbar1 = fig.colorbar(gs_plot, cax=cbar_axes['gs'], orientation='horizontal', format=cbar_text_format)
+            cbar1 = fig.colorbar(gs_plot, ax=axes['gs'], format=cbar_text_format)
         cbar1.ax.tick_params(labelsize=cbar_label_size)
-
-    return fig
 
 
 def bin_data(df, By_edges, Bz_edges):
@@ -307,14 +399,22 @@ def assign_imf_values(df, imf_df):
 
     By_nT_GSM, Bz_nT_GSM = [], []
     for i in range(len(df)):
-        index = bisect(imf_df['datetime'], df['datetime'].iat[i], hi=len(imf_df['datetime']) - 1)
+        datetime_here = df['datetime'].iat[i]
+
+        # Some matches will be off by up to 30 seconds
+        index = bisect(imf_df['datetime'], datetime_here, hi=len(imf_df['datetime'])) - 1
 
         # print("")
-        # print("Looking for a matching date to " + str(df_mm['datetime'].iat[i]))
-        # print("What we found was " + str(imf_df_mm['datetime'].iat[index]))
+        # print("Looking for a matching date to " + str(datetime_here))
+        # print("What we found was " + str(imf_df['datetime'].iat[index]))
 
-        By_nT_GSM.append(imf_df['By_nT_GSM'].iat[index])
-        Bz_nT_GSM.append(imf_df['Bz_nT_GSM'].iat[index])
+        # There could be areas missing in the IMF data - only assign a value here if the match is acceptably close
+        if math.fabs((datetime_here - imf_df['datetime'].iat[index]).total_seconds()) <= 180:
+            By_nT_GSM.append(imf_df['By_nT_GSM'].iat[index])
+            Bz_nT_GSM.append(imf_df['Bz_nT_GSM'].iat[index])
+        else:
+            By_nT_GSM.append(np.nan)
+            Bz_nT_GSM.append(np.nan)
 
     df['By_nT_GSM'] = By_nT_GSM
     df['Bz_nT_GSM'] = Bz_nT_GSM
@@ -323,6 +423,7 @@ def assign_imf_values(df, imf_df):
 
     # Remove all rows that have nan magnetic field data
     df = df.loc[df['By_nT_GSM'].notna() & df['Bz_nT_GSM'].notna()]
+    df.reset_index(drop=True, inplace=True)
 
     # print("After removing nan IMF values, the dataframe here is of length: " + str(len(df_mm)))
 
@@ -370,53 +471,67 @@ def add_axes(fig):
             Month axes will be keyed by month
     """
 
-    # Leave a blank column in the middle to separate the is and gs subplots
-    gs = fig.add_gridspec(ncols=9, nrows=7)
+    gs = fig.add_gridspec(ncols=8, nrows=10)
 
-    month_axes, cbar_axes = dict(), dict()
+    # Will will have axes for monthly reporting, and axes for yearly reporting
+    month_axes, year_axes = dict(), dict()
 
+    # There will be one set of contour plots for each month
     month_axes["January"] = {"is": fig.add_subplot(gs[0, 0:2]),
-                             "gs": fig.add_subplot(gs[0, 5:7])}
+                             "gs": fig.add_subplot(gs[0, 4:6])}
     month_axes["February"] = {"is": fig.add_subplot(gs[0, 2:4]),
-                              "gs": fig.add_subplot(gs[0, 7:9])}
+                              "gs": fig.add_subplot(gs[0, 6:8])}
 
     month_axes["March"] = {"is": fig.add_subplot(gs[1, 0:2]),
-                           "gs": fig.add_subplot(gs[1, 5:7])}
+                           "gs": fig.add_subplot(gs[1, 4:6])}
     month_axes["April"] = {"is": fig.add_subplot(gs[1, 2:4]),
-                           "gs": fig.add_subplot(gs[1, 7:9])}
+                           "gs": fig.add_subplot(gs[1, 6:8])}
 
     month_axes["May"] = {"is": fig.add_subplot(gs[2, 0:2]),
-                         "gs": fig.add_subplot(gs[2, 5:7])}
+                         "gs": fig.add_subplot(gs[2, 4:6])}
     month_axes["June"] = {"is": fig.add_subplot(gs[2, 2:4]),
-                          "gs": fig.add_subplot(gs[2, 7:9])}
+                          "gs": fig.add_subplot(gs[2, 6:8])}
 
     month_axes["July"] = {"is": fig.add_subplot(gs[3, 0:2]),
-                          "gs": fig.add_subplot(gs[3, 5:7])}
+                          "gs": fig.add_subplot(gs[3, 4:6])}
     month_axes["August"] = {"is": fig.add_subplot(gs[3, 2:4]),
-                            "gs": fig.add_subplot(gs[3, 7:9])}
+                            "gs": fig.add_subplot(gs[3, 6:8])}
 
     month_axes["September"] = {"is": fig.add_subplot(gs[4, 0:2]),
-                               "gs": fig.add_subplot(gs[4, 5:7])}
+                               "gs": fig.add_subplot(gs[4, 4:6])}
     month_axes["October"] = {"is": fig.add_subplot(gs[4, 2:4]),
-                             "gs": fig.add_subplot(gs[4, 7:9])}
+                             "gs": fig.add_subplot(gs[4, 6:8])}
 
     month_axes["November"] = {"is": fig.add_subplot(gs[5, 0:2]),
-                              "gs": fig.add_subplot(gs[5, 5:7])}
+                              "gs": fig.add_subplot(gs[5, 4:6])}
     month_axes["December"] = {"is": fig.add_subplot(gs[5, 2:4]),
-                              "gs": fig.add_subplot(gs[5, 7:9])}
+                              "gs": fig.add_subplot(gs[5, 6:8])}
 
-    # # Add two colour bar axes, one for is and one for gs
-    cbar_axes["is"] = fig.add_subplot(gs[6, 0:3])
-    cbar_axes["gs"] = fig.add_subplot(gs[6, 5:8])
+    # There will be one set of big contour plots for the whole year
+    year_axes["whole_year"] = {"is": fig.add_subplot(gs[6:9, 0:4]),
+                               "gs": fig.add_subplot(gs[6:9, 4:8])}
 
-    return month_axes, cbar_axes
+    # There will be a couple of histogram plots for the whole year
+    year_axes["By_hist"] = {"is": fig.add_subplot(gs[9, 0:2]),
+                            "gs": fig.add_subplot(gs[9, 4:6])}
+    year_axes["Bz_hist"] = {"is": fig.add_subplot(gs[9, 2:4]),
+                            "gs": fig.add_subplot(gs[9, 6:8])}
+
+    return month_axes, year_axes
 
 
-def apply_subplot_formatting(axes, x_lim, y_lim):
+def apply_subplot_formatting(month_axes, year_axes, x_lim, y_lim, year):
     """
-    :param axes: matplotlib.axes: All of the smaller monthly axis requiring formatting
-    :param x_lim: (int, int): x-axis limits
-    :param y_lim: (int, int): y-axis limits
+    :param month_axes: dictionary of matplotlib.axes:
+            All of the smaller monthly axis requiring formatting
+    :param year_axes: dictionary of matplotlib.axes:
+            All of the year axes that require formatting
+    :param x_lim: (int, int):
+            x-axis limits
+    :param y_lim: (int, int):
+            y-axis limits
+    :param year: int:
+            The year to consider.
     """
 
     grid_colour = "black"
@@ -424,9 +539,9 @@ def apply_subplot_formatting(axes, x_lim, y_lim):
     label_font_size = 10
     title_font_size = 10
 
-    for month, month_dict_item in axes.items():
+    for month_dict_key, month_dict_item in month_axes.items():
         for subplot_type, ax in month_dict_item.items():
-            ax.set_title(month[:3] + "; " + subplot_type.upper(), fontsize=title_font_size)
+            ax.set_title(month_dict_key[:3] + "; " + subplot_type.upper(), fontsize=title_font_size)
             ax.set_xlabel("By [nT] (GSM)", fontsize=label_font_size)
             ax.set_ylabel("Bz [nT] (GSM)", fontsize=label_font_size)
 
@@ -443,6 +558,43 @@ def apply_subplot_formatting(axes, x_lim, y_lim):
 
             ax.grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5, color=grid_colour)
             ax.grid(b=True, which='minor', axis='both', linestyle='--', linewidth=0.2, color=grid_colour)
+
+    for year_dict_key, year_dict_item in year_axes.items():
+        if year_dict_key == "whole_year":
+            # Then we are formatting the larger contour plots that represent the whole year
+            for subplot_type, ax in year_dict_item.items():
+                ax.set_title("All of " + str(year) + "; " + subplot_type.upper(), fontsize=title_font_size)
+                ax.set_xlabel("By [nT] (GSM)", fontsize=label_font_size)
+                ax.set_ylabel("Bz [nT] (GSM)", fontsize=label_font_size)
+
+                ax.set_xlim(x_lim)
+                ax.xaxis.set_major_locator(MultipleLocator(5))
+                ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+                ax.set_ylim(y_lim)
+                ax.yaxis.set_major_locator(MultipleLocator(5))
+                ax.yaxis.set_minor_locator(MultipleLocator(1))
+
+                ax.tick_params(axis='both', which='major', direction='in', color=grid_colour)
+                ax.tick_params(axis='both', which='minor', direction='in', color=grid_colour)
+
+                ax.grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5, color=grid_colour)
+                ax.grid(b=True, which='minor', axis='both', linestyle='--', linewidth=0.2, color=grid_colour)
+
+        else:
+            # We are formatting the histogram plots
+            for subplot_type, ax in year_dict_item.items():
+                    ax.set_title("All of " + str(year) + "; " + subplot_type.upper(), fontsize=title_font_size)
+                    ax.set_ylabel("Occurrence", fontsize=label_font_size)
+
+                    ax.set_xlim(x_lim)
+                    ax.xaxis.set_major_locator(MultipleLocator(5))
+                    ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+                    if year_dict_key == "By_hist":
+                        ax.set_xlabel("By [nT] (GSM)", fontsize=label_font_size)
+                    elif year_dict_key == "Bz_hist":
+                        ax.set_xlabel("Bz [nT] (GSM)", fontsize=label_font_size)
 
 
 if __name__ == '__main__':
@@ -473,7 +625,6 @@ if __name__ == '__main__':
         out_dir = loc_root + "/out"
 
         for year in years:
-
             fig = occ_imf_variation(station=station, year=year, day_range=(1, 15), hour_range=None,
                                     gate_range=(10, 30), beam_range=(6, 8), freq_range=freq_range,
                                     local_testing=local_testing, plot_type=plot_type, even_odd_days=even_odd_days)
