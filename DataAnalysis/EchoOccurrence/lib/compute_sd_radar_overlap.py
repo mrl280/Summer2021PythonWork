@@ -22,6 +22,7 @@ def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2, g
     For example, if you wanted to know which MCM radar cell corresponded to the cell defined by beam 10 gate 40 at DCE:
         mcm_beam, mcm_gate = compute_df_radar_overlap(station1=dce, station1_gate=40, station1_beam=10, station2=mcm)
 
+    Results are only valid when both radars are operating in the standard 45 km mode.
 
     :param station1: str:
             The station whose gate and beam we know, as 3 character string (e.g. "rkn").
@@ -122,10 +123,16 @@ if __name__ == '__main__':
     # station2 = "dcn"
     # gate_min = 20
 
-    station1 = "sas"
-    station1_gate = 68
-    station1_beam = 0
-    station2 = "cly"
+    # station1 = "sas"
+    # station1_gate = 68
+    # station1_beam = 0
+    # station2 = "cly"
+    # gate_min = 20
+
+    station1 = "dcn"
+    station1_gate = 40
+    station1_beam = 9
+    station2 = "mcm"
     gate_min = 20
 
     station2_beam, station2_gate = compute_df_radar_overlap(station1=station1, station1_gate=station1_gate,
