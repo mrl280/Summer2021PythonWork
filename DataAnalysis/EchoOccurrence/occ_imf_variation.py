@@ -88,8 +88,8 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
     vmaxs = {"is": 0.4,  # The top of the colour bar
              "gs": 0.1}
     title_fontsize = 18
-    x_lim = (-10, 10)
-    y_lim = (-10, 10)
+    x_lim = (-12, 12)
+    y_lim = (-12, 12)
 
     year = check_year(year=year)
     freq_range = check_freq_range(freq_range=freq_range)
@@ -140,11 +140,11 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
     df['month'] = month
 
     # Compute By edges (x-axis edges)
-    n_bins_By = 20
+    n_bins_By = 24
     By_edges = np.linspace(x_lim[0], x_lim[1], num=(n_bins_By + 1))
 
     # Compute Bz edges (y-axis edges)
-    n_bins_Bz = 20
+    n_bins_Bz = 24
     Bz_edges = np.linspace(y_lim[0], y_lim[1], num=(n_bins_Bz + 1))
 
     # We have to complete IMF assignment for the whole dataframe, even if it takes longer it is simplest to do the whole
