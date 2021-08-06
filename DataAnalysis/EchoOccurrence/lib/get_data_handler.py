@@ -91,7 +91,7 @@ def get_data_handler(station, year_range=None, month_range=None, day_range=None,
                           " Nov 12, 2011 at RKN. Gate and Beam filtering is still applied.", category=Warning)
 
             # df = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=23)
-            df = get_local_dummy_data(station=station, year=2011, month=11, day=12, start_hour_UT=0, end_hour_UT=24,
+            df = get_local_dummy_data(station="rkn", year=2011, month=11, day=12, start_hour_UT=0, end_hour_UT=24,
                                       occ_data=occ_data)
             # df_2 = get_local_dummy_data(station=station, year=2011, month=9, day=29, start_hour_UT=0, end_hour_UT=24,
             #                             occ_data=occ_data)
