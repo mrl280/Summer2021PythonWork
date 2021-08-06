@@ -11,7 +11,7 @@ import datetime as datetime
 from matplotlib import pyplot as plt
 from pydarn import radar_fov, SuperDARNRadars
 
-from DataAnalysis.EchoOccurrence.lib.add_mlt_to_df import centroid
+from add_mlt_to_df import centroid
 
 
 def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2, gate_min=30):
@@ -100,7 +100,7 @@ def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2, g
     if station2_gate < gate_min:
         return None, None
 
-    if station2_cell_centroid_distances[station2_gate, station2_beam] > 1:
+    if station2_cell_centroid_distances[station2_gate, station2_beam] > 1.5:
         # TODO: Optimize the acceptable difference - using degrees for difference might not be acceptable because 1 deg
         #  cells are smaller near the poles
         # We found something, but what we found is unacceptably far away
