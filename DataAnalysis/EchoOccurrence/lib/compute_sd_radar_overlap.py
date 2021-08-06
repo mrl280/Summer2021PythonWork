@@ -11,7 +11,12 @@ import datetime as datetime
 from matplotlib import pyplot as plt
 from pydarn import radar_fov, SuperDARNRadars
 
-from add_mlt_to_df import centroid
+try:
+    # Assume we are importing from one level up
+    from lib.add_mlt_to_df import centroid
+except ImportError:
+    # Needed for testing
+    from add_mlt_to_df import centroid
 
 
 def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2, gate_min=30):

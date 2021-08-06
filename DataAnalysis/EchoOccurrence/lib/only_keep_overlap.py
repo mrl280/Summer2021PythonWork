@@ -10,9 +10,16 @@ import cartopy.feature as cfeature
 from matplotlib import pyplot as plt
 from pydarn import SuperDARNRadars, radar_fov
 
-from compute_sd_radar_overlap import compute_df_radar_overlap
-from get_data_handler import get_data_handler
-from only_keep_45km_res_data import only_keep_45km_res_data
+try:
+    # Assume we are importing from one level up
+    from lib.compute_sd_radar_overlap import compute_df_radar_overlap
+    from lib.get_data_handler import get_data_handler
+    from lib.only_keep_45km_res_data import only_keep_45km_res_data
+except ImportError:
+    # Needed for testing
+    from compute_sd_radar_overlap import compute_df_radar_overlap
+    from get_data_handler import get_data_handler
+    from only_keep_45km_res_data import only_keep_45km_res_data
 
 
 def only_keep_overlap(station, df, other_station, gate_min=30):
@@ -73,6 +80,8 @@ if __name__ == "__main__":
     Testing
     
     Produces a quick fan plot to visually verify only_keep_overlap() is working as expected
+    
+    Note: colour change in fan before and after restriction is okay because they will be on different colour scales
     """
 
     # station = "dcn"
