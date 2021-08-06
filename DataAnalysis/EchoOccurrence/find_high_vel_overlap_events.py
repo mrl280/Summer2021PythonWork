@@ -22,7 +22,7 @@ def find_high_vel_overlap_events(station1, station2, year, month_range=None, day
 
     Given two SuperDARN radars, we want to find events where both radars are reporting high velocity echoes in the
     overlapping cells.  These events will then be further analysed to determine if the two radars are measuring similar
-    heights/velocities, or if each radar is in it's own world.
+    heights/velocities, or if each radar is in its own world.
 
     Data is grouped into chunks of length event_duration_h, and each chunk is assessed individually
 
