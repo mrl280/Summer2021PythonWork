@@ -86,10 +86,12 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
     """
 
     vmaxs = {"is": 0.4,  # The top of the colour bar
-             "gs": 0.1}
+             "gs": 0.05}
     title_fontsize = 18
-    x_lim = (-15, 15)
-    y_lim = (-15, 15)
+    x_lim = (-20, 20)
+    y_lim = (-20, 20)
+    n_bins_By = 20
+    n_bins_Bz = 20
 
     year = check_year(year=year)
     freq_range = check_freq_range(freq_range=freq_range)
@@ -125,7 +127,7 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
         df.reset_index(drop=True, inplace=True)
 
     print("     Preparing the figure...")
-    fig = plt.figure(figsize=[9, 21], constrained_layout=True, dpi=300)
+    fig = plt.figure(figsize=[9, 20], constrained_layout=True, dpi=300)
     month_axes, year_axes = add_axes(fig=fig)
     apply_subplot_formatting(month_axes=month_axes, year_axes=year_axes, x_lim=x_lim, y_lim=y_lim, year=year)
 
@@ -140,11 +142,9 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
     df['month'] = month
 
     # Compute By edges (x-axis edges)
-    n_bins_By = 15
     By_edges = np.linspace(x_lim[0], x_lim[1], num=(n_bins_By + 1))
 
     # Compute Bz edges (y-axis edges)
-    n_bins_Bz = 15
     Bz_edges = np.linspace(y_lim[0], y_lim[1], num=(n_bins_Bz + 1))
 
     # We have to complete IMF assignment for the whole dataframe, even if it takes longer it is simplest to do the whole
@@ -308,23 +308,22 @@ def plot_data(fig, axes, contour_data_is, contour_data_gs, By_edges, Bz_edges, p
 
     if cbar is True:
 
-        cbar_label_size = 10
-        cbar_text_format = '%.2f'
+        cbar_label_size = 8
 
         # The extend here is needed for the pixel option, it has no effect on contours,
         #  contour extend was set when plotting
         if vmaxs['is'] < 1:
-            is_cbar = fig.colorbar(is_plot, ax=axes['is'], format=cbar_text_format,
+            is_cbar = fig.colorbar(is_plot, ax=axes['is'], format='%.2f',
                                    extend='max')
         else:
-            is_cbar = fig.colorbar(is_plot, ax=axes['is'], format=cbar_text_format)
+            is_cbar = fig.colorbar(is_plot, ax=axes['is'], format='%.2f')
         is_cbar.ax.tick_params(labelsize=cbar_label_size)
 
         if vmaxs['gs'] < 1:
-            cbar1 = fig.colorbar(gs_plot, ax=axes['gs'], format=cbar_text_format,
+            cbar1 = fig.colorbar(gs_plot, ax=axes['gs'], format='%.3f',
                                  extend='max')
         else:
-            cbar1 = fig.colorbar(gs_plot, ax=axes['gs'], format=cbar_text_format)
+            cbar1 = fig.colorbar(gs_plot, ax=axes['gs'], format='%.3f')
         cbar1.ax.tick_params(labelsize=cbar_label_size)
 
 
@@ -567,7 +566,7 @@ def apply_subplot_formatting(month_axes, year_axes, x_lim, y_lim, year):
             ax.tick_params(axis='both', which='minor', direction='in', color=grid_colour)
 
             ax.grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5, color=grid_colour)
-            ax.grid(b=True, which='minor', axis='both', linestyle='--', linewidth=0.2, color=grid_colour)
+            # ax.grid(b=True, which='minor', axis='both', linestyle='--', linewidth=0.2, color=grid_colour)
 
     for year_dict_key, year_dict_item in year_axes.items():
         if year_dict_key == "whole_year":
