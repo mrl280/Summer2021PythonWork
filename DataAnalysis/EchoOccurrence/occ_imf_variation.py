@@ -85,7 +85,7 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
             desired.
     """
 
-    vmaxs = {"is": 0.4,  # The top of the colour bar
+    vmaxs = {"is": 0.5,  # The top of the colour bar
              "gs": 0.05}
     title_fontsize = 18
     x_lim = (-20, 20)
@@ -127,7 +127,7 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
         df.reset_index(drop=True, inplace=True)
 
     print("     Preparing the figure...")
-    fig = plt.figure(figsize=[9, 20], constrained_layout=True, dpi=300)
+    fig = plt.figure(figsize=[11, 26], constrained_layout=True, dpi=300)
     month_axes, year_axes = add_axes(fig=fig)
     apply_subplot_formatting(month_axes=month_axes, year_axes=year_axes, x_lim=x_lim, y_lim=y_lim, year=year)
 
@@ -614,7 +614,7 @@ def apply_subplot_formatting(month_axes, year_axes, x_lim, y_lim, year):
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station = "rkn"
