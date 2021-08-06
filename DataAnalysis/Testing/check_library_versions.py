@@ -1,6 +1,6 @@
 import matplotlib
 import pandas
-import pickle
+import dill as pickle
 
 print('matplotlib: {}'.format(matplotlib.__version__))
 

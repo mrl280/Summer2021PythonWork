@@ -5,7 +5,7 @@ import glob
 import h5py
 import bz2
 
-import pickle
+import dill as pickle
 import pandas as pd
 import numpy as np
 import deprecation

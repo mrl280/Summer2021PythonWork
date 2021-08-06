@@ -4,7 +4,7 @@ import glob
 import numpy as np
 import pandas as pd
 import datetime as datetime
-import pickle
+import dill as pickle
 
 try:
     from .build_datetime_epoch import build_datetime_epoch

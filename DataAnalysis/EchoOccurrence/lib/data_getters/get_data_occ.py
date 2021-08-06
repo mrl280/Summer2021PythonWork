@@ -6,7 +6,7 @@ import pathlib
 import time
 import warnings
 import pydarn
-import pickle
+import dill as pickle
 
 import datetime as datetime
 import pandas as pd

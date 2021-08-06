@@ -1,7 +1,7 @@
 import bz2
 import pathlib
 
-import pickle
+import dill as pickle
 import pandas as pd
 
 

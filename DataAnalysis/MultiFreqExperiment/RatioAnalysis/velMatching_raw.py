@@ -5,7 +5,7 @@ import time
 import pathlib
 import bz2
 
-import pickle
+import dill as pickle
 import numpy as np
 import pandas as pd
 

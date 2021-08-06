@@ -8,7 +8,7 @@ import os
 import pandas as pd
 import numpy as np
 import datetime as datetime
-import pickle
+import dill as pickle
 
 
 def PickleFITACF_occ(station, date, beam_range):

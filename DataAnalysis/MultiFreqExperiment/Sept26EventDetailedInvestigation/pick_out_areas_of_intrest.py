@@ -3,7 +3,7 @@ import bz2
 
 import pandas as pd
 import pydarn
-import pickle
+import dill as pickle
 
 from DataAnalysis.EchoOccurrence.lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.basic_SD_df_filter import basic_SD_df_filter

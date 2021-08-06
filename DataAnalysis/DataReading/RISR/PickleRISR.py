@@ -4,7 +4,7 @@ import glob
 
 import pandas as pd
 import numpy as np
-import pickle
+import dill as pickle
 
 from DataAnalysis.DataReading.RISR_HDF5.wd_beam_num import wd_beam_num
 from DataAnalysis.DataReading.SD.PickleFITACF_occ import build_datetime_epoch

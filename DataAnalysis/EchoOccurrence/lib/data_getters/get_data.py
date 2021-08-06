@@ -7,7 +7,7 @@ import warnings
 import pydarn
 import time
 import calendar
-import pickle
+import dill as pickle
 
 import pandas as pd
 import datetime as datetime
