@@ -88,8 +88,8 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
     vmaxs = {"is": 0.4,  # The top of the colour bar
              "gs": 0.1}
     title_fontsize = 18
-    x_lim = (-12, 12)
-    y_lim = (-12, 12)
+    x_lim = (-15, 15)
+    y_lim = (-15, 15)
 
     year = check_year(year=year)
     freq_range = check_freq_range(freq_range=freq_range)
@@ -125,7 +125,7 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
         df.reset_index(drop=True, inplace=True)
 
     print("     Preparing the figure...")
-    fig = plt.figure(figsize=[10, 19], constrained_layout=True, dpi=300)
+    fig = plt.figure(figsize=[9, 21], constrained_layout=True, dpi=300)
     month_axes, year_axes = add_axes(fig=fig)
     apply_subplot_formatting(month_axes=month_axes, year_axes=year_axes, x_lim=x_lim, y_lim=y_lim, year=year)
 
@@ -140,11 +140,11 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
     df['month'] = month
 
     # Compute By edges (x-axis edges)
-    n_bins_By = 24
+    n_bins_By = 15
     By_edges = np.linspace(x_lim[0], x_lim[1], num=(n_bins_By + 1))
 
     # Compute Bz edges (y-axis edges)
-    n_bins_Bz = 24
+    n_bins_Bz = 15
     Bz_edges = np.linspace(y_lim[0], y_lim[1], num=(n_bins_Bz + 1))
 
     # We have to complete IMF assignment for the whole dataframe, even if it takes longer it is simplest to do the whole
@@ -165,6 +165,13 @@ def occ_imf_variation(station, year=None, day_range=None, hour_range=None,
     """ Complete the histogram plots"""
     complete_hist_plot(axes=year_axes['By_hist'], df=df, param='By_nT_GSM', edges=By_edges)
     complete_hist_plot(axes=year_axes['Bz_hist'], df=df, param='Bz_nT_GSM', edges=By_edges)
+
+    # Compute magnetic field magnitude and plot it on the bigger histogram plot
+    df['B_magnitude'] = np.sqrt(np.square(df['By_nT_GSM']) + np.square(df['Bz_nT_GSM']))
+
+    # We are going to need a new set of edges here because we won't have any negative magnitudes
+    magnitude_edges = np.linspace(0, x_lim[1], num=int(n_bins_By + 1))
+    complete_hist_plot(axes=year_axes['big_hist'], df=df, param='B_magnitude', edges=magnitude_edges)
 
 
     """ Complete all of the small monthly axes """
@@ -471,7 +478,7 @@ def add_axes(fig):
             Month axes will be keyed by month
     """
 
-    gs = fig.add_gridspec(ncols=8, nrows=10)
+    gs = fig.add_gridspec(ncols=8, nrows=12)
 
     # Will will have axes for monthly reporting, and axes for yearly reporting
     month_axes, year_axes = dict(), dict()
@@ -516,6 +523,9 @@ def add_axes(fig):
                             "gs": fig.add_subplot(gs[9, 4:6])}
     year_axes["Bz_hist"] = {"is": fig.add_subplot(gs[9, 2:4]),
                             "gs": fig.add_subplot(gs[9, 6:8])}
+
+    year_axes["big_hist"] = {"is": fig.add_subplot(gs[10:12, 0:4]),
+                             "gs": fig.add_subplot(gs[10:12, 4:8])}
 
     return month_axes, year_axes
 
@@ -584,17 +594,22 @@ def apply_subplot_formatting(month_axes, year_axes, x_lim, y_lim, year):
         else:
             # We are formatting the histogram plots
             for subplot_type, ax in year_dict_item.items():
-                    ax.set_title("All of " + str(year) + "; " + subplot_type.upper(), fontsize=title_font_size)
-                    ax.set_ylabel("Occurrence", fontsize=label_font_size)
+                ax.set_title("All of " + str(year) + "; " + subplot_type.upper(), fontsize=title_font_size)
+                ax.set_ylabel("Occurrence", fontsize=label_font_size)
 
-                    ax.set_xlim(x_lim)
-                    ax.xaxis.set_major_locator(MultipleLocator(5))
-                    ax.xaxis.set_minor_locator(MultipleLocator(1))
+                ax.set_xlim(x_lim)
+                ax.xaxis.set_major_locator(MultipleLocator(5))
+                ax.xaxis.set_minor_locator(MultipleLocator(1))
 
-                    if year_dict_key == "By_hist":
-                        ax.set_xlabel("By [nT] (GSM)", fontsize=label_font_size)
-                    elif year_dict_key == "Bz_hist":
-                        ax.set_xlabel("Bz [nT] (GSM)", fontsize=label_font_size)
+                if year_dict_key == "By_hist":
+                    ax.set_xlabel("By [nT] (GSM)", fontsize=label_font_size)
+
+                elif year_dict_key == "Bz_hist":
+                    ax.set_xlabel("Bz [nT] (GSM)", fontsize=label_font_size)
+
+                elif year_dict_key == "big_hist":
+                    ax.set_xlabel("sqrt(By^2 + Bz^2) [nT] (GSM)", fontsize=label_font_size)
+                    ax.set_xlim([0, x_lim[1]])  # We won't have any negative values here
 
 
 if __name__ == '__main__':
