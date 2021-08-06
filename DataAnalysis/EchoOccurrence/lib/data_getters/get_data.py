@@ -7,7 +7,7 @@ import warnings
 import pydarn
 import time
 import calendar
-import _pickle
+import pickle
 
 import pandas as pd
 import datetime as datetime
@@ -263,4 +263,4 @@ if __name__ == '__main__':
 
         print("     Pickling as " + out_file + "...")
         with bz2.BZ2File(out_file, "w") as file:
-            _pickle.dump(df, file, protocol=_pickle.HIGHEST_PROTOCOL)
+            pickle.dump(df, file, protocol=pickle.HIGHEST_PROTOCOL)

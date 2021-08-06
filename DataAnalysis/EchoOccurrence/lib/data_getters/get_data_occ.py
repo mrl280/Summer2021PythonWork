@@ -6,7 +6,7 @@ import pathlib
 import time
 import warnings
 import pydarn
-import _pickle
+import pickle
 
 import datetime as datetime
 import pandas as pd
@@ -320,4 +320,4 @@ if __name__ == '__main__':
 
         print("     Pickling as " + out_file + "...")
         with bz2.BZ2File(out_file, "w") as file:
-            _pickle.dump(df, file, protocol=4)
+            pickle.dump(df, file, protocol=4)

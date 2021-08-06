@@ -4,7 +4,7 @@ import glob
 
 import pandas as pd
 import numpy as np
-import _pickle as cPickle
+import pickle
 
 from DataAnalysis.DataReading.RISR_HDF5.wd_beam_num import wd_beam_num
 from DataAnalysis.DataReading.SD.PickleFITACF_occ import build_datetime_epoch
@@ -127,7 +127,7 @@ def PickleRISR(station, date):
         out_file = in_file[:len(in_file) - 8] + "." + str(resolution) + "min.pbz2"
         print("     Pickling as " + out_file + "...")
         with bz2.BZ2File(out_file, "w") as file:
-            cPickle.dump(adjusted_df, file)
+            pickle.dump(adjusted_df, file)
 
         # Remove the temporary temp file
         for file in glob.iglob(in_dir + "/temp*.txt"):

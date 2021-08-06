@@ -5,7 +5,7 @@ import time
 import pathlib
 import bz2
 
-import _pickle as cPickle
+import pickle
 import numpy as np
 import pandas as pd
 
@@ -332,4 +332,4 @@ if __name__ == '__main__':
     print("Pickling as " + out_file + "...")
 
     with bz2.BZ2File(out_file, "w") as file:
-        cPickle.dump(matched_data, file)
+        pickle.dump(matched_data, file)

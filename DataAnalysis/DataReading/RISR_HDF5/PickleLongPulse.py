@@ -5,7 +5,7 @@ import glob
 import h5py
 import bz2
 
-import _pickle as cPickle
+import pickle
 import pandas as pd
 import numpy as np
 import deprecation
@@ -204,7 +204,7 @@ def PickleLongPulse(station, date):
             print("     Pickling as " + out_file + "...")
 
             with bz2.BZ2File(out_file, "w") as file:
-                cPickle.dump(df, file)
+                pickle.dump(df, file)
 
         file.close()
 

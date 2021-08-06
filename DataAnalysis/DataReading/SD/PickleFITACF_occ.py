@@ -8,7 +8,7 @@ import os
 import pandas as pd
 import numpy as np
 import datetime as datetime
-import _pickle as cPickle
+import pickle
 
 
 def PickleFITACF_occ(station, date, beam_range):
@@ -127,7 +127,7 @@ def PickleFITACF_occ(station, date, beam_range):
     out_file = in_dir + "/" + station + date + "_occ.pbz2"
     print("     Pickling as " + out_file + "...")
     with bz2.BZ2File(out_file, "w") as file:
-        cPickle.dump(df, file)
+        pickle.dump(df, file)
 
 
 def build_datetime_epoch(year, month, day, hour, minute, second):

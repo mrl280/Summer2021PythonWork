@@ -2,7 +2,6 @@ import bz2
 import time
 
 import numpy as np
-import _pickle as cPickle
 
 import pandas as pd
 

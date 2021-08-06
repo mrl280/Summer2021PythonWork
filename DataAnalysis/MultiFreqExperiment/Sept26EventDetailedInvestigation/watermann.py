@@ -6,7 +6,6 @@ import bz2
 
 import numpy as np
 import pandas as pd
-import _pickle as cPickle
 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, NullFormatter

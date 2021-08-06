@@ -4,7 +4,7 @@ import glob
 import numpy as np
 import pandas as pd
 import datetime as datetime
-import _pickle
+import pickle
 
 try:
     from .build_datetime_epoch import build_datetime_epoch
@@ -118,7 +118,7 @@ def pickle_imf(start_year=2010, end_year=2021):
     out_file = in_dir + "/omni_imf_" + str(start_year) + "-" + str(end_year) + ".pbz2"
     print("     Pickling as " + out_file + "...")
     with bz2.BZ2File(out_file, "w") as file:
-        _pickle.dump(df, file, protocol=4)
+        pickle.dump(df, file, protocol=4)
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 import bz2
 import pathlib
 
-import _pickle as cPickle
+import pickle
 import pandas as pd
 
 
@@ -109,5 +109,5 @@ if __name__ == '__main__':
     print(df)
 
     with bz2.BZ2File(out_file, "w") as file:
-        cPickle.dump(df, file)
+        pickle.dump(df, file)
 

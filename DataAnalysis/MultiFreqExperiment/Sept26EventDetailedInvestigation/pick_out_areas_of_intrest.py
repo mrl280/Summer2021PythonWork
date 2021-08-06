@@ -3,7 +3,7 @@ import bz2
 
 import pandas as pd
 import pydarn
-import _pickle as cPickle
+import pickle
 
 from DataAnalysis.EchoOccurrence.lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from lib.basic_SD_df_filter import basic_SD_df_filter
@@ -654,4 +654,4 @@ if __name__ == "__main__":
 
         print("Saving dataframe as " + out_file)
         with bz2.BZ2File(out_file, "w") as file:
-            cPickle.dump(limited_df, file)
+            pickle.dump(limited_df, file)

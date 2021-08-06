@@ -3,7 +3,7 @@ import os
 import pathlib
 import bz2
 
-import _pickle as cPickle
+import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.cm as cm

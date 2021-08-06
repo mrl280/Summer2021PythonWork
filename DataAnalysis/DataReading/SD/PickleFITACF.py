@@ -6,7 +6,7 @@ import os
 
 import pandas as pd
 import numpy as np
-import _pickle as cPickle
+import pickle
 
 from DataAnalysis.DataReading.SD.PickleFITACF_occ import build_datetime_epoch
 
@@ -186,7 +186,7 @@ def PickleFITACF(station, date):
     out_file = in_dir + "/" + station + date + ".pbz2"
     print("     Pickling as " + out_file + "...")
     with bz2.BZ2File(out_file, "w") as file:
-        cPickle.dump(df, file)
+        pickle.dump(df, file)
 
 
 if __name__ == '__main__':
