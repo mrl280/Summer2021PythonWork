@@ -1,4 +1,4 @@
-from lib.get_data_handler import get_data_handler
+from get_data_handler import get_data_handler
 
 
 if __name__ == '__main__':
