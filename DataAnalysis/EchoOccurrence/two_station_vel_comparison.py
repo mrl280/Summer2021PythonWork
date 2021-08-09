@@ -10,6 +10,7 @@ from pydarn import radar_fov, SuperDARNRadars
 
 import datetime as datetime
 import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 import matplotlib.path as mpath
 import matplotlib.ticker as mticker
 import numpy as np
@@ -35,6 +36,8 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
 
     The plan was to use find_high_vel_overlap_events() to find event of interest and then to feed those events into
      this program.
+
+    Contour comparison plots will have station1 along the x-axis.
 
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
@@ -69,7 +72,8 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
     seconds_in_an_hour = 3600
     t_diffs = {station1: 0.000,
                station2: 0.000}
-
+    param_ranges = {'vel': (-600, 600),
+                    'height': (100, 300)}
 
     if end_epoch < start_epoch:
         raise Exception("two_station_vel_comparison(): start epoch must be before end epoch.")
@@ -79,6 +83,18 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
     if ((end_epoch - start_epoch) - four_hours_worth_of_seconds) > 5:
         warnings.warn("two_station_vel_comparison() was designed to run on four-hour events, "
                       "events of different lengths might not work")
+
+    # Grab the radars info from the hardware files
+    all_radars_info = SuperDARNRadars()
+    station1_stid = pydarn.read_hdw_file(station1).stid
+    station2_stid = pydarn.read_hdw_file(station2).stid
+    first_radars_info = all_radars_info.radars[station1_stid]
+    second_radars_info = all_radars_info.radars[station2_stid]
+
+    reference_hemisphere = first_radars_info.hemisphere
+    if second_radars_info.hemisphere != reference_hemisphere:
+        raise Exception("two_station_vel_comparison(): " + station1 + " and " + station2
+                        + " are not in the same hemisphere.  We can't compare them because they have no overlap.")
 
     starting_datetime = datetime.datetime.fromtimestamp(start_epoch)
     ending_datetime = datetime.datetime.fromtimestamp(end_epoch)
@@ -117,9 +133,11 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
 
     print("     Preparing the figure...")
     fig = plt.figure(figsize=[20, 8], constrained_layout=True, dpi=300)
-    axes = add_axes(fig=fig)
+    axes = add_axes(fig=fig, reference_hemisphere=reference_hemisphere)
 
-    apply_subplot_formatting(axes=axes, station1=station1, station2=station2, t_diffs=t_diffs, gate_range=gate_range)
+    apply_subplot_formatting(axes=axes, station1=station1, station2=station2,
+                             reference_hemisphere=reference_hemisphere, t_diffs=t_diffs,
+                             gate_range=gate_range, vel_range=param_ranges['vel'], height_range=param_ranges['height'])
 
     # title_figure(fig=fig, station=station, year=year, time_units=time_units, beam_range=beam_range,
     #              gate_range=gate_range, freq_range=freq_range, hour_range=hour_range, day_range=day_range,
@@ -128,14 +146,29 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
     return fig
 
 
-def apply_subplot_formatting(axes, station1, station2, t_diffs=None, gate_range=(0, 74)):
+def apply_subplot_formatting(axes, station1, station2, reference_hemisphere, t_diffs=None,
+                             gate_range=(0, 74), vel_range=(-600, 600), height_range=(0, 300)):
     """
 
-    :param axes:
-    :param station1:
-    :param station2:
-    :param t_diffs:
-    :param gate_range:
+
+    :param axes: dictionary of matplotlib.axes:
+            A dictionary containing all the axes items.
+    :param station1: str:
+            The first radar station to consider, as 3 character string (e.g. "rkn").
+            For a complete listing of available stations, please see https://superdarn.ca/radar-info
+    :param station2: str:
+            The second radar station to consider, again as a 3 character string.
+    :param reference_hemisphere: pydarn hemisphere object:
+            The radars' hemisphere
+
+    :param t_diffs: Dictionary of floats: (Optional, default is {station1: 0.000, station2: 0.000})
+            The extra time delay added in when computing adjusted elevation angle, in microseconds.
+    :param gate_range: (int, int) (Optional; default is (0, 74))
+            See two_station_vel_comparison() docstring
+    :param height_range: (float, float) (Optional; default is (0, 300))
+            The height range in km
+    :param vel_range: (float, float) (Optional; default is (-600, 600))
+            The velocity range in m/s
 
     """
 
@@ -144,21 +177,22 @@ def apply_subplot_formatting(axes, station1, station2, t_diffs=None, gate_range=
 
     label_font_size = 10
     title_font_size = 10
+    bisector_colour = "purple"
 
     for axis_key, axis_item in axes.items():
 
-        if axis_key == 'station1_rti':
-            # We are formatting the first station's RTI plots
+        if axis_key == 'station1_rti' or axis_key == 'station2_rti':
+            # We are formatting the large RTI plots
             for subplot_type, ax in axis_item.items():
 
                 y_lim = gate_range
 
                 ax.set_ylim(y_lim)
-                ax.yaxis.set_major_locator(MultipleLocator(10))
+                ax.yaxis.set_major_locator(MultipleLocator(10))  # Every 10 gates
                 ax.yaxis.set_minor_locator(MultipleLocator(1))
 
                 # ax.set_xlim(x_lim)
-                ax.xaxis.set_major_locator(MultipleLocator(0.5))
+                ax.xaxis.set_major_locator(MultipleLocator(0.5))  # Every half hour
                 ax.xaxis.set_minor_locator(MultipleLocator(0.1))
 
                 ax.grid(b=True, which='major', axis='both', linewidth=1, linestyle='-')
@@ -166,65 +200,110 @@ def apply_subplot_formatting(axes, station1, station2, t_diffs=None, gate_range=
 
                 ax.set_ylabel("Range Gate", fontsize=label_font_size)
 
+                if axis_key == 'station1_rti':
+                    station_mnemonic = station1.upper()
+                    t_diff = t_diffs[station1]
+                else:
+                    station_mnemonic = station2.upper()
+                    t_diff = t_diffs[station2]
+
                 if subplot_type == "vel":
-                    ax.set_title(station1.upper() + " Velocities", fontsize=title_font_size)
+                    ax.set_title(station_mnemonic.upper() + " Velocities", fontsize=title_font_size)
                 elif subplot_type == "adjElv":
-                    ax.set_title(station1.upper() + " Adjusted Elevation Angles, tdiff=" + str(t_diffs[station1]) + " \u03BCs",
-                                 fontsize=title_font_size)
+                    ax.set_title(station_mnemonic.upper() + " Adjusted Elevation Angles, tdiff=" + str(t_diff)
+                                 + " \u03BCs", fontsize=title_font_size)
                     ax.set_xlabel("UT Time [hour]", fontsize=label_font_size)
 
-        elif axis_key == 'station2_rti':
-            # We are formatting the second station's RTI plots
+        elif axis_key == 'map':
+            # We are formatting the large map
+            lat_extreme = reference_hemisphere.value * 60  # deg
+            ax = axis_item
+            ax.set_extent([-180, 180, reference_hemisphere.value * 90, lat_extreme], crs=ccrs.PlateCarree())
+            ax.gridlines()
+            ax.add_feature(cfeature.OCEAN)
+            ax.add_feature(cfeature.LAND)
+
+        else:
+            # We are formatting the comparison plots
+
             for subplot_type, ax in axis_item.items():
 
-                y_lim = gate_range
-
-                ax.set_ylim(y_lim)
-                ax.yaxis.set_major_locator(MultipleLocator(10))
-                ax.yaxis.set_minor_locator(MultipleLocator(1))
-
-                # ax.set_xlim(x_lim)
-                ax.xaxis.set_major_locator(MultipleLocator(0.5))
-                ax.xaxis.set_minor_locator(MultipleLocator(0.1))
-
-                ax.grid(b=True, which='major', axis='both', linewidth=1, linestyle='-')
-                ax.grid(b=True, which='minor', axis='both', linewidth=0.4, linestyle='--')
-
-                ax.set_ylabel("Range Gate", fontsize=label_font_size)
-
                 if subplot_type == "vel":
-                    ax.set_title(station2.upper() + " Velocities", fontsize=title_font_size)
-                    # ax.xaxis.set_ticklabels([])
-                elif subplot_type == "adjElv":
-                    ax.set_title(station2.upper() + " Adjusted Elevation Angles, tdiff=" +
-                                 str(t_diffs[station2]) + " \u03BCs", fontsize=title_font_size)
-                    ax.set_xlabel("UT Time [hour]", fontsize=label_font_size)
+                    ax.set_ylim(vel_range)
+                    ax.set_xlim(vel_range)
+
+                    ax.set_xlabel(station1.upper() + " Velocities [m/s]")
+                    ax.set_ylabel(station2.upper() + " Velocities [m/s]")
+
+                    ax.yaxis.set_major_locator(MultipleLocator(600))
+                    ax.xaxis.set_major_locator(MultipleLocator(600))
+                    ax.yaxis.set_minor_locator(MultipleLocator(100))
+                    ax.xaxis.set_minor_locator(MultipleLocator(100))
+                    if axis_key == "full_event_comparison":
+                        plt.sca(ax)
+                        plt.xticks([-600, -400, -200, 0, 200, 400, 600])
+                        plt.yticks([-600, -400, -200, 0, 200, 400, 600])
+
+                elif subplot_type == "height":
+                    ax.set_ylim(height_range)
+                    ax.set_xlim(height_range)
+
+                    ax.set_xlabel(station1.upper() + " Virtual Heights [km]")
+                    ax.set_ylabel(station2.upper() + " Virtual Heights [km]")
+
+                    ax.yaxis.set_major_locator(MultipleLocator(100))
+                    ax.xaxis.set_major_locator(MultipleLocator(100))
+                    ax.yaxis.set_minor_locator(MultipleLocator(50))
+                    ax.xaxis.set_minor_locator(MultipleLocator(50))
+                    if axis_key == "full_event_comparison":
+                        plt.sca(ax)
+                        plt.xticks([100, 150, 200, 250, 300])
+                        plt.yticks([100, 150, 200, 250, 300])
+
+                ax.grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5)
+                ax.grid(b=True, which='minor', axis='both', linestyle='--', linewidth=0.2)
+                ax.plot(ax.get_ylim(), [0, 0], linestyle='-', linewidth=0.5, color='black')
+                ax.plot([0, 0], ax.get_xlim(), linestyle='-', linewidth=0.5, color='black')
+                ax.plot([ax.get_ylim()[0], ax.get_ylim()[1]], [ax.get_xlim()[0], ax.get_xlim()[1]],
+                        linestyle='--', linewidth=1, color=bisector_colour)
 
 
-
-def add_axes(fig):
+def add_axes(fig, reference_hemisphere):
     """
-    :param fig: The figure to draw the axes on
+    :param fig: matplotlib.pyplot.figure:
+            The figure to draw the axes on
+    :param reference_hemisphere: pydarn hemisphere object:
+            The radars' hemisphere
 
-    :return axes: dictionary of axes
-            A dictionary containing all the axes items
+    :return axes: dictionary of dictionary of axes:
+            A dictionary containing all the axes items.
     """
 
     gs = fig.add_gridspec(ncols=11, nrows=4)
 
     axes = dict()  # Remember that splices don't include last index
 
+    # We will have two large range-time plots - one for each station
     axes['station1_rti'] = {"vel": fig.add_subplot(gs[0, 0:3]), "adjElv": fig.add_subplot(gs[1, 0:3])}
     axes['station2_rti'] = {"vel": fig.add_subplot(gs[0, 6:9]), "adjElv": fig.add_subplot(gs[1, 6:9])}
 
-    axes['map'] = fig.add_subplot(gs[0:2, 3:6])
+    # We will have a map that shows each radar's fan and highlights the overlap
+    if reference_hemisphere.value == 1:
+        proj = ccrs.NorthPolarStereo()
+    elif reference_hemisphere.value == -1:
+        proj = ccrs.SouthPolarStereo()
+    else:
+        raise Exception("Hemisphere not recognized.")
+    axes['map'] = fig.add_subplot(gs[0:2, 3:6], projection=proj)
 
-    axes['full_event_comparison'] = {"vel": fig.add_subplot(gs[2:4, 0:3]), "adjElv": fig.add_subplot(gs[2:4, 3:6])}
+    # We will have a couple larger plots that show select comparisons for the whole event duration
+    axes['full_event_comparison'] = {"vel": fig.add_subplot(gs[2:4, 0:3]), "height": fig.add_subplot(gs[2:4, 3:6])}
 
-    axes['interval1'] = {"vel": fig.add_subplot(gs[0, 9]), "adjElv": fig.add_subplot(gs[0, 10])}
-    axes['interval2'] = {"vel": fig.add_subplot(gs[1, 9]), "adjElv": fig.add_subplot(gs[1, 10])}
-    axes['interval3'] = {"vel": fig.add_subplot(gs[2, 9]), "adjElv": fig.add_subplot(gs[2, 10])}
-    axes['interval4'] = {"vel": fig.add_subplot(gs[3, 9]), "adjElv": fig.add_subplot(gs[3, 10])}
+    # We will have some small plots that show select comparisons for parts of the event
+    axes['interval1'] = {"vel": fig.add_subplot(gs[0, 9]), "height": fig.add_subplot(gs[0, 10])}
+    axes['interval2'] = {"vel": fig.add_subplot(gs[1, 9]), "height": fig.add_subplot(gs[1, 10])}
+    axes['interval3'] = {"vel": fig.add_subplot(gs[2, 9]), "height": fig.add_subplot(gs[2, 10])}
+    axes['interval4'] = {"vel": fig.add_subplot(gs[3, 9]), "height": fig.add_subplot(gs[3, 10])}
 
     return axes
 
