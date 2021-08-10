@@ -1,5 +1,4 @@
 import math
-
 import deprecation
 import pydarn
 import bz2
