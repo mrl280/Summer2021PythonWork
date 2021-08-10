@@ -1,4 +1,6 @@
 import math
+
+import deprecation
 import pydarn
 import bz2
 
@@ -6,8 +8,11 @@ import pandas as pd
 import numpy as np
 
 
+@deprecation.deprecated()
 def elevation_v2(df, t_diff=0.0):
     """
+
+    *** Use the elevation_v2 program in the Echo Occurrence package - this one will no longer be maintained ***
 
     Adjusted elevation angles are computed and added to the dataframe.  Operation is done inplace.
 
