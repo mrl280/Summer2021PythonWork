@@ -118,7 +118,7 @@ def occ_seasonal_variation(station, year_range=None, day_range=None, hour_range=
     gate_string = "Gates " + str(gate_range[0]) + "-" + str(gate_range[1])
     freq_string = "Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz"
 
-    fig = plt.figure(figsize=[12, 8], dpi=300, constrained_layout=True)
+    fig = plt.figure(figsize=[18, 12], dpi=300, constrained_layout=True)
     axes = add_axes(fig=fig)
     format_subplots(axes=axes, x_lim=(year_range[0], year_range[1] + 1), y_lim=y_lim)
     fig.suptitle(year_string + " at " + station.upper() + "; " + gate_string + "; " + beam_string + "; " + freq_string
@@ -344,10 +344,10 @@ if __name__ == '__main__':
 
 
     else:
-        station = "mcm"
-        even_odd_days = "odd"
-        year_range = (2013, 2021)
-        freq_range = (8, 14)
+        station = "dcn"
+        even_odd_days = None
+        year_range = (2019, 2021)
+        freq_range = (8, 10)
 
         time_units = "lt"
 
