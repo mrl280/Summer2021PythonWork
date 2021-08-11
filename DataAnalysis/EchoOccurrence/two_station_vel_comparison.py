@@ -1,6 +1,7 @@
 import os
 import pathlib
 
+import pandas as pd
 import pydarn
 
 from matplotlib.ticker import MultipleLocator
@@ -73,11 +74,11 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
     minutes_in_an_hour = 60
     t_diffs = {station1: 0.000,
                station2: 0.000}
-    param_ranges = {'v': (-600, 600),
-                    'height': (100, 300),
+    param_ranges = {'v': (-1000, 1000),
+                    'height': (0, 1000),
                     'adjElv': (0, 30)}
-    param_n_bins = {'v': 60,
-                    'height': 20
+    param_n_bins = {'v': 50,
+                    'height': 50
                     }
     count_min = 1  # Minimum number of points needed in a spatial/temporal 'clump' in order plot the matched point
     color_maps = {'v': 'seismic_r',  # For the range-time profiles
@@ -166,27 +167,30 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
     df2 = only_keep_overlap(station=station2, df=df2, other_station=station1, gate_min=gate_range[0])
 
     print("Recomputing Elevation Angles for " + station1.upper() + " data - t_diff=" + str(t_diffs[station1]))
-    elevation_v2(df=df1, t_diff=t_diffs[station1])  # t_diff is in microseconds
+    elevation_v2(station=station1, df=df1, t_diff=t_diffs[station1])  # t_diff is in microseconds
 
     print("Recomputing Elevation Angles for " + station2.upper() + " data - t_diff=" + str(t_diffs[station2]))
-    elevation_v2(df=df2, t_diff=t_diffs[station2])  # t_diff is in microseconds
+    elevation_v2(station=station2, df=df2, t_diff=t_diffs[station2])  # t_diff is in microseconds
+
+    # print(df1[['slist', 'adjElv']])
+    # print(df2[['slist', 'adjElv']])
 
     print("Computing virtual heights for " + station1.upper())
     slant_range1 = 120 + 45 / 2 + 45 * df1['slist']  # Slant range [km]
-    df1['height'] = np.median(np.sqrt(Re * Re + slant_range1 * slant_range1 + 2 * Re * slant_range1
-                                      * np.sin(np.radians(np.asarray(df1['adjElv'])))) - Re)
+    df1['height'] = np.sqrt(Re * Re + slant_range1 * slant_range1 + 2 * Re * slant_range1
+                            * np.sin(np.radians(np.asarray(df1['adjElv'])))) - Re
 
     print("Computing virtual heights for " + station2.upper())
     slant_range2 = 120 + 45 / 2 + 45 * df2['slist']  # Slant range [km]
-    df2['height'] = np.median(np.sqrt(Re * Re + slant_range2 * slant_range2 + 2 * Re * slant_range1
-                                      * np.sin(np.radians(np.asarray(df2['adjElv'])))) - Re)
+    df2['height'] = np.sqrt(Re * Re + slant_range2 * slant_range2 + 2 * Re * slant_range2
+                            * np.sin(np.radians(np.asarray(df2['adjElv'])))) - Re
 
     print("Adding decimal time to " + station1.upper() + "'s data.")
     station1_stid = pydarn.read_hdw_file(station1).stid
     df1 = add_decimal_hour_to_df(df=df1, time_units='ut', stid=station1_stid,
                                  date_time_est=(df1['datetime'].iat[0]).to_pydatetime())
 
-    print("Adding decimal time to " + station1.upper() + "'s data.")
+    print("Adding decimal time to " + station2.upper() + "'s data.")
     station2_stid = pydarn.read_hdw_file(station2).stid
     df2 = add_decimal_hour_to_df(df=df2, time_units='ut', stid=station2_stid,
                                  date_time_est=(df2['datetime'].iat[0]).to_pydatetime())
@@ -287,13 +291,17 @@ def complete_comparison_plot(fig, axes, matched_df, param_edges, cbar=False, plo
             plot = ax.pcolormesh(param_edges[param], param_edges[param], result.transpose(), cmap=cmap, zorder=0)
 
         elif plot_type == 'contour':
-            plot = ax.contourf(param_edges[param], param_edges[param], result.transpose(), cmap=cmap, zorder=0)
+
+            bin_width = (param_edges[param][1] - param_edges[param][0])
+            bin_centers = param_edges[param][1:] - bin_width / 2
+
+            plot = ax.contourf(bin_centers, bin_centers, result.transpose(), cmap=cmap, zorder=0)
 
         else:
             raise Exception("complete_comparison_plot(): plot_type " + str(plot_type) + " not recognized.")
 
         if cbar:
-            cbar = fig.colorbar(plot, ax=ax, orientation="vertical")
+            cbar = fig.colorbar(plot, ax=ax, format='%.1f', orientation="vertical")
 
 
 def complete_range_time_profile(fig, axes, df, gate_range, hour_range, param_ranges, color_maps):
@@ -499,6 +507,8 @@ def apply_subplot_formatting(axes, station1, station2, reference_hemisphere, hou
 
     """
 
+    print("Using a vel range of " + str(vel_range))
+
     if t_diffs is None:
         t_diffs = {station1: 0.000, station2: 0.000}
 
@@ -563,15 +573,15 @@ def apply_subplot_formatting(axes, station1, station2, reference_hemisphere, hou
                     ax.set_xlabel(station1.upper() + " Velocities [m/s]")
                     ax.set_ylabel(station2.upper() + " Velocities [m/s]")
 
-                    ax.yaxis.set_major_locator(MultipleLocator(600))
-                    ax.xaxis.set_major_locator(MultipleLocator(600))
+                    ax.yaxis.set_major_locator(MultipleLocator(500))
+                    ax.xaxis.set_major_locator(MultipleLocator(500))
                     ax.yaxis.set_minor_locator(MultipleLocator(100))
                     ax.xaxis.set_minor_locator(MultipleLocator(100))
                     if axis_key == "full_event_comparison":
                         ax.set_title("Full Event Velocity Comparison", fontsize=title_font_size)
-                        plt.sca(ax)
-                        plt.xticks([-600, -400, -200, 0, 200, 400, 600])
-                        plt.yticks([-600, -400, -200, 0, 200, 400, 600])
+                        # plt.sca(ax)
+                        # plt.xticks([-600, -400, -200, 0, 200, 400, 600])
+                        # plt.yticks([-600, -400, -200, 0, 200, 400, 600])
 
                 elif subplot_type == "height":
                     ax.set_ylim(height_range)
@@ -580,22 +590,22 @@ def apply_subplot_formatting(axes, station1, station2, reference_hemisphere, hou
                     ax.set_xlabel(station1.upper() + " Virtual Heights [km]")
                     ax.set_ylabel(station2.upper() + " Virtual Heights [km]")
 
-                    ax.yaxis.set_major_locator(MultipleLocator(100))
-                    ax.xaxis.set_major_locator(MultipleLocator(100))
-                    ax.yaxis.set_minor_locator(MultipleLocator(50))
-                    ax.xaxis.set_minor_locator(MultipleLocator(50))
+                    ax.yaxis.set_major_locator(MultipleLocator(500))
+                    ax.xaxis.set_major_locator(MultipleLocator(500))
+                    ax.yaxis.set_minor_locator(MultipleLocator(100))
+                    ax.xaxis.set_minor_locator(MultipleLocator(100))
                     if axis_key == "full_event_comparison":
                         ax.set_title("Full Event Virtual Height Comparison", fontsize=title_font_size)
-                        plt.sca(ax)
-                        plt.xticks([100, 150, 200, 250, 300])
-                        plt.yticks([100, 150, 200, 250, 300])
+                        # plt.sca(ax)
+                        # plt.xticks([100, 150, 200, 250, 300])
+                        # plt.yticks([100, 150, 200, 250, 300])
 
                 ax.grid(b=True, which='major', axis='both', linestyle='--', linewidth=0.5)
                 ax.grid(b=True, which='minor', axis='both', linestyle='--', linewidth=0.2)
                 ax.plot(ax.get_ylim(), [0, 0], linestyle='-', linewidth=0.5, color='black')
                 ax.plot([0, 0], ax.get_xlim(), linestyle='-', linewidth=0.5, color='black')
                 ax.plot([ax.get_ylim()[0], ax.get_ylim()[1]], [ax.get_xlim()[0], ax.get_xlim()[1]],
-                        linestyle='--', linewidth=1, color=bisector_colour)
+                        linestyle='--', linewidth=2, color=bisector_colour)
 
 
 def add_axes(fig, reference_hemisphere):
@@ -641,7 +651,7 @@ def add_axes(fig, reference_hemisphere):
 if __name__ == '__main__':
     """ Testing """
 
-    local_testing = True
+    local_testing = False
 
     if local_testing:
         station1 = "dcn"
@@ -663,11 +673,84 @@ if __name__ == '__main__':
 
 
     else:
-        station1 = "dcn"
-        station2 = "mcm"
 
-        start_epoch = 1321070400  # Saturday, November 12, 2011 4:00:00 AM UTC = 1321070400
-        end_epoch = 1321084800  # Saturday, November 12, 2011 8:00:00 AM UTC = 1321084800
+        # Build an event dataframe to hold all the events we want to look at
+        column_names = ["station1",  # 3 char radar identifier
+                        "station2",  # 3 char radar identifier
+                        "start_epoch",
+                        "end_epoch",
+                        ]
+        event_df = pd.DataFrame(columns=column_names)
+
+        # Notes:
+        event_df = event_df.append({"station1": "dcn",
+                                    "station2": "mcm",
+                                    "start_epoch": 1570647600,  # 2019-10-09 19:00
+                                    "end_epoch": 1570662000  # 2019-10-09 23:00
+                                    }, ignore_index=True)
+
+        # Notes:
+        event_df = event_df.append({"station1": "dcn",
+                                    "station2": "mcm",
+                                    "start_epoch": 1572463800,  # 2019-10-30 19:30
+                                    "end_epoch": 1572478200  # 2019-10-30 23:30
+                                    }, ignore_index=True)
+
+        # Notes:
+        event_df = event_df.append({"station1": "dcn",
+                                    "station2": "mcm",
+                                    "start_epoch": 1551369600,  # 2019-02-28 16:00
+                                    "end_epoch": 1551384000  # 2019-02-28 20:00
+                                    }, ignore_index=True)
+
+        # Notes:
+        event_df = event_df.append({"station1": "dcn",
+                                    "station2": "mcm",
+                                    "start_epoch": 1567305000,  # 2019-09-01 2:30
+                                    "end_epoch": 1567319400  # 2019-09-01 6:30
+                                    }, ignore_index=True)
+
+        # Notes:
+        event_df = event_df.append({"station1": "dcn",
+                                    "station2": "mcm",
+                                    "start_epoch": 1571943600,  # 2019-10-24 19:00
+                                    "end_epoch": 1571958000  # 2019-10-24 23:00
+                                    }, ignore_index=True)
+
+        # Notes:
+        event_df = event_df.append({"station1": "dcn",
+                                    "station2": "mcm",
+                                    "start_epoch": 1549416600,  # 2019-02-06 1:30
+                                    "end_epoch": 1549431000  # 2019-02-06 5:30
+                                    }, ignore_index=True)
+
+        # Notes:
+        event_df = event_df.append({"station1": "dcn",
+                                    "station2": "mcm",
+                                    "start_epoch": 1549416600,  # 2019-02-06 1:30
+                                    "end_epoch": 1549431000  # 2019-02-06 5:30
+                                    }, ignore_index=True)
+
+        # Notes:
+        event_df = event_df.append({"station1": "dcn",
+                                    "station2": "mcm",
+                                    "start_epoch": 1573486200,  # 2019-11-11 15:30
+                                    "end_epoch": 1573500600  # 2019-11-11 19:30
+                                    }, ignore_index=True)
+
+        # Notes:
+        event_df = event_df.append({"station1": "dcn",
+                                    "station2": "mcm",
+                                    "start_epoch": 1570761000,  # 2019-10-11 2:30
+                                    "end_epoch": 1570775400  # 2019-10-11 6:30
+                                    }, ignore_index=True)
+
+        # Notes:
+        event_df = event_df.append({"station1": "dcn",
+                                    "station2": "mcm",
+                                    "start_epoch": 1573497000,  # 2019-11-11 18:30
+                                    "end_epoch": 1573511400  # 2019-11-11 22:30
+                                    }, ignore_index=True)
 
         gate_range = (20, 74)
         beam_range = (0, 15)
@@ -677,14 +760,23 @@ if __name__ == '__main__':
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        fig = two_station_vel_comparison(station1=station1, station2=station2,
-                                         start_epoch=start_epoch, end_epoch=end_epoch,
-                                         gate_range=gate_range, beam_range=beam_range, freq_range=None,
-                                         local_testing=local_testing, plot_type=plot_type)
+        for i in range(len(event_df)):
 
+            station1 = event_df['station1'].iat[i]
+            station2 = event_df['station2'].iat[i]
+            start_epoch = event_df['start_epoch'].iat[i]
+            end_epoch = event_df['end_epoch'].iat[i]
 
-        out_fig = out_dir + "/two_station_comparison-" + station1 + "_" + station2 + \
-                  "-from " + str(start_epoch) + "_to_" + str(end_epoch)
+            print("Running from " + str(start_epoch) + " to " + str(end_epoch) + " for "
+                  + station1.upper() + " and " + station2.upper())
 
-        print("Saving plot as " + out_fig)
-        fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+            fig = two_station_vel_comparison(station1=station1, station2=station2,
+                                             start_epoch=start_epoch, end_epoch=end_epoch,
+                                             gate_range=gate_range, beam_range=beam_range, freq_range=None,
+                                             local_testing=local_testing, plot_type=plot_type)
+
+            out_fig = out_dir + "/two_station_comparison-" + station1 + "_" + station2 + \
+                      "-from_" + str(start_epoch) + "_to_" + str(end_epoch)
+
+            print("Saving plot as " + out_fig)
+            fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
