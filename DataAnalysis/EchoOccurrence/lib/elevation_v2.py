@@ -4,7 +4,7 @@ import pydarn
 import numpy as np
 
 
-def elevation_v2(df, t_diff=0.0):
+def elevation_v2(station, df, t_diff=0.0):
     """
 
     Adjusted elevation angles are computed and added to the dataframe.  Operation is done inplace.
@@ -18,6 +18,9 @@ def elevation_v2(df, t_diff=0.0):
     - In the fitACF file, a phase offset of 0 results in an elevation angle of 0.  However, that is not the case
      for this program.  Rather, you will get the appropriate non-zero elevation angle.
 
+    :param station: str:
+            The radar station to consider, as 3 character string (e.g. "rkn").
+            For a complete listing of available stations, please see https://superdarn.ca/radar-info
     :param df: pandas.DataFrame:
         SuperDARN data frame.  Must contain the following standard parameters: 'transFreq', 'phase', 'station', 'bmnum'
     :param t_diff: float: (Optional, default is 0.0)
@@ -36,7 +39,6 @@ def elevation_v2(df, t_diff=0.0):
     c = 2.998e+8  # Speed of light in vacuum [m/s]
 
     # Pull the required information out of the hardware file
-    station = df['station'].iat[0]
     hdw_info = pydarn.read_hdw_file(station)
     x = hdw_info.interferometer_offset.x  # Metres
     y = hdw_info.interferometer_offset.y  # Metres
@@ -62,14 +64,14 @@ def elevation_v2(df, t_diff=0.0):
     sp0 = np.sin(phi0)
 
     # Find the phase delay due to the electrical path difference
-    psi_ele = -2 * math.pi * df['transFreq'] * t_diff * 1e-3
+    psi_ele = -2 * math.pi * df['tfreq'] * t_diff * 1e-3
 
     # Find the elevation angle where phase difference is max
     # For most sites: z=0 and so a0=0
     a0 = np.arcsin(y_sign * z * cp0 / math.sqrt(y * y + z * z))
 
     # Assume that negative elevation angles are unphysical
-    for i in a0:
+    for i in range(len(a0)):
         if a0[i] < 0:
             a0[i] = 0
 
@@ -79,21 +81,21 @@ def elevation_v2(df, t_diff=0.0):
     # Find the maximum phase.  This is phi_ele + phi_geo(a0)
     # TODO: In rst it is ca0 * ca0 - sp0 * sp0, I am following what is in the paper
     psi_max = psi_ele + \
-              2 * math.pi * df['transFreq'] * 1e3 / c * (x * sp0 + y * np.sqrt(cp0 * cp0 - sa0 * sa0) + z * sa0)
+              2 * math.pi * df['tfreq'] * 1e3 / c * (x * sp0 + y * np.sqrt(cp0 * cp0 - sa0 * sa0) + z * sa0)
 
     # "Unwrap" phase
     # Find the number of 2pi factors required to map phase to the correct region
-    dpsi = psi_max - df['phase']  # Max phase minus observed phase
+    dpsi = psi_max - df['phi0']  # Max phase minus observed phase
     if y > 0:
         n = np.floor(dpsi / (2 * math.pi))
     else:
         n = np.ceil(dpsi / (2 * math.pi))
 
     # map the observed phase to the correct region
-    df['adjPhase'] = df['phase'] + (n * 2 * math.pi)
+    df['adjPhase'] = df['phi0'] + (n * 2 * math.pi)
 
     # And we can solve for elevation angle alpha
-    E = (df['adjPhase'] / (2 * math.pi * df['transFreq'] * 1e3) + t_diff * 1e-6) * c - x * sp0
+    E = (df['adjPhase'] / (2 * math.pi * df['tfreq'] * 1e3) + t_diff * 1e-6) * c - x * sp0
     df['adjElv'] = np.degrees(
         np.arcsin((E * z + np.sqrt(E * E * z * z - (y * y + z * z) * (E * E - y * y * cp0 * cp0))) /
                   (y * y + z * z)))
