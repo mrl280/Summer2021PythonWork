@@ -141,6 +141,8 @@ def find_high_vel_overlap_events(station1, station2, year, month_range=None, day
 
     event_starting_epochs, event_ending_epochs = [], []
     station1_mean_event_velocities, station2_mean_event_velocities = [], []
+    starting_datetimes, ending_datetimes = [], []
+    station1_count, station2_count = [], []
 
     # Go ahead and run through each of the time chunks for each starting epoch
     for epoch_start in starting_epochs:
@@ -168,17 +170,26 @@ def find_high_vel_overlap_events(station1, station2, year, month_range=None, day
                 station1_mean_event_velocities.append(np.mean(df_tt_1['v']))
                 station2_mean_event_velocities.append(np.mean(df_tt_2['v']))
 
+                starting_datetimes.append(datetime.datetime.utcfromtimestamp(starting_edge_epoch))
+                ending_datetimes.append(datetime.datetime.utcfromtimestamp(ending_edge_epoch))
+
+                station1_count.append(df_tt_1.shape[0])
+                station2_count.append(df_tt_2.shape[0])
+
     # Put the data into a dataframe
     print("     Putting all the events into a dataframe...")
-    event_df = pd.DataFrame({'station1': [station1] * len(event_starting_epochs),
+    event_df = pd.DataFrame({'start': starting_datetimes,       'end': ending_datetimes,
+                             'station1': [station1] * len(event_starting_epochs),
                              'station2': [station2] * len(event_starting_epochs),
-                             'start_epoch': event_starting_epochs, 'end_epoch': event_ending_epochs,
+                             'start_epoch': event_starting_epochs,      'end_epoch': event_ending_epochs,
                              'station1_mean_vel': station1_mean_event_velocities,
-                             'station2_mean_vel': station2_mean_event_velocities
+                             'station2_mean_vel': station2_mean_event_velocities,
+                             'station1_count': station1_count,
+                             'station2_count': station2_count
                              })
 
     # We want high velocity events - so sort the dataframe by the mean velocities
-    event_df.sort_values(by=['station1_mean_vel', 'station2_mean_vel'], ascending=[True, True], inplace=True)
+    event_df.sort_values(by=['station1_mean_vel', 'station2_mean_vel'], ascending=[False, False], inplace=True)
     event_df.reset_index(drop=True, inplace=True)
 
     return event_df
@@ -204,7 +215,7 @@ if __name__ == '__main__':
     else:
         station1 = "dcn"
         station2 = "mcm"
-        year = 2019
+        years = [2020]
         event_duration_h = 4
         even_odd_days = None
         freq_range = (8, 11)
@@ -212,15 +223,18 @@ if __name__ == '__main__':
         beam_range = (0, 15)
 
         loc_root = str((pathlib.Path().parent.absolute()))
-        out_dir = loc_root + "/out"
+        out_dir = loc_root + "/data/overlap_events"
 
-        df = find_high_vel_overlap_events(station1=station1, station2=station2, year=year, day_range=None,
-                                          gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
-                                          event_duration_h=event_duration_h, even_odd_days=even_odd_days,
-                                          local_testing=local_testing)
+        for year in years:
+            df = find_high_vel_overlap_events(station1=station1, station2=station2, year=year, day_range=None,
+                                              gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+                                              event_duration_h=event_duration_h, even_odd_days=even_odd_days,
+                                              local_testing=local_testing)
 
-        out_file = out_dir + "/list_of_overlap_events-" + station1 + "_and_" + station2 + ".pbz2"
+            df = df.loc[(df['station1_mean_vel'] >= 300) & (df['station2_mean_vel'] >= 300)]
+            df.reset_index(drop=True, inplace=True)
 
-        print("     Pickling as " + out_file + "...")
-        with bz2.BZ2File(out_file, "w") as file:
-            pickle.dump(df, file, protocol=4)
+            out_file = out_dir + "/list_of_overlap_events-" + station1 + "_and_" + station2 + "-" + str(year) + ".csv"
+
+            print("     Saving as " + out_file + "...")
+            df.to_csv(out_file)
