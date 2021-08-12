@@ -18,6 +18,9 @@ def build_two_radar_matched_data(station1, df1, station2, df2, time_interval_s, 
         - Temporal resolution - time_interval_s
         - Spatial resolution - kind of hard to say, but probably varies from 0 to 50 km?
 
+    Note: This is just a straight chunk match - so we assume velocity (a line-of-sight vector measurement) has been
+     adjusted so both radars are seeing velocities in the same direction
+
     # TODO: Sometimes a datapoint from one dataframe will be used multiple times because it will be the closest match
        to multiple different cells within the other dataframe.  Not sure if this is a valid approach, and should maybe
        be depicted on an overlap map.
@@ -97,8 +100,15 @@ def build_two_radar_matched_data(station1, df1, station2, df2, time_interval_s, 
                 v1.append(np.median(df1_ss_tt['v']))
                 v2.append(np.median(df2_ss_tt['v']))
 
-                height1.append(np.median(df1_ss_tt['height']))
-                height2.append(np.median(df2_ss_tt['height']))
+                try:
+                    height1.append(np.median(df1_ss_tt['height']))
+                    height2.append(np.median(df2_ss_tt['height']))
+                except KeyError:
+                    # Guess we don't have this parameter
+                    height1.append(np.nan)
+                    height2.append(np.nan)
+                except BaseException as e:
+                    raise e
 
     matched_df = pd.DataFrame({'matched_epoch': matched_epoch,
                                'v1': v1, 'v2': v2,
