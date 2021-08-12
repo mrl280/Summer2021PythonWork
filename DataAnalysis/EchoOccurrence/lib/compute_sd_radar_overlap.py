@@ -19,7 +19,7 @@ except ImportError:
     from add_mlt_to_df import centroid
 
 
-def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2, gate_min=30):
+def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2, gate_range=(20, 74), beam_range=(0, 15)):
     """
 
     Given a SuperDARN radar cell - compute the overlapping cell from a second radar.
@@ -38,16 +38,21 @@ def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2, g
             The gate of the first station's cell
     :param station2:
             The second station we want to match up with
-    :param gate_min: int:
+    :param gate_range: (int, int):
+            The range of allowable gates.  Gate matches from outside this range (at either radar) will not be considered
             Often the near gates will not see F region echoes.
-            So, overlaps are only valid if they are at ranges further than gate gate_min (for both radars)
+            So, you probably want to start around gate 20.
+    :param beam_range: (int, int):
+            The range of allowable beams.  Beam matches from outside this range (at either radar) will not be considered
 
     :return station2_beam, station2_gate: int, int:
             The beam and gate of station2 that overlap with the provided station1_beam and station1_gate
             If no valid overlap is found - then None, None is returned
     """
 
-    if station1_gate < gate_min:
+    if station1_gate < gate_range[0] or station1_gate > gate_range[1] or \
+            station1_beam < beam_range[0] or station1_beam > beam_range[1]:
+        # We are outside of the allowable gate/beam range
         return None, None
 
     all_radars_info = SuperDARNRadars()
@@ -79,7 +84,7 @@ def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2, g
     fan_shape = station2_cell_corners_lons.shape
 
     # Save the distances so we can find the smallest one
-    station2_cell_centroid_distances = np.full(shape=(fan_shape[0] - 1, fan_shape[1] - 1), fill_value=np.nan)
+    station2_cell_centroid_distances = np.full(shape=(fan_shape[0] - 1, fan_shape[1] - 1), fill_value=np.inf)
 
     for gate_corner in range(fan_shape[0] - 1):
         for beam_corner in range(fan_shape[1] - 1):
@@ -102,7 +107,9 @@ def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2, g
     station2_gate, station2_beam = np.unravel_index(station2_cell_centroid_distances.argmin(),
                                                     station2_cell_centroid_distances.shape)
 
-    if station2_gate < gate_min:
+    if station2_gate < gate_range[0] or station2_gate > gate_range[1] or \
+            station2_beam < beam_range[0] or station2_beam > beam_range[1]:
+        # We are outside of the allowable gate/beam range
         return None, None
 
     if station2_cell_centroid_distances[station2_gate, station2_beam] > 1.5:
@@ -222,7 +229,6 @@ if __name__ == '__main__':
                                                       cell_corners_lats[station1_gate, station1_beam + 1]),
                                                      (cell_corners_lons[station1_gate + 1, station1_beam + 1],
                                                       cell_corners_lats[station1_gate + 1, station1_beam + 1])])
-
 
     plt.plot([station1_cell_lon, station1_cell_lon], [station1_cell_lat, station1_cell_lat], marker=".", markersize=1,
              transform=ccrs.Geodetic(), color=colours[station1])
