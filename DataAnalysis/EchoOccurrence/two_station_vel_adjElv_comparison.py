@@ -1,6 +1,7 @@
 import os
 import pathlib
 import pydarn
+import deprecation
 
 from matplotlib.ticker import MultipleLocator
 from matplotlib import pyplot as plt
@@ -23,6 +24,8 @@ from lib.get_data_handler import get_data_handler
 from lib.data_getters.input_checkers import *
 
 
+@deprecation.deprecated(details="Elevation angle data is not suitable for this purpose, use "
+                                "two_station_vel_comparison() instead.")
 def two_station_vel_adjElv_comparison(station1, station2, start_epoch, end_epoch,
                                       gate_range=None, beam_range=None, freq_range=None,
                                       local_testing=False, plot_type='contour'):
