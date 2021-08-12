@@ -702,7 +702,7 @@ if __name__ == '__main__':
                                                     gate_range=gate_range, beam_range=beam_range, freq_range=None,
                                                     local_testing=local_testing, plot_type=plot_type)
 
-            out_fig = out_dir + "/two_station_comparison-" + station1 + "_" + station2 + \
+            out_fig = out_dir + "/two_station_comparison_vel_adjElv-" + station1 + "_" + station2 + \
                       "-from_" + str(start_epoch) + "_to_" + str(end_epoch)
 
             print("Saving plot as " + out_fig)
