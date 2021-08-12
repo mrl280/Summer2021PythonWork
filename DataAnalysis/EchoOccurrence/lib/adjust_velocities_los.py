@@ -29,7 +29,7 @@ def adjust_velocities_los(station, df, ref_beam):
     radar_info = all_radars_info.radars[station_stid]
 
     bmsep = radar_info.hardware_info.beam_separation  # Angular separation in degrees between adjacent beams [deg]
-    # bmsep might be negative but that should be okay
+    # bmsep might be negative (and so might ref_beam), but that should be okay
 
     # Compute the angular separation in degrees between every beam and the ref_beam
     separation_from_ref_beam = bmsep * (df['bmnum'] - ref_beam)
