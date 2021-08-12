@@ -20,7 +20,8 @@ from lib.z_min_max_defaults import z_min_max_defaults
 from lib.data_getters.input_checkers import check_year
 
 
-@deprecation.deprecated()
+@deprecation.deprecated(details="This function is not complete, and probably never will be.. "
+                                "there are still concerns around what to do here...")
 def occ_full_circle(station, year, month_range=None, day_range=None, hour_range=None, gate_range=None, beam_range=None,
                     local_testing=False, parameter=None, plot_ground_scat=False):
     """

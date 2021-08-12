@@ -1,13 +1,14 @@
 import time
 import bz2
+import deprecation
 
 import pandas as pd
 
-if __name__ == '__main__':
+
+@deprecation.deprecated(details="I no longer use RISR data from HDF5 files because they don't include all derived "
+                                "parameters.")
+def ReadPickleData():
     """
-    
-    ### DEPRECATED ###
-    
     Read in pickled HDF5 RISR Data
     """
 
@@ -53,3 +54,6 @@ if __name__ == '__main__':
     # print("Max magnetic lat: " + str(df['cgmLat'].unique().max()))
     # print("Min magnetic lat: " + str(df['cgmLat'].unique().min()))
 
+
+if __name__ == '__main__':
+    ReadPickleData()

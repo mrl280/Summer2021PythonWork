@@ -7,12 +7,11 @@ import pandas as pd
 import datetime as datetime
 
 
-@deprecation.deprecated()
+@deprecation.deprecated(details="This program is no longer necessary because the new version of "
+                                "find_high_velocity_overlap_events() directly ads in datetime info, filters the data, "
+                                "and saves the event dataframe as an easy-view .csv file")
 def read_overlap_events():
     """
-
-    ** This program is no longer necessary because the new version of find_high_velocity_overlap_events() directly
-        ads in datetime info, filters the data, and saves the event dataframe as an easy-view .csv file **
 
     Loop thorough all of the pickled overlap event files, and read them in.
     The dataframe can then be sorted and the required information saved to csv.

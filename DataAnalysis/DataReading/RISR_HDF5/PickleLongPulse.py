@@ -13,7 +13,8 @@ import deprecation
 from wd_beam_num import wd_beam_num
 
 
-@deprecation.deprecated()
+@deprecation.deprecated(details="I no longer use RISR data from HDF5 files because they don't include all derived "
+                                "parameters.")
 def PickleLongPulse(station, date):
     """
 
