@@ -28,14 +28,14 @@ def get_LISIRD_data(dataset_name):
     except FileNotFoundError:
         # We might have imported from somewhere else, try again
         root = str((pathlib.Path().parent.absolute().parent.absolute()))
-        in_dir = root + "/data"
+        in_dir = root + "/data/lisird"
         in_file = in_dir + "/" + dataset_name + ".csv"
         try:
             df = pd.read_csv(in_file)
         except FileNotFoundError:
             # We might have imported from somewhere else, try again
             root = str((pathlib.Path().parent.absolute().parent.absolute().parent.absolute()))
-            in_dir = root + "/data"
+            in_dir = root + "/data/lisird"
             in_file = in_dir + "/" + dataset_name + ".csv"
             df = pd.read_csv(in_file)
 
