@@ -1,5 +1,4 @@
 import math
-import deprecation
 import pydarn
 import bz2
 
@@ -7,11 +6,8 @@ import pandas as pd
 import numpy as np
 
 
-@deprecation.deprecated()
 def elevation_v2(df, t_diff=0.0):
     """
-
-    *** Use the elevation_v2 program in the Echo Occurrence package - this one will no longer be maintained ***
 
     Adjusted elevation angles are computed and added to the dataframe.  Operation is done inplace.
 
@@ -75,7 +71,7 @@ def elevation_v2(df, t_diff=0.0):
     a0 = np.arcsin(y_sign * z * cp0 / math.sqrt(y * y + z * z))
 
     # Assume that negative elevation angles are unphysical
-    for i in a0:
+    for i in range(len(a0)):
         if a0[i] < 0:
             a0[i] = 0
 
