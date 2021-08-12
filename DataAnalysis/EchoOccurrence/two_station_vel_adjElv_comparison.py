@@ -1,7 +1,5 @@
 import os
 import pathlib
-
-import pandas as pd
 import pydarn
 
 from matplotlib.ticker import MultipleLocator
@@ -13,6 +11,7 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import numpy as np
 
+from lib.two_station_overlap_events.get_dcn_mcm_overlap_events import get_dcn_mcm_overlap_events
 from lib.elevation_v2 import elevation_v2
 from lib.only_keep_overlap import only_keep_overlap
 from lib.build_two_radar_matched_data import build_two_radar_matched_data
@@ -24,10 +23,13 @@ from lib.get_data_handler import get_data_handler
 from lib.data_getters.input_checkers import *
 
 
-def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
-                               gate_range=None, beam_range=None, freq_range=None,
-                               local_testing=False, plot_type='contour'):
+def two_station_vel_adjElv_comparison(station1, station2, start_epoch, end_epoch,
+                                      gate_range=None, beam_range=None, freq_range=None,
+                                      local_testing=False, plot_type='contour'):
     """
+
+    # TODO: Out of all beams that overlap spatially, need to select only those beams that are in the same
+       direction/azimuth.
 
     Produce a series of plots that is meant to showcase the elevation/velocity comparison between two SuperDARN radars.
 
@@ -664,116 +666,38 @@ if __name__ == '__main__':
         beam_range = (0, 15)
 
         # Note: year, month, and day don't matter for local testing
-        fig = two_station_vel_comparison(station1=station1, station2=station2,
-                                         start_epoch=start_epoch, end_epoch=end_epoch,
-                                         gate_range=gate_range, beam_range=beam_range, freq_range=None,
-                                         local_testing=local_testing, plot_type='contour')
+        fig = two_station_vel_adjElv_comparison(station1=station1, station2=station2,
+                                                start_epoch=start_epoch, end_epoch=end_epoch,
+                                                gate_range=gate_range, beam_range=beam_range, freq_range=None,
+                                                local_testing=local_testing, plot_type='contour')
 
         plt.show()
 
 
     else:
 
-        # Build an event dataframe to hold all the events we want to look at
-        column_names = ["station1",  # 3 char radar identifier
-                        "station2",  # 3 char radar identifier
-                        "start_epoch",
-                        "end_epoch",
-                        ]
-        event_df = pd.DataFrame(columns=column_names)
-
-        # Notes:
-        event_df = event_df.append({"station1": "dcn",
-                                    "station2": "mcm",
-                                    "start_epoch": 1570647600,  # 2019-10-09 19:00
-                                    "end_epoch": 1570662000  # 2019-10-09 23:00
-                                    }, ignore_index=True)
-
-        # Notes:
-        event_df = event_df.append({"station1": "dcn",
-                                    "station2": "mcm",
-                                    "start_epoch": 1572463800,  # 2019-10-30 19:30
-                                    "end_epoch": 1572478200  # 2019-10-30 23:30
-                                    }, ignore_index=True)
-
-        # Notes:
-        event_df = event_df.append({"station1": "dcn",
-                                    "station2": "mcm",
-                                    "start_epoch": 1551369600,  # 2019-02-28 16:00
-                                    "end_epoch": 1551384000  # 2019-02-28 20:00
-                                    }, ignore_index=True)
-
-        # Notes:
-        event_df = event_df.append({"station1": "dcn",
-                                    "station2": "mcm",
-                                    "start_epoch": 1567305000,  # 2019-09-01 2:30
-                                    "end_epoch": 1567319400  # 2019-09-01 6:30
-                                    }, ignore_index=True)
-
-        # Notes:
-        event_df = event_df.append({"station1": "dcn",
-                                    "station2": "mcm",
-                                    "start_epoch": 1571943600,  # 2019-10-24 19:00
-                                    "end_epoch": 1571958000  # 2019-10-24 23:00
-                                    }, ignore_index=True)
-
-        # Notes:
-        event_df = event_df.append({"station1": "dcn",
-                                    "station2": "mcm",
-                                    "start_epoch": 1549416600,  # 2019-02-06 1:30
-                                    "end_epoch": 1549431000  # 2019-02-06 5:30
-                                    }, ignore_index=True)
-
-        # Notes:
-        event_df = event_df.append({"station1": "dcn",
-                                    "station2": "mcm",
-                                    "start_epoch": 1549416600,  # 2019-02-06 1:30
-                                    "end_epoch": 1549431000  # 2019-02-06 5:30
-                                    }, ignore_index=True)
-
-        # Notes:
-        event_df = event_df.append({"station1": "dcn",
-                                    "station2": "mcm",
-                                    "start_epoch": 1573486200,  # 2019-11-11 15:30
-                                    "end_epoch": 1573500600  # 2019-11-11 19:30
-                                    }, ignore_index=True)
-
-        # Notes:
-        event_df = event_df.append({"station1": "dcn",
-                                    "station2": "mcm",
-                                    "start_epoch": 1570761000,  # 2019-10-11 2:30
-                                    "end_epoch": 1570775400  # 2019-10-11 6:30
-                                    }, ignore_index=True)
-
-        # Notes:
-        event_df = event_df.append({"station1": "dcn",
-                                    "station2": "mcm",
-                                    "start_epoch": 1573497000,  # 2019-11-11 18:30
-                                    "end_epoch": 1573511400  # 2019-11-11 22:30
-                                    }, ignore_index=True)
-
-        gate_range = (20, 74)
-        beam_range = (0, 15)
-        freq_range = (8, 11)
-        plot_type = 'contour'
+        event_df = get_dcn_mcm_overlap_events()
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
         for i in range(len(event_df)):
-
             station1 = event_df['station1'].iat[i]
             station2 = event_df['station2'].iat[i]
             start_epoch = event_df['start_epoch'].iat[i]
             end_epoch = event_df['end_epoch'].iat[i]
+            gate_range = event_df['gate_range'].iat[i]
+            beam_range = event_df['beam_range'].iat[i]
+            freq_range = event_df['freq_range'].iat[i]
+            plot_type = event_df['plot_type'].iat[i]
 
             print("Running from " + str(start_epoch) + " to " + str(end_epoch) + " for "
                   + station1.upper() + " and " + station2.upper())
 
-            fig = two_station_vel_comparison(station1=station1, station2=station2,
-                                             start_epoch=start_epoch, end_epoch=end_epoch,
-                                             gate_range=gate_range, beam_range=beam_range, freq_range=None,
-                                             local_testing=local_testing, plot_type=plot_type)
+            fig = two_station_vel_adjElv_comparison(station1=station1, station2=station2,
+                                                    start_epoch=start_epoch, end_epoch=end_epoch,
+                                                    gate_range=gate_range, beam_range=beam_range, freq_range=None,
+                                                    local_testing=local_testing, plot_type=plot_type)
 
             out_fig = out_dir + "/two_station_comparison-" + station1 + "_" + station2 + \
                       "-from_" + str(start_epoch) + "_to_" + str(end_epoch)
