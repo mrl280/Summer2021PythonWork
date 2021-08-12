@@ -21,6 +21,9 @@ def get_dcn_mcm_overlap_events():
                     "station2",  # 3 char radar identifier
                     "start_epoch",
                     "end_epoch",
+                    "station1_ref_beam", "station2_ref_beam",
+                    "gate_range", "beam_range", "freq_range",
+                    "plot_type"
                     ]
     event_df = pd.DataFrame(columns=column_names)
 
