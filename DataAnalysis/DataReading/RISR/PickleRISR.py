@@ -12,8 +12,12 @@ from DataAnalysis.DataReading.SD.PickleFITACF_occ import build_datetime_epoch
 
 def PickleRISR(station, date):
     """
-    Take a RISR_HDF5 long pulse file and pickle it
-    Works for both RISR_HDF5-N and RISR_HDF5-C, although some RISR_HDF5-C files seem not to have altitude data
+    Take a RISR long-pulse ascii file and pickle it
+    Works for both RISR-N and RISR-C, although sometimes one radar won't have all the same data parameters
+
+    Note:
+        When downloading RISR data - make sure to grab the Long Pulse (480) - status: final
+        Make sure that the ascii file you want to pickle has "raw" somewhere in the name or it won't be found
 
     Parameters of Interest:
         - Epoch time (seconds since 1970.01.01)
@@ -50,7 +54,8 @@ def PickleRISR(station, date):
     in_dir = "data/" + station + "/" + station + date
 
     # Build a temp file all the unnecessary data stripped out
-    for in_file in glob.iglob(in_dir + "/*_raw.txt"):
+    for in_file in glob.iglob(in_dir + "/*raw.txt"):
+        print("Reading file " + in_file)
 
         # First just obtain the header
         with open(in_file, 'r') as infile:
@@ -106,7 +111,7 @@ def PickleRISR(station, date):
              'bmId': df['BEAMID'], 'wdBmnum': wdBmnum, 'bmazm': df['AZM'],
              'cbadl': df['CBADL'],
              'elv': df['ELM'],
-             'transFreq': df['TFREQ'], 'reciveFreq': df['RFREQ'],
+             'transFreq': df['TFREQ'], 'receiveFreq': df['RFREQ'],
              'gdlat': df['GDLAT'], 'gdlon': df['GLON'], 'gdalt': df['GDALT'],
              'Ne': df['NE'], 'NeErr': df['DNE'],
              'ionTemp': df['TI'], 'ionTempErr': df['DTI'],
@@ -148,6 +153,6 @@ if __name__ == '__main__':
                 PickleRISR(station, in_dir[3:])
     else:
         station = "ran"
-        date = "20101105"
+        date = "20091015"
         print("Pickling " + station + date + "...")
         PickleRISR(station, date)
