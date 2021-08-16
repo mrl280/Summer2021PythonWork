@@ -7,13 +7,15 @@ def get_prg_cvw_overlap_events():
     """
 
     station1 = "pgr"
+    gate_range1 = (20, 74)
+    beam_range1 = (5, 6)
     station1_ref_beam = 6
 
     station2 = "cvw"
+    gate_range2 = (20, 74)
+    beam_range2 = (15, 15)
     station2_ref_beam = 15
 
-    gate_range = (20, 74)
-    beam_range = (0, 15)
     freq_range = (8, 11)
     plot_type = 'contour'
 
@@ -22,7 +24,7 @@ def get_prg_cvw_overlap_events():
                     "start_epoch",
                     "end_epoch",
                     "station1_ref_beam", "station2_ref_beam",
-                    "gate_range", "beam_range", "freq_range",
+                    "gate_range1", "beam_range1", "gate_range2", "beam_range2", "freq_range",
                     "plot_type"
                     ]
     event_df = pd.DataFrame(columns=column_names)
@@ -32,8 +34,9 @@ def get_prg_cvw_overlap_events():
     #                             "station2": station2,
     #                             "start_epoch": 1570647600,  # 2019-10-09 19:00
     #                             "end_epoch": 1570662000,  # 2019-10-09 23:00
-    #                             "station1_ref_beam": station1_ref_beam,     "station2_ref_beam": station2_ref_beam,
-    #                             "gate_range": gate_range,   "beam_range": beam_range,   "freq_range": freq_range,
+    #                             "station1_ref_beam": station1_ref_beam, "station2_ref_beam": station2_ref_beam,
+    #                             "gate_range1": gate_range1, "beam_range1": beam_range1,
+    #                             "gate_range2": gate_range2, "beam_range2": beam_range2, "freq_range": freq_range,
     #                             "plot_type": plot_type
     #                             }, ignore_index=True)
 
