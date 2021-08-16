@@ -4,11 +4,18 @@ import os
 
 import pandas as pd
 
-from adjust_velocities_los import adjust_velocities_los
-from get_data_handler import get_data_handler
-from only_keep_45km_res_data import only_keep_45km_res_data
-from only_keep_overlap import only_keep_overlap
-from data_getters.input_checkers import *
+if __name__ == "__main__":
+    from adjust_velocities_los import adjust_velocities_los
+    from get_data_handler import get_data_handler
+    from only_keep_45km_res_data import only_keep_45km_res_data
+    from only_keep_overlap import only_keep_overlap
+    from data_getters.input_checkers import *
+else:
+    from lib.adjust_velocities_los import adjust_velocities_los
+    from lib.get_data_handler import get_data_handler
+    from lib.only_keep_45km_res_data import only_keep_45km_res_data
+    from lib.only_keep_overlap import only_keep_overlap
+    from lib.data_getters.input_checkers import *
 
 
 def get_overlap_event_df1_and_df2(station1, station2, year, use_only_coinciding_beams=True,
@@ -17,8 +24,8 @@ def get_overlap_event_df1_and_df2(station1, station2, year, use_only_coinciding_
                                   local_testing=False):
     """
 
-    This program reads in an overlap event csv file, and builds dataframes with the combined data for every entry
-     listed in the file.
+    This program reads in the event summary files (.csv files) produced directly by find_high_vel_overlap_events()
+     and builds dataframes with the combined data for every entry listed in the file.
 
     :param station1: str:
             The first radar station to consider, as 3 character string (e.g. "rkn").
@@ -61,7 +68,7 @@ def get_overlap_event_df1_and_df2(station1, station2, year, use_only_coinciding_
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
     """
 
-    pattern = "%Y-%m-%d %H:%M"
+    pattern = "%Y-%m-%d %H:%M:%S"
 
     loc_root = str((pathlib.Path().parent.absolute()))
     if "data_getters" in loc_root:
@@ -81,6 +88,9 @@ def get_overlap_event_df1_and_df2(station1, station2, year, use_only_coinciding_
             print("Reading overlap events from " + file_name)
             event_df = pd.read_csv(in_file)
             event_df = event_df.loc[event_df['start'].notna()]
+
+            print("Here are the events we are using:")
+            print(event_df[['start', 'end']])
 
             # Use the first event to initialize the dataframe
             starting_datetime = datetime.datetime.strptime(event_df['start'].iat[0], pattern)
