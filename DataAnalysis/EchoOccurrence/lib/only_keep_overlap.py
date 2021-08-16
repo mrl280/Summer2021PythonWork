@@ -6,7 +6,6 @@ import pydarn
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
-
 from matplotlib import pyplot as plt
 from pydarn import SuperDARNRadars, radar_fov
 
@@ -22,7 +21,7 @@ except ImportError:
     from only_keep_45km_res_data import only_keep_45km_res_data
 
 
-def only_keep_overlap(station, df, other_station, gate_min=30):
+def only_keep_overlap(station, df, gate_range, beam_range, other_station, other_gate_range, other_beam_range):
     """
 
     Given a SuperDARN dataframe (df) with fit data for station, remove all data for cells that don't overlap with the
@@ -33,21 +32,26 @@ def only_keep_overlap(station, df, other_station, gate_min=30):
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
     :param df: pandas.DataFrame
             station's dataframe.  Must contain 'gate' and 'beam' columns
+    :param gate_range: (int, int):
+            The range of allowable gates for station.  Gate matches from outside this range will not be considered.
+            Often the near gates will not see F region echoes. So, you probably want to start
+             around gate 20.
+    :param beam_range: (int, int):
+            The range of allowable beams for station.  Beam matches from outside this range will not be considered.
+
     :param other_station: str
             The other station, also as a 3 character string.
-    :param gate_min:
-            Often the near gates will not see F region echoes.
-            So, restrict both stations valid region of overlap to be only gates greater than this gate_min
+    :param other_gate_range: (int, int):
+            The range of allowable gates for other_station.  Gate matches from outside this range will not be considered.
+            Often the near gates will not see F region echoes. So, you probably want to start
+             around gate 20.
+    :param other_beam_range: (int, int):
+            The range of allowable beams for other_station.  Beam matches from outside this range will not be considered.
 
     :return restricted_df:
             The provided dataframe, expect restricted to only those cells for which there is valid overlap with
              other_station
     """
-
-    #  TODO: Figure out what to do about gate and beam ranges
-    #       - right now we assume the station has 75 gates and 16 beams
-    gate_range = (gate_min, 74)
-    beam_range = (0, 15)
 
     # Quickest just to kill this stuff straight away, then we don't have to loop though it
     df = df.loc[((df['slist'] >= gate_range[0]) & (df['slist'] <= gate_range[1])) &
@@ -64,7 +68,11 @@ def only_keep_overlap(station, df, other_station, gate_min=30):
         for gate in gates:
             other_station_beam, other_station_gate = compute_df_radar_overlap(station1=station,
                                                                               station1_beam=beam, station1_gate=gate,
-                                                                              station2=other_station, gate_min=gate_min)
+                                                                              gate_range1=gate_range,
+                                                                              beam_range1=beam_range,
+                                                                              station2=other_station,
+                                                                              gate_range2=other_gate_range,
+                                                                              beam_range2=other_beam_range)
 
             if other_station_beam is None or other_station_gate is None:
                 # Then this cell is not overlapping, remove all data for this cell
@@ -93,15 +101,17 @@ if __name__ == "__main__":
     year = 2019
     gate_range = (0, 74)
     beam_range = (0, 15)
+    other_gate_range = (0, 74)
+    other_beam_range = (0, 6)
 
     print("     Retrieving SuperDARN data...")
     df = get_data_handler("rkn", year_range=(year, year), month_range=None, day_range=None,
                           gate_range=gate_range, beam_range=beam_range, freq_range=None,
                           local_testing=True, even_odd_days=None)
     df = only_keep_45km_res_data(df)
-    print(df.keys())
     print("The dataframe is of length " + str(len(df)))
 
+    # print(df.keys())
     # print("Here is a list of remaining gates:")
     # print(df['slist'].unique())
     #
@@ -155,7 +165,6 @@ if __name__ == "__main__":
         ax.add_feature(cfeature.OCEAN)
         ax.add_feature(cfeature.LAND)
 
-
     """ On the first plot, plot the fan before restriction """
     cell_corners_lats, cell_corners_lons = radar_fov(stid=radar_id, coords='geo')
 
@@ -175,12 +184,8 @@ if __name__ == "__main__":
             cell_df = df[(df['slist'] == gate) & (df['bmnum'] == beam)]
             grndsct_scans[gate_idx, beam_idx] = cell_df[(cell_df['gflg'] == 1)].shape[0]
 
-           # Average the provided parameter
-            try:
-                scans[gate_idx, beam_idx] = statistics.median(cell_df.query('gflg == 0')[parameter])
-            except statistics.StatisticsError:
-                # We can't take a median because there are no points
-                scans[gate_idx, beam_idx] = np.nan
+            # Average the provided parameter
+            scans[gate_idx, beam_idx] = np.median(cell_df.query('gflg == 0')[parameter])
 
     # Build reduced arrays containing only the cells in the specified gate/beam range
     reduced_cell_corners_lons = cell_corners_lons[gate_range[0]: gate_range[1] + 2,
@@ -193,11 +198,11 @@ if __name__ == "__main__":
                           transform=ccrs.PlateCarree(), cmap=cmap, zorder=3)
     # fig.colorbar(data, ax=ax1)
 
-
     print("Running only_keep_overlap().. ")
-    df = only_keep_overlap(station=station, df=df, other_station=other_station, gate_min=20)
+    df = only_keep_overlap(station=station, df=df, gate_range=gate_range, beam_range=beam_range,
+                           other_station=other_station, other_gate_range=other_gate_range,
+                           other_beam_range=other_beam_range)
     print("The dataframe is now of length " + str(len(df)))
-
 
     """ On the second plot, plot the fan after restriction """
     cell_corners_lats, cell_corners_lons = radar_fov(stid=radar_id, coords='geo')
@@ -219,11 +224,7 @@ if __name__ == "__main__":
             grndsct_scans[gate_idx, beam_idx] = cell_df[(cell_df['gflg'] == 1)].shape[0]
 
             # Average the provided parameter
-            try:
-                scans[gate_idx, beam_idx] = statistics.median(cell_df.query('gflg == 0')[parameter])
-            except statistics.StatisticsError:
-                # We can't take a median because there are no points
-                scans[gate_idx, beam_idx] = np.nan
+            scans[gate_idx, beam_idx] = np.median(cell_df.query('gflg == 0')[parameter])
 
     # Build reduced arrays containing only the cells in the specified gate/beam range
     reduced_cell_corners_lons = cell_corners_lons[gate_range[0]: gate_range[1] + 2,
@@ -236,11 +237,17 @@ if __name__ == "__main__":
                           transform=ccrs.PlateCarree(), cmap=cmap, zorder=3)
     # fig.colorbar(data, ax=ax1)
 
-
     """ Plot the radars fans """
     colours = {station: 'red', other_station: 'blue'}
     for ax in [ax1, ax2]:
         for station_here in [station, other_station]:
+
+            if station_here == station:
+                gate_range = gate_range
+                beam_range = beam_range
+            else:
+                gate_range = other_gate_range
+                beam_range = other_beam_range
             station_info = all_radars_info.radars[pydarn.read_hdw_file(station_here).stid]
             radar_id = station_info.hardware_info.stid
             radar_lon = station_info.hardware_info.geographic.lon
@@ -251,20 +258,20 @@ if __name__ == "__main__":
 
             # Plot the radar as a dot
             ax.plot([radar_lon, radar_lon], [radar_lat, radar_lat], marker="o", markersize=3, transform=ccrs.Geodetic(),
-                     label=station_info.name, color=colours[station_here])
+                    label=station_info.name, color=colours[station_here])
 
             cell_corners_lats, cell_corners_lons = radar_fov(stid=radar_id, coords='geo')
 
             # plot all the beam boundary lines
             for beam_line in range(beam_range[0], beam_range[1] + 2):
                 ax.plot(cell_corners_lons[gate_range[0]:gate_range[1] + 2, beam_line],
-                         cell_corners_lats[gate_range[0]:gate_range[1] + 2, beam_line],
-                         color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
+                        cell_corners_lats[gate_range[0]:gate_range[1] + 2, beam_line],
+                        color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
             # plot the arcs boundary lines
             for range_ in range(gate_range[0], gate_range[1] + 2):
                 ax.plot(cell_corners_lons[range_, beam_range[0]:beam_range[1] + 2],
-                         cell_corners_lats[range_, beam_range[0]:beam_range[1] + 2],
-                         color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
+                        cell_corners_lats[range_, beam_range[0]:beam_range[1] + 2],
+                        color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
     plt.show()

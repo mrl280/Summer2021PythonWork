@@ -25,8 +25,8 @@ from lib.data_getters.input_checkers import *
 
 
 def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
-                               station1_ref_beam, station2_ref_beam,
-                               gate_range=None, beam_range=None, freq_range=None,
+                               use_only_coinciding_beams=True, station1_ref_beam=None, station2_ref_beam=None,
+                               gate_range1=None, beam_range1=None, gate_range2=None, beam_range2=None, freq_range=None,
                                local_testing=False, plot_type='contour'):
     """
 
@@ -37,12 +37,23 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
 
     Contour/pixel comparison plots will have station1 along the x-axis.
 
+    Originally this program was designed to use the full area of mutual overlap, and take the cosine of all velocity
+     measurements to orient them along the same reference beam (same line-of-sight).  However, from Koustov:
+     "E region velocity does not follow the cosine rule. How well this rule works in the F region is also an issue".
+    So, there are two options:
+        - If use_only_coinciding_beams=True, then gate and beam range restrictions will be applied, but velocities will
+           not be modified.
+        - If use_only_coinciding_beams=False, then gate and beam range restrictions will still be applied, but
+           velocities will be multiplied by cosine of their angular separation from their reference beam and reference
+           beams will be added to the map plot.
+
     Notes:
         - This program was originally written to be run on maxwell.usask.ca.  This decision was made because
             Maxwell holds all SuperDARN data.
         - Only considers 45 km data.
             (a warning will be printed if other spatial resolution data is stripped from the dataset)
         - To check which fitACF program is being used, refer to the data readers in lib.data_getters
+
 
 
     :param station1: str:
@@ -54,28 +65,44 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
             The starting epoch of the event to consider.
     :param end_epoch:
             The ending epoch of the event to consider.  Usually this is 4 hours after the starting epoch.
+
+    :param use_only_coinciding_beams: bool (optional; default is True).
+            - If True; apply gate and beam range restrictions, but don't adjust velocities
+            - If False; still apply gate and beam range restrictions, but also modify velocities (requires reference
+            beams be passed in)
     :param station1_ref_beam: int:
+            Only referenced if use_only_coinciding_beams == False.
             The beam used to adjust station1 velocity measurements so they are as if they are looking along this beam.
             We need to modify LoS velocities so that line-of-sight velocity measurements from different directions can
             be compared directly - to do this select two beam (one from each station) that point the same direction and
             adjust all velocities so it is as if all velocity measurements are looking along this same line-of-sight.
     :param station2_ref_beam: int:
+            Only referenced if use_only_coinciding_beams == False.
             The beam used to adjust station2 velocity measurements so they are as if they are looking along this beam.
 
-    :param gate_range: (int, int) (optional):
-            Inclusive. The gate range to consider.  If omitted (or None), then all the gates will be considered.
+    :param gate_range1: (int, int) (optional):
+            Inclusive. The gate range for the first station.  If omitted (or None), then all the gates will be considered.
             Note that early gates probably are not seeing F region echoes, so you probably don't want to consider them
             Note that gates start at 0, so gates (0, 3) is 4 gates.
-    :param beam_range: (int, int) (optional):
-            Inclusive. The beam range to consider.  If omitted (or None), then all beams will be considered.
+    :param beam_range1: (int, int) (optional):
+            Inclusive. The beam range for the first station.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
+    :param gate_range2: (int, int) (optional):
+            Inclusive. The gate range for the second station.  If omitted (or None), then all the gates will be considered.
+            Note that early gates probably are not seeing F region echoes, so you probably don't want to consider them
+            Note that gates start at 0, so gates (0, 3) is 4 gates.
+    :param beam_range2: (int, int) (optional):
+            Inclusive. The beam range for the second station.  If omitted (or None), then all beams will be considered.
+            Note that beams start at 0, so beams (0, 3) is 4 beams.
+
     :param freq_range: (float, float) (optional):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
-    :param local_testing: bool (optional):
-            Set this to true if you are testing on your local machine.  Program will then use local dummy data.
     :param plot_type: str (optional):
             The type of plot, either 'contour' or 'pixel', default is 'contour'
+
+    :param local_testing: bool (optional; default is False):
+            Set this to true if you are testing on your local machine.  Program will then use local dummy data.
     """
 
     seconds_in_an_hour = 3600
@@ -92,14 +119,20 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
     if end_epoch < start_epoch:
         raise Exception("two_station_vel_comparison(): start epoch must be before end epoch.")
 
-    # Compute parameter edges used in the contour/pixel comparisons
-    vel_edges = np.linspace(vel_range[0], vel_range[1], num=(n_vel_bins + 1))
+    if use_only_coinciding_beams == False:
+        # We would like to use the entire overlap, make sure we have reference beams
+        if station1_ref_beam is None or station2_ref_beam is None:
+            raise Exception("two_station_vel_comparison(): In order to use the entire overlap, you must pass in "
+                            "reference beams.")
 
     # When writing this I was planning on 4 hour events, warn if this is not what we were given
     four_hours_worth_of_seconds = 4 * seconds_in_an_hour
     if ((end_epoch - start_epoch) - four_hours_worth_of_seconds) > 5:
         warnings.warn("two_station_vel_comparison() was designed to run on four-hour events, "
                       "events of different lengths might not work")
+
+    # Compute parameter edges used in the contour/pixel comparisons
+    vel_edges = np.linspace(vel_range[0], vel_range[1], num=(n_vel_bins + 1))
 
     # Grab the radars info from the hardware files
     all_radars_info = SuperDARNRadars()
@@ -110,10 +143,10 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
 
     # Check input ranges, make sure they work for both radars
     freq_range = check_freq_range(freq_range=freq_range)
-    gate_range = check_gate_range(gate_range=gate_range, hdw_info=first_radars_info.hardware_info)
-    gate_range = check_gate_range(gate_range=gate_range, hdw_info=second_radars_info.hardware_info)
-    beam_range = check_beam_range(beam_range=beam_range, hdw_info=first_radars_info.hardware_info)
-    beam_range = check_beam_range(beam_range=beam_range, hdw_info=second_radars_info.hardware_info)
+    gate_range1 = check_gate_range(gate_range=gate_range1, hdw_info=first_radars_info.hardware_info)
+    gate_range2 = check_gate_range(gate_range=gate_range2, hdw_info=second_radars_info.hardware_info)
+    beam_range1 = check_beam_range(beam_range=beam_range1, hdw_info=first_radars_info.hardware_info)
+    beam_range2 = check_beam_range(beam_range=beam_range2, hdw_info=second_radars_info.hardware_info)
 
     # Make sure that both of the radars provided are in the same hemisphere
     reference_hemisphere = first_radars_info.hemisphere
@@ -141,10 +174,13 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
 
     print("Getting SuperDARN data for " + station1.upper())
     df1 = get_data_handler(station=station1, year_range=year_range, month_range=month_range, day_range=day_range,
-                           gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+                           gate_range=gate_range1, beam_range=beam_range1, freq_range=freq_range,
                            local_testing=local_testing, even_odd_days=None)
     df1 = only_keep_45km_res_data(df1)
-    df1 = adjust_velocities_los(station=station1, df=df1, ref_beam=station1_ref_beam)
+
+    if use_only_coinciding_beams == False:
+        # We want to use the whole overlap range - cosine adjust velocities
+        df1 = adjust_velocities_los(station=station1, df=df1, ref_beam=station1_ref_beam)
 
     df1 = df1.loc[(df1['epoch'] >= start_epoch) & (df1['epoch'] <= end_epoch)]
     df1 = df1.loc[(df1['v'] > -1000) & (df1['v'] < 1000)]  # Remove extreme values
@@ -152,14 +188,18 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
 
     print("Restricting " + station1.upper() + "'s data - only keeping data for those cells that overlap with "
           + station2.upper())
-    df1 = only_keep_overlap(station=station1, df=df1, other_station=station2, gate_min=gate_range[0])
+    df1 = only_keep_overlap(station=station1, df=df1, gate_range=gate_range1, beam_range=beam_range1,
+                            other_station=station2, other_gate_range=gate_range2, other_beam_range=beam_range2)
 
     print("Getting SuperDARN data for " + station2.upper())
     df2 = get_data_handler(station=station2, year_range=year_range, month_range=month_range, day_range=day_range,
-                           gate_range=gate_range, beam_range=beam_range, freq_range=freq_range,
+                           gate_range=gate_range2, beam_range=beam_range2, freq_range=freq_range,
                            local_testing=local_testing, even_odd_days=None)
     df2 = only_keep_45km_res_data(df2)
-    df2 = adjust_velocities_los(station=station2, df=df2, ref_beam=station2_ref_beam)
+
+    if not use_only_coinciding_beams:
+        # We want to use the whole overlap range - cosine adjust velocities
+        df2 = adjust_velocities_los(station=station2, df=df2, ref_beam=station2_ref_beam)
 
     df2 = df2.loc[(df2['epoch'] >= start_epoch) & (df2['epoch'] <= end_epoch)]
     df2 = df2.loc[(df2['v'] > -1000) & (df2['v'] < 1000)]  # Remove extreme values
@@ -167,7 +207,8 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
 
     print("Restricting " + station2.upper() + "'s data - only keep data for those cells that overlap with "
           + station1.upper())
-    df2 = only_keep_overlap(station=station2, df=df2, other_station=station1, gate_min=gate_range[0])
+    df2 = only_keep_overlap(station=station2, df=df2, gate_range=gate_range2, beam_range=beam_range2,
+                            other_station=station1, other_gate_range=gate_range1, other_beam_range=beam_range1)
 
     print("Adding decimal time to " + station1.upper() + "'s data.")
     station1_stid = pydarn.read_hdw_file(station1).stid
@@ -180,34 +221,39 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
                                  date_time_est=(df2['datetime'].iat[0]).to_pydatetime())
 
     print("Preparing the figure...")
-    fig = plt.figure(figsize=[12, 10], constrained_layout=True, dpi=300)
+    fig = plt.figure(figsize=[12, 11], constrained_layout=True, dpi=300)
     axes = add_axes(fig=fig, station1=station1, station2=station2, reference_hemisphere=reference_hemisphere)
 
     apply_subplot_formatting(axes=axes, station1=station1, station2=station2,
-                             gate_range=gate_range, vel_range=vel_range, hour_range=hour_range,
-                             reference_hemisphere=reference_hemisphere)
+                             gate_range1=gate_range1, gate_range2=gate_range2, vel_range=vel_range,
+                             hour_range=hour_range, reference_hemisphere=reference_hemisphere)
 
     title_figure(fig=fig, station1=station1, station2=station2,
                  starting_datetime=starting_datetime, ending_datetime=ending_datetime,
-                 beam_range=beam_range, gate_range=gate_range, freq_range=freq_range,
-                 title_fontsize=title_fontsize)
+                 gate_range1=gate_range1, gate_range2=gate_range2, beam_range1=beam_range1, beam_range2=beam_range2,
+                 freq_range=freq_range, title_fontsize=title_fontsize)
 
     print("Working on the range-time profile for " + station1.upper())
-    complete_range_time_profile(fig=fig, ax=axes['rti'][station1], df=df1, gate_range=gate_range,
+    complete_range_time_profile(fig=fig, ax=axes['rti'][station1], df=df1, gate_range=gate_range1,
                                 hour_range=hour_range, param='v', param_range=vel_range, cmap=rt_cmap)
 
     print("Working on the range-time profile for " + station2.upper())
-    complete_range_time_profile(fig=fig, ax=axes['rti'][station2], df=df2, gate_range=gate_range,
+    complete_range_time_profile(fig=fig, ax=axes['rti'][station2], df=df2, gate_range=gate_range2,
                                 hour_range=hour_range, param='v', param_range=vel_range, cmap=rt_cmap)
 
     print("Working on the map")
     complete_map_subplot(ax=axes['map'], station1=station1, station2=station2,
                          station1_ref_beam=station1_ref_beam, station2_ref_beam=station2_ref_beam,
-                         gate_range=gate_range, beam_range=beam_range)
+                         gate_range1=gate_range1, gate_range2=gate_range2,
+                         beam_range1=beam_range1, beam_range2=beam_range2,
+                         use_only_coinciding_beams=use_only_coinciding_beams)
 
     print("Building a matched dataframe...")
-    matched_df = build_two_radar_matched_data(station1=station1, df1=df1, station2=station2, df2=df2,
-                                              time_interval_s=time_interval_s, gate_min=gate_range[0])
+    matched_df = build_two_radar_matched_data(station1=station1, df1=df1, gate_range=gate_range1,
+                                              beam_range=beam_range1, station2=station2, df2=df2,
+                                              other_gate_range=gate_range2, other_beam_range=beam_range2,
+                                              time_interval_s=time_interval_s)
+
     matched_df = matched_df.loc[(matched_df['count1'] >= count_min) & (matched_df['count2'] >= count_min)]
 
     print("Completing the large comparison plots")
@@ -342,7 +388,7 @@ def complete_range_time_profile(fig, ax, df, gate_range, hour_range, param, para
 
 
 def title_figure(fig, station1, station2, starting_datetime, ending_datetime,
-                 beam_range, gate_range, freq_range,
+                 gate_range1, beam_range1, gate_range2, beam_range2, freq_range,
                  title_fontsize):
     """
     :param fig: The figure to title
@@ -355,24 +401,32 @@ def title_figure(fig, station1, station2, starting_datetime, ending_datetime,
             The start of the event
     :param ending_datetime:
             The end of the event
-    :param beam_range: See two_station_vel_comparison() docstring
-    :param gate_range: See two_station_vel_comparison() docstring
+    :param gate_range1: See two_station_vel_comparison() docstring
+    :param beam_range1: See two_station_vel_comparison() docstring
+    :param gate_range2: See two_station_vel_comparison() docstring
+    :param beam_range2: See two_station_vel_comparison() docstring
     :param freq_range: See two_station_vel_comparison() docstring
     :param title_fontsize:
     """
 
-    beam_string = "Allowed Beams " + str(beam_range[0]) + "-" + str(beam_range[1])
-    gate_string = "Allowed Gates " + str(gate_range[0]) + "-" + str(gate_range[1])
+    first_station_string = "Station 1: " + station1.upper() + \
+                           " (Beams " + str(beam_range1[0]) + "-" + str(beam_range1[1]) + \
+                           "; Gates: " + str(gate_range1[0]) + "-" + str(gate_range1[1]) + ")"
+    second_station_string = "Station 2: " + station2.upper() + \
+                            " (Beams " + str(beam_range2[0]) + "-" + str(beam_range2[1]) + \
+                            "; Gates: " + str(gate_range2[0]) + "-" + str(gate_range2[1]) + ")"
+
     freq_string = "Frequencies " + str(freq_range[0]) + "-" + str(freq_range[1]) + " MHz"
 
-    fig.suptitle(station1.upper() + " and " + station2.upper() + " Velocity Comparison.  From "
-                 + str(starting_datetime) + " to " + str(ending_datetime) + " (UTC)."
-                                                                            "\n" + gate_string + "; " + beam_string + "; " + freq_string +
-                 "\nProduced by " + str(os.path.basename(__file__)), fontsize=title_fontsize)
+    fig.suptitle("Velocity Comparison. From " + str(starting_datetime) + " to " + str(ending_datetime) + " (UTC)." +
+                 "\n" + first_station_string +
+                 "\n" + second_station_string +
+                 "\n" + freq_string + "; Produced by " + str(os.path.basename(__file__)), fontsize=title_fontsize)
 
 
 def complete_map_subplot(ax, station1, station2, station1_ref_beam, station2_ref_beam,
-                         gate_range, beam_range, colours=None):
+                         gate_range1, gate_range2, beam_range1, beam_range2,
+                         use_only_coinciding_beams, colours=None):
     """
 
     Complete the map subplot.
@@ -385,10 +439,13 @@ def complete_map_subplot(ax, station1, station2, station1_ref_beam, station2_ref
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
     :param station2: str:
             The second radar station to consider, again as a 3 character string.
-    :param gate_range: See two_station_vel_comparison() docstring
-    :param beam_range: See two_station_vel_comparison() docstring
+    :param gate_range1: See two_station_vel_comparison() docstring
+    :param beam_range1: See two_station_vel_comparison() docstring
+    :param gate_range2: See two_station_vel_comparison() docstring
+    :param beam_range2: See two_station_vel_comparison() docstring
     :param station1_ref_beam: See two_station_vel_comparison() docstring
     :param station2_ref_beam: See two_station_vel_comparison() docstring
+    :param use_only_coinciding_beams: See two_station_vel_comparison() docstring
 
     :param colours: dictionary of named colours: (optional; default is {station1: "red", station2: "blue"}):
             The colour to use for each station's dot/shading
@@ -401,6 +458,13 @@ def complete_map_subplot(ax, station1, station2, station1_ref_beam, station2_ref
     for station in [station1, station2]:
 
         """ Plot both radar's fans"""
+        if station == station1:
+            gate_range = gate_range1
+            beam_range = beam_range1
+        else:
+            gate_range = gate_range2
+            beam_range = beam_range2
+
         all_radars_info = SuperDARNRadars()
         station_stid = pydarn.read_hdw_file(station).stid
         radar_info = all_radars_info.radars[station_stid]
@@ -430,10 +494,6 @@ def complete_map_subplot(ax, station1, station2, station1_ref_beam, station2_ref
                     color='black', linewidth=0.1, transform=ccrs.Geodetic(), zorder=4)
 
         """ Shade the overlapping areas"""
-        if station == station1:
-            other_station = station2
-        else:
-            other_station = station1
         # Build reduced arrays containing only the cells in the specified gate/beam range
         reduced_cell_corners_lons = cell_corners_lons[gate_range[0]: gate_range[1] + 2,
                                     beam_range[0]: beam_range[1] + 2]
@@ -451,9 +511,21 @@ def complete_map_subplot(ax, station1, station2, station1_ref_beam, station2_ref
                 gate = gate_range[0] + gate_idx
                 beam = beam_range[0] + beam_idx
                 # print("Gate: " + str(gate) + ", beam : " + str(beam))
-                station2_beam, station2_gate = compute_df_radar_overlap(station1=station, station1_beam=beam,
-                                                                        station1_gate=gate, station2=other_station,
-                                                                        gate_range=gate_range, beam_range=beam_range)
+                if station == station1:
+                    station2_beam, station2_gate = compute_df_radar_overlap(station1=station1, station1_beam=beam,
+                                                                            station1_gate=gate, station2=station2,
+                                                                            gate_range1=gate_range1,
+                                                                            beam_range1=beam_range1,
+                                                                            gate_range2=gate_range2,
+                                                                            beam_range2=beam_range2)
+                else:
+                    # We need to pass in station1=station2 and vice versa
+                    station2_beam, station2_gate = compute_df_radar_overlap(station1=station2, station1_beam=beam,
+                                                                            station1_gate=gate, station2=station1,
+                                                                            gate_range1=gate_range2,
+                                                                            beam_range1=beam_range2,
+                                                                            gate_range2=gate_range1,
+                                                                            beam_range2=beam_range1)
 
                 if station2_beam is not None and station2_gate is not None:
                     # Then we have a valid overlap
@@ -463,41 +535,41 @@ def complete_map_subplot(ax, station1, station2, station1_ref_beam, station2_ref
         ax.pcolormesh(reduced_cell_corners_lons, reduced_cell_corners_lats, scan,
                       transform=ccrs.PlateCarree(), cmap=cmap, alpha=0.2, zorder=3)
 
-        """ Mark the reference beams """
-        if station == station1:
-            ref_beam = station1_ref_beam
-        else:
-            ref_beam = station2_ref_beam
-        # Compute cell centroids for the reference beam
-        gates = np.arange(start=gate_range[0], stop=gate_range[1], step=1)
+        if not use_only_coinciding_beams:
+            """ Mark the reference beams """
+            if station == station1:
+                ref_beam = station1_ref_beam
+            else:
+                ref_beam = station2_ref_beam
+            # Compute cell centroids for the reference beam
+            gates = np.arange(start=gate_range[0], stop=gate_range[1], step=1)
 
-        ref_beam_cell_center_lons = np.zeros(shape=gates.shape)
-        ref_beam_cell_center_lats = np.zeros(shape=gates.shape)
-        ref_beam_cell_center_lons[:] = np.nan
-        ref_beam_cell_center_lats[:] = np.nan
+            ref_beam_cell_center_lons = np.zeros(shape=gates.shape)
+            ref_beam_cell_center_lats = np.zeros(shape=gates.shape)
+            ref_beam_cell_center_lons[:] = np.nan
+            ref_beam_cell_center_lats[:] = np.nan
 
-        for idx, gate_corner in enumerate(gates):
+            for idx, gate_corner in enumerate(gates):
+                cent_lon, cent_lat = centroid([(cell_corners_lons[gate_corner, ref_beam],
+                                                cell_corners_lats[gate_corner, ref_beam]),
+                                               (cell_corners_lons[gate_corner + 1, ref_beam],
+                                                cell_corners_lats[gate_corner + 1, ref_beam]),
+                                               (cell_corners_lons[gate_corner, ref_beam + 1],
+                                                cell_corners_lats[gate_corner, ref_beam + 1]),
+                                               (cell_corners_lons[gate_corner + 1, ref_beam + 1],
+                                                cell_corners_lats[gate_corner + 1, ref_beam + 1])])
+                ref_beam_cell_center_lons[idx] = cent_lon
+                ref_beam_cell_center_lats[idx] = cent_lat
 
-            cent_lon, cent_lat = centroid([(cell_corners_lons[gate_corner, ref_beam],
-                                            cell_corners_lats[gate_corner, ref_beam]),
-                                           (cell_corners_lons[gate_corner + 1, ref_beam],
-                                            cell_corners_lats[gate_corner + 1, ref_beam]),
-                                           (cell_corners_lons[gate_corner, ref_beam + 1],
-                                            cell_corners_lats[gate_corner, ref_beam + 1]),
-                                           (cell_corners_lons[gate_corner + 1, ref_beam + 1],
-                                            cell_corners_lats[gate_corner + 1, ref_beam + 1])])
-            ref_beam_cell_center_lons[idx] = cent_lon
-            ref_beam_cell_center_lats[idx] = cent_lat
-
-        # plot the beam centroid line
-        ax.plot(ref_beam_cell_center_lons, ref_beam_cell_center_lats,
-                color=colours[station], linewidth=0.5, transform=ccrs.Geodetic(), zorder=5)
+            # plot the beam centroid line
+            ax.plot(ref_beam_cell_center_lons, ref_beam_cell_center_lats,
+                    color=colours[station], linewidth=0.5, transform=ccrs.Geodetic(), zorder=5)
 
     ax.legend(loc='upper right', ncol=2)
 
 
 def apply_subplot_formatting(axes, station1, station2, reference_hemisphere, hour_range,
-                             gate_range=(0, 74), vel_range=(-600, 600)):
+                             gate_range1=(0, 74), gate_range2=(0, 74), vel_range=(-600, 600)):
     """
 
     :param axes: dictionary of matplotlib.axes:
@@ -512,7 +584,9 @@ def apply_subplot_formatting(axes, station1, station2, reference_hemisphere, hou
     :param hour_range: (float, float):
             The hour range to consider.
 
-    :param gate_range: (int, int) (Optional; default is (0, 74))
+    :param gate_range1: (int, int) (Optional; default is (0, 74))
+            See two_station_vel_comparison() docstring
+    :param gate_range2: (int, int) (Optional; default is (0, 74))
             See two_station_vel_comparison() docstring
     :param vel_range: (float, float) (Optional; default is (-600, 600))
             The velocity range in m/s
@@ -527,6 +601,11 @@ def apply_subplot_formatting(axes, station1, station2, reference_hemisphere, hou
         if axis_key == 'rti':
             # We are formatting the large RTI plots
             for station, ax in axis_item.items():
+                if station == station1:
+                    gate_range = gate_range1
+                else:
+                    gate_range = gate_range2
+
                 y_lim = gate_range
                 x_lim = hour_range
 
@@ -627,56 +706,57 @@ if __name__ == '__main__':
     """ Testing """
 
     local_testing = True
+    use_only_coinciding_beams = True  # See note from Koustov regarding validity of cosine approach
 
     if local_testing:
         station1 = "dcn"
+        gate_range1 = (20, 74)
+        beam_range1 = (14, 15)
         station1_ref_beam = 15
         station2 = "mcm"
+        gate_range2 = (20, 74)
+        beam_range2 = (8, 8)
         station2_ref_beam = 8
 
         # station1 = "inv"
+        # gate_range1 = (20, 74)
+        # beam_range1 = (12, 14)
         # station1_ref_beam = 13
         # station2 = "kod"
+        # gate_range2 = (20, 74)
+        # beam_range2 = (7, 8)
         # station2_ref_beam = 7
 
         # station1 = "pgr"
+        # gate_range1 = (20, 74)
+        # beam_range1 = (5, 6)
         # station1_ref_beam = 6
         # station2 = "cvw"
+        # gate_range2 = (20, 74)
+        # beam_range2 = (15, 15)
         # station2_ref_beam = 15
 
         # station1 = "inv"
+        # gate_range1 = (15, 74)
+        # beam_range1 = (15, 15)
         # station1_ref_beam = 15
         # station2 = "cly"
+        # gate_range2 = (15, 74)
+        # beam_range2 = (4, 5)
         # station2_ref_beam = 4
 
-        # station1 = "rkn"
-        # station1_ref_beam = 1
-        # station2 = "kap"
-        # station2_ref_beam = 12
-
-        # station1 = "mcm"
-        # station1_ref_beam = 1
-        # station2 = "ker"
-        # station2_ref_beam = 12
-
-        # station1 = "bpk"
-        # station1_ref_beam = 0
-        # station2 = "tig"
-        # station2_ref_beam = 11
-
-        gate_range = (20, 74)
-        beam_range = (0, 15)
-
-        # This is a DCN/MCM event:
+        # These epochs are for a DCN/MCM event:
         start_epoch = 1321070400  # Saturday, November 12, 2011 4:00:00 AM UTC = 1321070400
         end_epoch = 1321084800  # Saturday, November 12, 2011 8:00:00 AM UTC = 1321084800
 
         # Note: year, month, and day don't matter for local testing
         fig = two_station_vel_comparison(station1=station1, station2=station2,
                                          start_epoch=start_epoch, end_epoch=end_epoch,
+                                         use_only_coinciding_beams=use_only_coinciding_beams,
                                          station1_ref_beam=station1_ref_beam, station2_ref_beam=station2_ref_beam,
-                                         gate_range=gate_range, beam_range=beam_range, freq_range=None,
-                                         local_testing=local_testing, plot_type='contour')
+                                         gate_range1=gate_range1, beam_range1=beam_range1, gate_range2=gate_range2,
+                                         beam_range2=beam_range2, freq_range=None, plot_type='contour',
+                                         local_testing=local_testing)
 
         plt.show()
 
@@ -698,20 +778,23 @@ if __name__ == '__main__':
             station1_ref_beam = int(event_df['station1_ref_beam'].iat[i])
             station2_ref_beam = int(event_df['station2_ref_beam'].iat[i])
 
-            gate_range = event_df['gate_range'].iat[i]
-            beam_range = event_df['beam_range'].iat[i]
+            gate_range1 = event_df['gate_range1'].iat[i]
+            beam_range1 = event_df['beam_range1'].iat[i]
+            gate_range2 = event_df['gate_range2'].iat[i]
+            beam_range2 = event_df['beam_range2'].iat[i]
             freq_range = event_df['freq_range'].iat[i]
             plot_type = event_df['plot_type'].iat[i]
-
 
             print("Running from " + str(start_epoch) + " to " + str(end_epoch) + " for "
                   + station1.upper() + " and " + station2.upper())
 
             fig = two_station_vel_comparison(station1=station1, station2=station2,
                                              start_epoch=start_epoch, end_epoch=end_epoch,
+                                             use_only_coinciding_beams=use_only_coinciding_beams,
                                              station1_ref_beam=station1_ref_beam, station2_ref_beam=station2_ref_beam,
-                                             gate_range=gate_range, beam_range=beam_range, freq_range=None,
-                                             local_testing=local_testing, plot_type=plot_type)
+                                             gate_range1=gate_range1, beam_range1=beam_range1, gate_range2=gate_range2,
+                                             beam_range2=beam_range2, freq_range=None, plot_type=plot_type,
+                                             local_testing=local_testing)
 
             out_fig = out_dir + "/two_station_comparison-" + station1 + "_" + station2 + \
                       "-from_" + str(start_epoch) + "_to_" + str(end_epoch)

@@ -19,7 +19,8 @@ except ImportError:
     from add_mlt_to_df import centroid
 
 
-def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2, gate_range=(20, 74), beam_range=(0, 15)):
+def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2,
+                             gate_range1=(20, 74), beam_range1=(0, 15), gate_range2=(20, 74), beam_range2=(0, 15)):
     """
 
     Given a SuperDARN radar cell - compute the overlapping cell from a second radar.
@@ -38,20 +39,27 @@ def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2, g
             The gate of the first station's cell
     :param station2:
             The second station we want to match up with
-    :param gate_range: (int, int):
-            The range of allowable gates.  Gate matches from outside this range (at either radar) will not be considered
-            Often the near gates will not see F region echoes.
-            So, you probably want to start around gate 20.
-    :param beam_range: (int, int):
-            The range of allowable beams.  Beam matches from outside this range (at either radar) will not be considered
+
+    :param gate_range1: (int, int):
+            The range of allowable gates for station1.  Gate matches from outside this range will not be considered.
+            Often the near gates will not see F region echoes. So, you probably want to start around gate 20.
+    :param beam_range1: (int, int):
+            The range of allowable beams for station1.  Beam matches from outside this range will not be considered.
+    :param gate_range2: (int, int):
+            The range of allowable gates for station2.  Gate matches from outside this range (at either radar)
+             will not be considered.  Often the near gates will not see F region echoes. So, you probably want to start
+             around gate 20.
+    :param beam_range2: (int, int):
+            The range of allowable beams for station2.  Beam matches from outside this range (at either radar) will not
+             be considered.
 
     :return station2_beam, station2_gate: int, int:
             The beam and gate of station2 that overlap with the provided station1_beam and station1_gate
             If no valid overlap is found - then None, None is returned
     """
 
-    if station1_gate < gate_range[0] or station1_gate > gate_range[1] or \
-            station1_beam < beam_range[0] or station1_beam > beam_range[1]:
+    if station1_gate < gate_range1[0] or station1_gate > gate_range1[1] or \
+            station1_beam < beam_range1[0] or station1_beam > beam_range1[1]:
         # We are outside of the allowable gate/beam range
         return None, None
 
@@ -107,8 +115,8 @@ def compute_df_radar_overlap(station1, station1_beam, station1_gate, station2, g
     station2_gate, station2_beam = np.unravel_index(station2_cell_centroid_distances.argmin(),
                                                     station2_cell_centroid_distances.shape)
 
-    if station2_gate < gate_range[0] or station2_gate > gate_range[1] or \
-            station2_beam < beam_range[0] or station2_beam > beam_range[1]:
+    if station2_gate < gate_range2[0] or station2_gate > gate_range2[1] or \
+            station2_beam < beam_range2[0] or station2_beam > beam_range2[1]:
         # We are outside of the allowable gate/beam range
         return None, None
 

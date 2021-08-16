@@ -8,7 +8,9 @@ except:
     from DataAnalysis.EchoOccurrence.lib.compute_sd_radar_overlap import compute_df_radar_overlap
 
 
-def build_two_radar_matched_data(station1, df1, station2, df2, time_interval_s, gate_min=30):
+def build_two_radar_matched_data(station1, df1, gate_range, beam_range,
+                                 station2, df2, other_gate_range, other_beam_range,
+                                 time_interval_s):
     """
 
     Given two SuperDARN fit dataframes, build and return a dataframe holding matched data.
@@ -28,13 +30,27 @@ def build_two_radar_matched_data(station1, df1, station2, df2, time_interval_s, 
     :param station1: str:
             The first radar station to consider, as 3 character string (e.g. "rkn").
             For a complete listing of available stations, please see https://superdarn.ca/radar-info
-    :param station2: str:
-            The second radar station to consider, again as a 3 character string.
     :param df1: pandas.DataFrame:
             The SuperDARN fit dataframe for station1.
+    :param gate_range: (int, int):
+            The range of allowable gates for station.  Gate matches from outside this range will not be considered.
+            Often the near gates will not see F region echoes. So, you probably want to start
+             around gate 20.
+    :param beam_range: (int, int):
+            The range of allowable beams for station.  Beam matches from outside this range will not be considered.
+
+    :param station2: str:
+            The second radar station to consider, again as a 3 character string.
     :param df2: pandas.DataFrame:
             The SuperDARN fit dataframe for station2.
             Needs to have temporal and spatial overlap with the first dataframe otherwise no matches will be found.
+    :param other_gate_range: (int, int):
+            The range of allowable gates for other_station.  Gate matches from outside this range will not be considered.
+            Often the near gates will not see F region echoes. So, you probably want to start
+             around gate 20.
+    :param other_beam_range: (int, int):
+            The range of allowable beams for other_station.  Beam matches from outside this range will not be considered.
+
     :param time_interval_s: int:
             The time resolution of the data.  Data is clumped into intervals of time_interval_s.
 
@@ -78,8 +94,12 @@ def build_two_radar_matched_data(station1, df1, station2, df2, time_interval_s, 
             df1_ss = df1[(df1['bmnum'] == station1_beam) & (df1['slist'] == station1_gate)]
 
             station2_beam, station2_gate = compute_df_radar_overlap(station1=station1, station1_beam=station1_beam,
-                                                                    station1_gate=station1_gate, station2=station2,
-                                                                    gate_min=gate_min)
+                                                                    station1_gate=station1_gate,
+                                                                    gate_range1=gate_range,
+                                                                    beam_range1=beam_range,
+                                                                    station2=station2,
+                                                                    gate_range2=other_gate_range,
+                                                                    beam_range2=other_beam_range)
 
             df2_ss = df2[(df2['bmnum'] == station2_beam) & (df2['slist'] == station2_gate)]
 
