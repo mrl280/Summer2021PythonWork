@@ -1,20 +1,20 @@
 import pandas as pd
 
 
-def get_inv_kod_overlap_events():
+def get_select_prg_cvw_overlap_events():
     """"
     Build and return an event dataframe to hold all the two radar overlap events we want to look at
     """
 
-    # station1 = "inv"
-    # gate_range1 = (15, 74)
-    # beam_range1 = (15, 15)
-    # station1_ref_beam = 15
+    station1 = "pgr"
+    gate_range1 = (20, 74)
+    beam_range1 = (5, 6)
+    station1_ref_beam = 6
 
-    # station2 = "cly"
-    # gate_range2 = (15, 74)
-    # beam_range2 = (4, 5)
-    # station2_ref_beam = 4
+    station2 = "cvw"
+    gate_range2 = (20, 74)
+    beam_range2 = (15, 15)
+    station2_ref_beam = 15
 
     freq_range = (8, 11)
     plot_type = 'contour'

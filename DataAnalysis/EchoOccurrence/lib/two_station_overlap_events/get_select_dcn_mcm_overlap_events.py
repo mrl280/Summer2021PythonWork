@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def get_dcn_mcm_overlap_events():
+def get_select_dcn_mcm_overlap_events():
     """"
     Build and return an event dataframe to hold all the two radar overlap events we want to look at
     """

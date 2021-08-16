@@ -11,9 +11,9 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import numpy as np
 
+from lib.two_station_overlap_events.get_select_dcn_mcm_overlap_events import get_select_dcn_mcm_overlap_events
 from lib.add_mlt_to_df import centroid
 from lib.adjust_velocities_los import adjust_velocities_los
-from lib.two_station_overlap_events.get_dcn_mcm_overlap_events import get_dcn_mcm_overlap_events
 from lib.only_keep_overlap import only_keep_overlap
 from lib.build_two_radar_matched_data import build_two_radar_matched_data
 from lib.cm.single_colour_cmap import single_colour_cmap
@@ -32,8 +32,11 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
 
     Produce a series of plots that is meant to showcase the velocity comparison between two SuperDARN radars.
 
+    This program is meant to run on individual events starting at start_epoch and ending at end_epoch, if you want to
+     produce combined plots for a large number of events, see two_station_vel_comparison_whole_year().
+
     The plan was to use find_high_vel_overlap_events() to find event of interest and then to feed those events into
-     this program.
+     this program. The events of interest have to be hand picked out of the overlap event files
 
     Contour/pixel comparison plots will have station1 along the x-axis.
 
@@ -762,7 +765,7 @@ if __name__ == '__main__':
 
     else:
 
-        event_df = get_dcn_mcm_overlap_events()
+        event_df = get_select_dcn_mcm_overlap_events()
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"

@@ -12,7 +12,7 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import numpy as np
 
-from lib.two_station_overlap_events.get_dcn_mcm_overlap_events import get_dcn_mcm_overlap_events
+from lib.two_station_overlap_events.get_select_dcn_mcm_overlap_events import get_select_dcn_mcm_overlap_events
 from lib.elevation_v2 import elevation_v2
 from lib.only_keep_overlap import only_keep_overlap
 from lib.build_two_radar_matched_data import build_two_radar_matched_data
@@ -679,7 +679,7 @@ if __name__ == '__main__':
 
     else:
 
-        event_df = get_dcn_mcm_overlap_events()
+        event_df = get_select_dcn_mcm_overlap_events()
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
