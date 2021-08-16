@@ -94,13 +94,12 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
     :param beam_range2: (int, int) (optional):
             Inclusive. The beam range for the second station.  If omitted (or None), then all beams will be considered.
             Note that beams start at 0, so beams (0, 3) is 4 beams.
-
     :param freq_range: (float, float) (optional):
             Inclusive.  The frequency range to consider in MHz.
             If omitted (or None), then all frequencies are considered.
-    :param plot_type: str (optional):
-            The type of plot, either 'contour' or 'pixel', default is 'contour'
 
+    :param plot_type: str (optional; default is 'contour'):
+            The type of plot, either 'contour' or 'pixel', default is 'contour'
     :param local_testing: bool (optional; default is False):
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
     """
@@ -178,7 +177,7 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
                            local_testing=local_testing, even_odd_days=None)
     df1 = only_keep_45km_res_data(df1)
 
-    if use_only_coinciding_beams == False:
+    if not use_only_coinciding_beams:
         # We want to use the whole overlap range - cosine adjust velocities
         df1 = adjust_velocities_los(station=station1, df=df1, ref_beam=station1_ref_beam)
 
