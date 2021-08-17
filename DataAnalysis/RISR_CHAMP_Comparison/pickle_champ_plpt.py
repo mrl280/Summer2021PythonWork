@@ -5,11 +5,7 @@ import os
 import pandas as pd
 import dill as pickle
 
-try:
-    from .build_datetime_epoch import build_datetime_epoch
-except ImportError:
-    # We are performing local testing
-    from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_epoch
+from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_epoch
 
 
 def pickle_champ_plpt(year, month, day):
@@ -37,7 +33,7 @@ def pickle_champ_plpt(year, month, day):
             The day of the event to pickle
     """
 
-    in_dir = "../data/champ"
+    in_dir = "data/champ"
     for in_file in glob.iglob(in_dir + "/*PLPT*.dat"):
         file_name = str(os.path.basename(in_file))
 
