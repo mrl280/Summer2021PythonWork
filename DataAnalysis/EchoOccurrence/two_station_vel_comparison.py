@@ -105,6 +105,9 @@ def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
             The type of plot, either 'contour' or 'pixel', default is 'contour'
     :param local_testing: bool (optional; default is False):
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
+
+    :return fig:  matplotlib.pyplot.figure:
+            The figure. It can then be modified, added to, printed out, or saved in whatever format is desired.
     """
 
     seconds_in_an_hour = 3600

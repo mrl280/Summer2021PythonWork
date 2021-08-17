@@ -96,6 +96,9 @@ def two_station_vel_comparison_whole_year(station1, station2, year, use_only_coi
             The type of plot, either 'contour' or 'pixel', default is 'contour'
     :param local_testing: bool (optional; default is False):
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
+
+    :return fig:  matplotlib.pyplot.figure:
+            The figure. It can then be modified, added to, printed out, or saved in whatever format is desired.
     """
 
     vel_range = (-1000, 1000)

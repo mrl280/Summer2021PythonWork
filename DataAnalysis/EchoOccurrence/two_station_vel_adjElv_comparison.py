@@ -71,7 +71,10 @@ def two_station_vel_adjElv_comparison(station1, station2, start_epoch, end_epoch
     :param local_testing: bool (optional):
             Set this to true if you are testing on your local machine.  Program will then use local dummy data.
     :param plot_type: str (optional):
-            The type of plot, either 'contour' or 'pixel', default is 'contour'
+            The type of plot, either 'contour' or 'pixel', default is 'contour'.
+
+    :return fig:  matplotlib.pyplot.figure:
+            The figure. It can then be modified, added to, printed out, or saved in whatever format is desired.
     """
 
     Re = 6370  # Radius of the Earth, [km]
