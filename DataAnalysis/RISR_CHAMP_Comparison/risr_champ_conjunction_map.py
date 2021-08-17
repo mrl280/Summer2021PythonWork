@@ -121,8 +121,13 @@ def add_risr_points(ax, year, month, day, start_epoch, end_epoch, color):
 
     print("Here is RISR's max altitude: " + str(np.max(df['gdalt'])))
     print("Here is RISR's min altitude: " + str(np.min(df['gdalt'])))
-    print("Restricting to RISR altitude...")
 
+    print("Here are RISR's elevations:")
+    print(df['elv'].unique())
+
+    df = df.loc[df['elv'] >= 49]
+
+    print("Restricting to RISR altitude...")
     df = df.loc[(df['gdalt'] >= 300) & (df['gdalt'] <= 340)]
 
     print(df.head())
