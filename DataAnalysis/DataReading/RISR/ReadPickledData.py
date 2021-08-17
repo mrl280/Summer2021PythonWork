@@ -19,6 +19,7 @@ if __name__ == '__main__':
     data_stream = bz2.BZ2File(in_file, "rb")
     df = pd.read_pickle(data_stream)
 
+    print(df.keys())
     print(df.head())
 
     # Grab start and end times
@@ -34,6 +35,16 @@ if __name__ == '__main__':
     print("Min aspect: " + str(min(df['aspect'].unique())))
     print("Max aspect: " + str(max(df['aspect'].unique())))
     print("Mean aspect: " + str(np.mean(df['aspect'].unique())))
+    print("\n")
+
+    print("Unique latitudes for this beam:")
+    print(df['gdlat'].unique())
+
+    print("Unique longitudes for this beam:")
+    print(df['gdlon'].unique())
+
+    print("Unique altitudes for this beam:")
+    print(df['gdalt'].unique())
 
     # df = df.drop_duplicates(subset=['dateTime'])
     # print(df['minute'].iloc[1] - df['minute'].iloc[0])
