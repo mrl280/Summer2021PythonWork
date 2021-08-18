@@ -21,6 +21,9 @@ def highly_averaged_comparison_single_event(year, month, day, risr_start_day, st
 
     This program compares highly averaged CHAMP and RISR data.
 
+    This programs runs on a single event.  It you want to create a single scatter plot for multiple events, see
+     highly_averaged_comparison()
+
     Instructions from Koustov:
         - Consider 3 min RISR data. Average over beams with elevation >50 deg.
         - Consider CHAMP averaged density over geographic latitudes 75 + 76 deg. Longitudinally +/- 20 deg would be
