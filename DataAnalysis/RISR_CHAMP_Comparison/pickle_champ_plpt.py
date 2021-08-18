@@ -37,10 +37,12 @@ def pickle_champ_plpt(year, month, day):
     for in_file in glob.iglob(in_dir + "/*PLPT*.dat"):
         file_name = str(os.path.basename(in_file))
 
-        # Check to see if the file is the one we are looking for
-        if str(year) in file_name and str(month) in file_name and str(day) in file_name:
-            print("We are going to use the following .dat file: " + file_name)
-            print(file_name)
+        # TODO: This check is insufficient, we will usually just pickle all data
+        # # Check to see if the file is the one we are looking for
+        #
+        # if str(year) in file_name and str(month) in file_name and str(day) in file_name:
+        #     print("We are going to use the following .dat file: " + file_name)
+        #     print(file_name)
 
         # Build a temp file all the unnecessary data stripped out
         temp_file = in_dir + "/temp_" + file_name
@@ -90,8 +92,8 @@ if __name__ == '__main__':
     """
 
     year = 2009
-    month = 10
-    day = 16
+    month = 9
+    day = 15
 
     print("Pickling CHAMP PLPT data from " + str(day) + "/" + str(month) + "/" + str(year) + "...")
     pickle_champ_plpt(year=year, month=month, day=day)
