@@ -138,6 +138,9 @@ def get_overlap_event_df1_and_df2(station1, station2, year, use_only_coinciding_
                 day_range = (starting_datetime.day, ending_datetime.day)
                 day_range = check_day_range(day_range=day_range)
 
+                if month_range[0] != month_range[1]:
+                    continue  # We have trouble with events that wrap months, so skip them
+
                 df1_here = get_data_handler(station=station1, year_range=year_range, month_range=month_range,
                                             day_range=day_range, gate_range=gate_range1, beam_range=beam_range1,
                                             local_testing=local_testing, even_odd_days=None)
