@@ -78,6 +78,7 @@ def PickleRISR(station, date):
         # Read in the data from the adjusted temp file
         df = pd.read_csv(temp_file, delim_whitespace=True, lineterminator='\r')
         df.drop(df.tail(1).index, inplace=True)  # drop last row, it is just white space
+        df.replace(to_replace={'missing': np.nan, "assumed": np.nan}, inplace=True)
 
         df['MONTH'] = df['MONTH'].astype(int)
         df['DAY'] = df['DAY'].astype(int)
@@ -109,18 +110,18 @@ def PickleRISR(station, date):
              'hour': df['HOUR'], 'minute': df['MIN'], 'second': df['SEC'],
              'range': df['RANGE'],
              'bmId': df['BEAMID'], 'wdBmnum': wdBmnum, 'bmazm': df['AZM'],
-             'cbadl': df['CBADL'],
+             'cbadl': df['CBADL'].astype(float),
              'elv': df['ELM'],
-             'transFreq': df['TFREQ'], 'receiveFreq': df['RFREQ'],
+             'transFreq': df['TFREQ'].astype(float), 'receiveFreq': df['RFREQ'].astype(float),
              'gdlat': df['GDLAT'], 'gdlon': df['GLON'], 'gdalt': df['GDALT'],
-             'Ne': df['NE'], 'NeErr': df['DNE'],
+             'Ne': df['NE'].astype(float), 'NeErr': df['DNE'].astype(float),
              'ionTemp': df['TI'], 'ionTempErr': df['DTI'],
              'eTemp': df['TE'], 'eTempErr': df['DTE'],
              'losIonVel': df['VO'], 'losIonVelErr': df['DVO'],
              'cgmLat': df['CGM_LAT'], 'cgmLon': df['CGM_LONG'],
-             'comp': df['PO+'], 'compErr': df['DPO+'],
+             'comp': df['PO+'].astype(float), 'compErr': df['DPO+'].astype(float),
              'aspect': df['ASPECT'],
-             'pulseLength': df['PL']
+             'pulseLength': df['PL'].astype(float)
              })
 
         # Compute Data Resolution in minutes
