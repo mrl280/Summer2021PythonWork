@@ -16,7 +16,7 @@ from matplotlib.ticker import MultipleLocator
 from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_epoch
 
 
-def highly_averaged_comparison(year, month, day, risr_start_day, start_epoch, end_epoch):
+def highly_averaged_comparison_single_event(year, month, day, risr_start_day, start_epoch, end_epoch):
     """
 
     This program compares highly averaged CHAMP and RISR data.
@@ -50,7 +50,7 @@ def highly_averaged_comparison(year, month, day, risr_start_day, start_epoch, en
     risr_lon, risr_lat = -94.91, 74.73  # RISR
     title_fontsize = 14
     risr_data_resolution = 3  # minutes
-    density_range = (0, 15)
+    density_range = (0, 17)
     bisector_colour = "red"
 
     risr_color = "red"
@@ -83,7 +83,7 @@ def highly_averaged_comparison(year, month, day, risr_start_day, start_epoch, en
 
     # Create a Rectangle patch outlining the valid area of overlap
     lat_min = 75
-    lat_max = 77
+    lat_max = 76
     lon_width = 10
     rect1 = patches.Rectangle(xy=(risr_lon - lon_width, lat_min), width=lon_width, height=(lat_max - lat_min),
                               fill=True, alpha=0.2, transform=ccrs.Geodetic(), label="Spatial Overlap Considered")
@@ -223,8 +223,8 @@ if __name__ == '__main__':
     loc_root = str(pathlib.Path().parent.absolute())
     out_dir = loc_root + "/out"
 
-    fig = highly_averaged_comparison(year=year, month=month, day=day, risr_start_day=risr_start_day,
-                                     start_epoch=start_epoch, end_epoch=end_epoch)
+    fig = highly_averaged_comparison_single_event(year=year, month=month, day=day, risr_start_day=risr_start_day,
+                                                  start_epoch=start_epoch, end_epoch=end_epoch)
 
     plt.show()
 
