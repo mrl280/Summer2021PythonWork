@@ -13,11 +13,10 @@ import matplotlib.patches as patches
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
-from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_epoch
 from DataAnalysis.RISR_CHAMP_Comparison.read_in_flyover_events import read_in_flyover_events
 
 
-def highly_averaged_comparison(in_file):
+def highly_averaged_comparison(in_file, lat_range, lon_width):
     """
 
     This program compares highly averaged CHAMP and RISR data.
@@ -44,24 +43,32 @@ def highly_averaged_comparison(in_file):
                 risr_data:          is there RISR data for this event? YES or NO
                 risr_start_day:     Often a single RISR file will contain data for several days. So, this is the day
                                      used in the RISR file name.
+    :param lat_range: (float, float):
+            The allowed latitude range.
+    :param lon_width: float:
+            How many degrees of longitude to use on either side of RISR radar
+            Allowed longitudes will be [risr_lon - lon_width, risr_lon + lon_width]
 
     :return fig:  matplotlib.pyplot.figure:
             The figure. It can then be modified, added to, printed out, or saved in whatever format is desired.
     """
 
-    lat_range = (75, 77)  # deg
-    lon_width = 10  # deg
+    altitude_range = (300, 340)  # km
 
     risr_lon_lat = (-94.91, 74.73)  # RISR location in geographical coordinates
+    lon_range = (risr_lon_lat[0] - lon_width, risr_lon_lat[0] + lon_width)
 
-    title_fontsize = 30
-    risr_data_resolution = 3  # minutes
-    density_range = (0, 30)
+    lat_lon_string = "Lats: " + str(round(lat_range[0], 1)) + " to " + str(round(lat_range[1], 1)) + "; " + \
+                     "Lons: " + str(round(lon_range[0], 1)) + " to " + str(round(lon_range[1], 1))
+
+    title_fontsize = 26
+    density_range = (0, 25)
     bisector_colour = "red"
 
     event_df = read_in_flyover_events(in_file)
-    print("Here is the event dataframe:")
+    print("\nHere is the event dataframe:")
     print(event_df.head())
+    print("Total number of events: " + str(len(event_df)))
 
     print("Preparing the figure...")
     fig = plt.figure(figsize=[20, 12], constrained_layout=True, dpi=300)
@@ -69,19 +76,196 @@ def highly_averaged_comparison(in_file):
     apply_subplot_formatting(axes=axes, density_range=density_range, lat_range=lat_range, lon_width=lon_width,
                              risr_lon_lat=risr_lon_lat, bisector_colour=bisector_colour)
 
-    fig.suptitle("RISR CHAMP Density Comparison (Highly Averaged Approach)"
+    fig.suptitle("RISR CHAMP Density Comparison (Highly Averaged Approach).  " + lat_lon_string +
                  "\nVarious Events from Sept-Dec 2009.  " +
                  "Produced by " + str(os.path.basename(__file__)), fontsize=title_fontsize)
 
     risr_scatter_color = "red"
     champ_scatter_color = "blue"
 
-    # starting_datetime = datetime.datetime.utcfromtimestamp(start_epoch)  # Note we are grabbing UTC datetime objs
-    # ending_datetime = datetime.datetime.utcfromtimestamp(end_epoch)
+    print("Computing datetime objects and epochs...")
+    pattern = '%Y-%m-%d %H:%M'
+    epoch_reference_datetime = datetime.datetime(year=1970, month=1, day=1, hour=0, second=0)
+    datetimes, epoch = [], []
+    for i in range(len(event_df)):
+        datetime_here = datetime.datetime.strptime(event_df['Time'].iat[i], pattern)
+        epoch.append((datetime_here - epoch_reference_datetime).total_seconds())
+        datetimes.append(datetime_here)
+    event_df['datetime'] = datetimes
+    event_df['epoch'] = epoch
 
-    # TODO: Add data to the plots
+    # We need to consider a little bit of time on either side of the flyover
+    time_delta_s = 180
+    event_df['starting_epoch'] = event_df['epoch'] - time_delta_s
+    event_df['ending_epoch'] = event_df['epoch'] + time_delta_s
+
+    risr_matched_medians, champ_matched_medians = [], []
+
+    print("Looping through the events and reading in the data...")
+    for i in range(len(event_df)):
+
+        ax = axes['map'][i]
+        datetime_here = event_df['datetime'].iat[i]
+        start_epoch = event_df['starting_epoch'].iat[i]
+        end_epoch = event_df['ending_epoch'].iat[i]
+
+        # Grab and restrict CHAMP data
+        champ_df = get_champ_df(year=datetime_here.year, month=datetime_here.month, day=datetime_here.day)
+        champ_df = champ_df.loc[(champ_df['epoch'] >= start_epoch) & (champ_df['epoch'] <= end_epoch)]
+
+        # Plot the CHAMP flyover line.  This lets us see where the satellite went event if we aren't considering any
+        #  points from the flyover
+        ax.plot(champ_df['gdlon'], champ_df['gdlat'], linestyle='--', linewidth=0.75, color=champ_scatter_color,
+                transform=ccrs.Geodetic(), label="CHAMP Trajectory")
+
+        champ_df['Ne'] = champ_df['Ne_cm-3'] * 1e6  # Put densities in per m^3 so they are in the same units as RISR
+        champ_df = champ_df.loc[champ_df['Ne'].notna()]
+        champ_df = champ_df.loc[(champ_df['gdlat'] >= lat_range[0]) & (champ_df['gdlat'] <= lat_range[1])]
+        champ_df = champ_df.loc[(champ_df['gdlon'] >= lon_range[0]) & (champ_df['gdlon'] <= lon_range[1])]
+        champ_df.reset_index(drop=True, inplace=True)
+
+        if len(champ_df) > 0:
+            champ_matched_medians.append(np.median(champ_df['Ne']))
+        else:
+            champ_matched_medians.append(np.nan)
+
+        # Plot CHAMP measurments considered
+        ax.scatter(champ_df['gdlon'], champ_df['gdlat'], marker='o', color=champ_scatter_color, s=5,
+                   transform=ccrs.Geodetic(), label="CHAMP Points Considered", zorder=4)
+
+        # Grab and restrict RISR data
+        risr_df = get_risr_df(year=datetime_here.year, month=datetime_here.month,
+                              file_start_day=event_df['risr_start_day'].iat[i])
+        risr_df = risr_df.loc[(risr_df['epoch'] >= start_epoch) & (risr_df['epoch'] <= end_epoch)]
+        risr_df = risr_df.loc[risr_df['elv'] >= 49]
+        risr_df = risr_df.loc[(risr_df['gdalt'] >= altitude_range[0]) & (risr_df['gdalt'] <= altitude_range[1])]
+        risr_df = risr_df.loc[(risr_df['gdlat'] >= lat_range[0]) & (risr_df['gdlat'] <= lat_range[1])]
+        risr_df = risr_df.loc[(risr_df['gdlon'] >= lon_range[0]) & (risr_df['gdlon'] <= lon_range[1])]
+        risr_df = risr_df.loc[risr_df['Ne'].notna()]
+        risr_df.reset_index(drop=True, inplace=True)
+
+        ax.scatter(risr_df['gdlon'], risr_df['gdlat'], marker='o', color=risr_scatter_color, s=5,
+                   transform=ccrs.Geodetic(), label="RISR Points Considered")
+
+        if len(risr_df) > 0:
+            risr_matched_medians.append(np.median(risr_df['Ne']))
+        else:
+            risr_matched_medians.append(np.nan)
+
+        # Title plot
+        ax.set_title(str(event_df['datetime'].iat[i].date()) + "\n" + str(event_df['datetime'].iat[i].time()))
+        ax.legend(loc='upper center', prop={'size': 4})
+
+    risr_matched_medians = np.asarray(risr_matched_medians) / 1e10
+    champ_matched_medians = np.asarray(champ_matched_medians) / 1e10
+
+    # Put the matched data into a dataframe so we can view it easier
+    median_matched_df = pd.DataFrame({'risr': risr_matched_medians,
+                                      'champ': champ_matched_medians,
+                                      'champ/risr ratio': champ_matched_medians / risr_matched_medians})
+
+    median_matched_df = median_matched_df.loc[(median_matched_df['champ/risr ratio'].notna())]
+
+    print("\nHere is the median matched data:")
+    print(median_matched_df)
+
+    # Complete the large scatter plot
+    axes['data'].plot(median_matched_df['risr'], median_matched_df['champ'], 'o', color="purple",
+                      label="Matched Medians")
+
+    # # Do not consider any points less than 1
+    # median_matched_df = median_matched_df.loc[(median_matched_df['risr'] >= 1) & (median_matched_df['champ'] >= 1)]
+
+    # Find the best fit line, and print it out onto the plot
+    x_data = median_matched_df['risr']
+    y_data = median_matched_df['champ']
+    A = np.vstack([x_data, np.ones(len(x_data))]).T
+    m, b = np.linalg.lstsq(A, y_data, rcond=None)[0]
+    axes['data'].plot(x_data, m * x_data + b, 'm',
+                      label="Best fit line (y=" + str(round(m, 3)) + "x + " + str(round(b, 3)) + ")")
+
+    axes['data'].legend(loc='upper left', prop={'size': 20})
 
     return fig
+
+
+def get_risr_df(year, month, file_start_day):
+    """
+
+    Read in RISR Long Pulse data from a pickled file.
+
+    :param year: int:
+            The year to consider.
+    :param month: int:
+            The month to consider.
+    :param file_start_day: int:
+            The day to consider.  Often a single RISR file will contain data for several days.
+            So, this is the day used in the RISR file name.  The day the event in the file starts.
+
+    :return risr_df: pandas.DataFrame:
+            Dataframe containing RISR data.  Data is unfiltered.
+    """
+
+    year = str(year)
+    if month < 10:
+        month = "0" + str(month)
+    else:
+        month = str(month)
+    if file_start_day < 10:
+        file_start_day = "0" + str(file_start_day)
+    else:
+        file_start_day = str(file_start_day)
+
+    station = "ran"
+    date = year + month + file_start_day
+    loc_root = str((pathlib.Path().parent.absolute()).parent.absolute())
+    in_dir = loc_root + "/DataReading/RISR/data/" + station + "/" + station + date
+
+    try:
+        in_file = in_dir + "/" + station + date + ".1min.pbz2"  # Try for 1 minute resolution data
+        data_stream = bz2.BZ2File(in_file, "rb")
+    except FileNotFoundError:
+        in_file = in_dir + "/" + station + date + ".3min.pbz2"  # Use 3 minute data
+        data_stream = bz2.BZ2File(in_file, "rb")
+
+    print("     RISR data obtained from: + " + in_file)
+    risr_df = pd.read_pickle(data_stream)
+
+    return risr_df
+
+
+def get_champ_df(year, month, day):
+    """
+
+    Read in CHAMP PLPT data from a pickled file.
+
+    :param year: int:
+            The year to consider.
+    :param month: int:
+            The month to consider.
+    :param day: int:
+            The day to consider.
+
+    :return champ_df: pandas.DataFrame:
+            Dataframe containing CHAMP data.  Data is unfiltered
+    """
+
+    in_dir = "data/champ"
+    for in_file in glob.iglob(in_dir + "/*PLPT*.pbz2"):
+        file_name = str(os.path.basename(in_file))
+        file_year = file_name[13:17]
+        file_month = file_name[18:20]
+        file_day = file_name[21:23]
+
+        # Check to see if the file is the one we are looking for
+        if str(year) == file_year and str(month) in file_month and str(day) in file_day:
+            print("     CHAMP data obtained from: + " + file_name)
+
+            data_stream = bz2.BZ2File(in_file, "rb")
+            return pd.read_pickle(data_stream)
+
+    raise Exception("Error in get_champ_df(): no data found for " +
+                    "year=" + str(year) + " month=" + str(month) + " day=" + str(day))
 
 
 def apply_subplot_formatting(axes, density_range, lat_range, lon_width, risr_lon_lat, bisector_colour):
@@ -113,7 +297,6 @@ def apply_subplot_formatting(axes, density_range, lat_range, lon_width, risr_lon
             print("Formatting map subplots...")
 
             for event_index, ax in axis_item.items():
-                # ax.set_extent([-180, 180, 90, lat_lower_extent], crs=ccrs.PlateCarree())
                 ax.set_extent([-135, -45, 80, 70], crs=ccrs.PlateCarree())
                 ax.gridlines()
                 # ax.add_feature(cfeature.OCEAN)
@@ -219,16 +402,17 @@ def add_axes(fig):
 if __name__ == '__main__':
     """ Testing """
 
-    loc_root = str(pathlib.Path().parent.absolute())
-    out_dir = loc_root + "/out"
-
+    lat_range = (75, 77)  # deg
+    lon_width = 10  # deg
     in_file = "risr_champ_500km_conjunctions.csv"
 
-    fig = highly_averaged_comparison(in_file=in_file)
+    fig = highly_averaged_comparison(in_file=in_file, lat_range=lat_range, lon_width=lon_width)
 
     plt.show()
 
-    out_fig = out_dir + "/risr_champ_highly_averaged_comparisons-all_events"
+    loc_root = str(pathlib.Path().parent.absolute())
+    out_dir = loc_root + "/out"
+    out_fig = out_dir + "/risr_champ_highly_averaged_comparisons-all_events - lon_width" + str(lon_width)
 
     print("Saving plot as " + out_fig)
-    # fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
+    fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
