@@ -16,10 +16,10 @@ from lib.build_two_radar_matched_data import build_two_radar_matched_data
 from lib.data_getters.input_checkers import *
 
 
-def two_station_vel_comparison_whole_year(station1, station2, year, use_only_coinciding_beams=True,
-                                          station1_ref_beam=None, station2_ref_beam=None,
-                                          gate_range1=None, beam_range1=None, gate_range2=None, beam_range2=None,
-                                          freq_range=None, plot_type='contour', local_testing=False):
+def two_station_vel_comparison_file_events(station1, station2, year, use_only_coinciding_beams=True,
+                                           station1_ref_beam=None, station2_ref_beam=None,
+                                           gate_range1=None, beam_range1=None, gate_range2=None, beam_range2=None,
+                                           freq_range=None, plot_type='contour', local_testing=False):
     """
 
     Produce a velocity comparison plot comparing two SuperDARN radars.
@@ -314,14 +314,14 @@ if __name__ == '__main__':
         end_epoch = 1321084800  # Saturday, November 12, 2011 8:00:00 AM UTC = 1321084800
 
         # Note: year, month, and day don't matter for local testing
-        fig = two_station_vel_comparison_whole_year(station1=station1, station2=station2, year=year,
-                                                    use_only_coinciding_beams=use_only_coinciding_beams,
-                                                    station1_ref_beam=station1_ref_beam,
-                                                    station2_ref_beam=station2_ref_beam,
-                                                    gate_range1=gate_range1, beam_range1=beam_range1,
-                                                    gate_range2=gate_range2, beam_range2=beam_range2,
-                                                    freq_range=None, plot_type='contour',
-                                                    local_testing=local_testing)
+        fig = two_station_vel_comparison_file_events(station1=station1, station2=station2, year=year,
+                                                     use_only_coinciding_beams=use_only_coinciding_beams,
+                                                     station1_ref_beam=station1_ref_beam,
+                                                     station2_ref_beam=station2_ref_beam,
+                                                     gate_range1=gate_range1, beam_range1=beam_range1,
+                                                     gate_range2=gate_range2, beam_range2=beam_range2,
+                                                     freq_range=None, plot_type='contour',
+                                                     local_testing=local_testing)
 
         plt.show()
 
@@ -370,14 +370,14 @@ if __name__ == '__main__':
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
 
-        fig = two_station_vel_comparison_whole_year(station1=station1, station2=station2, year=year,
-                                                    use_only_coinciding_beams=use_only_coinciding_beams,
-                                                    station1_ref_beam=station1_ref_beam,
-                                                    station2_ref_beam=station2_ref_beam,
-                                                    gate_range1=gate_range1, beam_range1=beam_range1,
-                                                    gate_range2=gate_range2, beam_range2=beam_range2,
-                                                    freq_range=None, plot_type=plot_type,
-                                                    local_testing=local_testing)
+        fig = two_station_vel_comparison_file_events(station1=station1, station2=station2, year=year,
+                                                     use_only_coinciding_beams=use_only_coinciding_beams,
+                                                     station1_ref_beam=station1_ref_beam,
+                                                     station2_ref_beam=station2_ref_beam,
+                                                     gate_range1=gate_range1, beam_range1=beam_range1,
+                                                     gate_range2=gate_range2, beam_range2=beam_range2,
+                                                     freq_range=None, plot_type=plot_type,
+                                                     local_testing=local_testing)
 
         out_fig = out_dir + "/two_station_comparison-" + station1 + "_" + station2 + "-" + str(year)
 
