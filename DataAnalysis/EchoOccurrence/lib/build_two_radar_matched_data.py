@@ -77,7 +77,7 @@ def build_two_radar_matched_data(station1, df1, gate_range, beam_range,
         end_epoch = df2_ending_epoch
 
     epoch_edges = np.arange(start=start_epoch, stop=end_epoch, step=time_interval_s)
-    # print("Epoch edges: " + str(epoch_edges))
+    print("Epoch edges: " + str(epoch_edges))
 
     matched_epoch = []
     v1, v2 = [], []
@@ -114,11 +114,19 @@ def build_two_radar_matched_data(station1, df1, gate_range, beam_range,
 
                 matched_epoch.append(int(starting_edge_epoch + time_interval_s / 2))  # Middle of the time interval
 
-                count1.append(df1_ss_tt.shape[0])
-                count2.append(df2_ss_tt.shape[0])
+                if len(df1_ss_tt) > 0:
+                    count1.append(df1_ss_tt.shape[0])
+                    v1.append(np.median(df1_ss_tt['v']))
+                else:
+                    count1.append(0)
+                    v1.append(np.nan)
 
-                v1.append(np.median(df1_ss_tt['v']))
-                v2.append(np.median(df2_ss_tt['v']))
+                if len(df2_ss_tt) > 0:
+                    count2.append(df2_ss_tt.shape[0])
+                    v2.append(np.median(df2_ss_tt['v']))
+                else:
+                    count2.append(0)
+                    v2.append(np.nan)
 
                 try:
                     height1.append(np.median(df1_ss_tt['height']))
