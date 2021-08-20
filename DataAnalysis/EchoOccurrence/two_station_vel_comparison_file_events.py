@@ -11,7 +11,7 @@ import cartopy.feature as cfeature
 import numpy as np
 
 from lib.get_overlap_event_df1_and_df2 import get_overlap_event_df1_and_df2
-from two_station_vel_comparison import complete_map_subplot, complete_comparison_plot
+from two_station_vel_comparison_single_event import complete_map_subplot, complete_comparison_plot
 from lib.build_two_radar_matched_data import build_two_radar_matched_data
 from lib.data_getters.input_checkers import *
 
@@ -233,12 +233,17 @@ def format_map_axis(ax, reference_hemisphere):
     ax.add_feature(cfeature.LAND)
 
 
-def format_data_axis(ax, vel_range):
+def format_data_axis(ax, vel_range, station1, station2):
     """
     :param ax: matplotlib.axes:
             The axes to format.
     :param vel_range: (float, float) (Optional; default is (-600, 600))
             The velocity range in m/s
+    :param station1: str:
+            The first radar station to consider, as 3 character string (e.g. "rkn").
+            For a complete listing of available stations, please see https://superdarn.ca/radar-info
+    :param station2: str:
+            The second radar station to consider, again as a 3 character string.
     """
 
     title_font_size = 10
