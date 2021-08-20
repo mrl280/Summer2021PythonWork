@@ -24,10 +24,12 @@ from lib.get_data_handler import get_data_handler
 from lib.data_getters.input_checkers import *
 
 
-def two_station_vel_comparison(station1, station2, start_epoch, end_epoch,
-                               use_only_coinciding_beams=True, station1_ref_beam=None, station2_ref_beam=None,
-                               gate_range1=None, beam_range1=None, gate_range2=None, beam_range2=None, freq_range=None,
-                               local_testing=False, plot_type='contour'):
+def two_station_vel_comparison_single_event(station1, station2, start_epoch, end_epoch,
+                                            use_only_coinciding_beams=True, station1_ref_beam=None,
+                                            station2_ref_beam=None,
+                                            gate_range1=None, beam_range1=None, gate_range2=None, beam_range2=None,
+                                            freq_range=None,
+                                            local_testing=False, plot_type='contour'):
     """
 
     Produce a series of plots that is meant to showcase the velocity comparison between two SuperDARN radars.
@@ -755,13 +757,15 @@ if __name__ == '__main__':
         end_epoch = 1321084800  # Saturday, November 12, 2011 8:00:00 AM UTC = 1321084800
 
         # Note: year, month, and day don't matter for local testing
-        fig = two_station_vel_comparison(station1=station1, station2=station2,
-                                         start_epoch=start_epoch, end_epoch=end_epoch,
-                                         use_only_coinciding_beams=use_only_coinciding_beams,
-                                         station1_ref_beam=station1_ref_beam, station2_ref_beam=station2_ref_beam,
-                                         gate_range1=gate_range1, beam_range1=beam_range1, gate_range2=gate_range2,
-                                         beam_range2=beam_range2, freq_range=None, plot_type='contour',
-                                         local_testing=local_testing)
+        fig = two_station_vel_comparison_single_event(station1=station1, station2=station2,
+                                                      start_epoch=start_epoch, end_epoch=end_epoch,
+                                                      use_only_coinciding_beams=use_only_coinciding_beams,
+                                                      station1_ref_beam=station1_ref_beam,
+                                                      station2_ref_beam=station2_ref_beam,
+                                                      gate_range1=gate_range1, beam_range1=beam_range1,
+                                                      gate_range2=gate_range2,
+                                                      beam_range2=beam_range2, freq_range=None, plot_type='contour',
+                                                      local_testing=local_testing)
 
         plt.show()
 
@@ -793,13 +797,15 @@ if __name__ == '__main__':
             print("Running from " + str(start_epoch) + " to " + str(end_epoch) + " for "
                   + station1.upper() + " and " + station2.upper())
 
-            fig = two_station_vel_comparison(station1=station1, station2=station2,
-                                             start_epoch=start_epoch, end_epoch=end_epoch,
-                                             use_only_coinciding_beams=use_only_coinciding_beams,
-                                             station1_ref_beam=station1_ref_beam, station2_ref_beam=station2_ref_beam,
-                                             gate_range1=gate_range1, beam_range1=beam_range1, gate_range2=gate_range2,
-                                             beam_range2=beam_range2, freq_range=None, plot_type=plot_type,
-                                             local_testing=local_testing)
+            fig = two_station_vel_comparison_single_event(station1=station1, station2=station2,
+                                                          start_epoch=start_epoch, end_epoch=end_epoch,
+                                                          use_only_coinciding_beams=use_only_coinciding_beams,
+                                                          station1_ref_beam=station1_ref_beam,
+                                                          station2_ref_beam=station2_ref_beam,
+                                                          gate_range1=gate_range1, beam_range1=beam_range1,
+                                                          gate_range2=gate_range2,
+                                                          beam_range2=beam_range2, freq_range=None, plot_type=plot_type,
+                                                          local_testing=local_testing)
 
             out_fig = out_dir + "/two_station_comparison-" + station1 + "_" + station2 + \
                       "-from_" + str(start_epoch) + "_to_" + str(end_epoch)
