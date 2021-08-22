@@ -168,7 +168,7 @@ def PickleFITACF(station, date):
                        'intt': intt,
                        'gate': slist,
                        'transFreq': tfreq,
-                        'firstRang': frang,     'rangeSep': rsep,
+                       'firstRang': frang,     'rangeSep': rsep,
                        'fitACFRev': fitACF_rev,
                        'CtrlPrgrm': combf,
                        'qflg': qflg,
@@ -202,7 +202,7 @@ if __name__ == '__main__':
                 print("\nStarting " + in_dir)
                 PickleFITACF(station, in_dir[3:])
     else:
-        station = "rkn"
-        date = "20111112"
+        station = "hok"
+        date = "20140223"
         print("Pickling " + station + date + "...")
         PickleFITACF(station, date)
