@@ -198,8 +198,8 @@ def two_station_vel_comparison(station1, station2, year, month_range=None, day_r
         df1 = adjust_velocities_los(station=station1, df=df1, ref_beam=station1_ref_beam)
         df2 = adjust_velocities_los(station=station2, df=df2, ref_beam=station2_ref_beam)
 
-    df1 = df1.loc[(np.abs(df1['v']) > 50) & (np.abs(df1['v']) < 1000)]  # Remove extreme values
-    df2 = df2.loc[(np.abs(df1['v']) > 50) & (np.abs(df2['v']) < 1000)]  # Low velocities are usually not of interest
+    df1 = df1.loc[(np.abs(df1['v']) > 100) & (np.abs(df1['v']) < 1000)]  # Remove extreme values
+    df2 = df2.loc[(np.abs(df1['v']) > 100) & (np.abs(df2['v']) < 1000)]  # Low velocities are usually not of interest
 
     df1.reset_index(drop=True, inplace=True)
     df2.reset_index(drop=True, inplace=True)
