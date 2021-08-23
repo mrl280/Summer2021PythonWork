@@ -63,7 +63,7 @@ def range_time_profiler(df, gate_range, hour_range, param, time_units='ut'):
 
     fig, ax = plt.subplots(figsize=(8, 4), dpi=300, constrained_layout=True, nrows=1, ncols=1)
     ax.set_xlabel("Hour [" + time_units.upper() + "]")
-    ax.set_xlabel("Range Gate")
+    ax.set_ylabel("Range Gate")
     plot = ax.pcolormesh(hour_edges, gate_edges, result.transpose(), cmap='jet', vmin=0, vmax=40,
                          zorder=0)
 
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     year = "2014"
     month = "02"
     day = "23"
-    t_diff = 37  # in nanoseconds
+    t_diff = 0  # in nanoseconds
     gate_range = (0, 74)
     hour_range = (6, 12)
     beam = 7
