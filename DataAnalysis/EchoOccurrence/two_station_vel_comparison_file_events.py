@@ -266,7 +266,9 @@ def format_data_axis(ax, vel_range, station1, station2):
     ax.grid(b=True, which='minor', axis='both', linestyle='--', linewidth=0.2)
     ax.plot(ax.get_ylim(), [0, 0], linestyle='-', linewidth=0.5, color='black')
     ax.plot([0, 0], ax.get_xlim(), linestyle='-', linewidth=0.5, color='black')
-    ax.plot([ax.get_ylim()[0], ax.get_ylim()[1]], [ax.get_xlim()[0], ax.get_xlim()[1]],
+    ax.plot([ax.get_xlim()[0], ax.get_xlim()[1]], [ax.get_ylim()[0], ax.get_ylim()[1]],
+            linestyle='--', linewidth=2, color=bisector_colour)
+    ax.plot([ax.get_xlim()[0], ax.get_xlim()[1]], [ax.get_ylim()[1], ax.get_ylim()[0]],
             linestyle='--', linewidth=2, color=bisector_colour)
 
 
