@@ -4,7 +4,7 @@ import calendar
 import time
 import bz2
 
-from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
+from lib.elevation_v2 import elevation_v2
 
 
 def get_df_multi_event(file_name=None, flag=None, include_adj_elv=False):

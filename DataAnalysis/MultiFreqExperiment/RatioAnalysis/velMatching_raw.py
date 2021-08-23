@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from lib.basic_SD_df_filter import basic_SD_df_filter
-from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
+from lib.elevation_v2 import elevation_v2
 
 if __name__ == '__main__':
     """

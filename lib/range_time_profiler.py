@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 
 from scipy import stats
 
-from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
+from lib.elevation_v2 import elevation_v2
 from DataAnalysis.EchoOccurrence.lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 
 

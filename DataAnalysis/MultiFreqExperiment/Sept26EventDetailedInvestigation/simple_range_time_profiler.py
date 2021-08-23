@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from scipy import stats
 
-from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
+from lib.elevation_v2 import elevation_v2
 from DataAnalysis.EchoOccurrence.lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_epoch
 from lib.basic_SD_df_filter import basic_SD_df_filter

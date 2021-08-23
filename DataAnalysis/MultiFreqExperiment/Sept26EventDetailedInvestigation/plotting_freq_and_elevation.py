@@ -1,7 +1,6 @@
 import calendar
 import os
 import pathlib
-import statistics
 import warnings
 import pydarn
 import bz2
@@ -12,7 +11,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from scipy import stats
 
-from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
+from lib.elevation_v2 import elevation_v2
 from DataAnalysis.EchoOccurrence.lib.add_decimal_hour_to_df import add_decimal_hour_to_df
 from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_epoch
 from lib.basic_SD_df_filter import basic_SD_df_filter

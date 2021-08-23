@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from DataAnalysis.DataReading.SD.elevation_v2 import elevation_v2
+from lib.elevation_v2 import elevation_v2
 from DataAnalysis.EchoOccurrence.lib.build_datetime_epoch import build_datetime_epoch
 from lib.basic_SD_df_filter import basic_SD_df_filter
 
