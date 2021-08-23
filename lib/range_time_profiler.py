@@ -83,7 +83,7 @@ if __name__ == "__main__":
     year = "2014"
     month = "02"
     day = "23"
-    t_diff = 0  # in nanoseconds
+    t_diff = 37  # in nanoseconds
     gate_range = (0, 74)
     hour_range = (6, 12)
     beam = 7
@@ -108,3 +108,10 @@ if __name__ == "__main__":
 
     fig = range_time_profiler(df=df, gate_range=gate_range, hour_range=hour_range, param='adjElv', time_units='ut')
     plt.show()
+
+    # Save the figure to file
+    loc_root = str(pathlib.Path().parent.absolute())
+    out_dir = loc_root + "/out"
+    out_fig = out_dir + "/rt_profile_" + station + year + month + day + "_tdiff_" + str(t_diff) + "ns"
+    print("Saving plot as " + out_fig)
+    fig.savefig(out_fig + ".jpg", format='jpg', dpi=300)
