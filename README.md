@@ -8,11 +8,9 @@ During the summer, I supported various research initiatives involving the Super 
 - Calibrating SuperDARN elevation angle data.
 - Leveraging the cartopy library to produce various map-based plots.
 
-Please contact me by email at mrl280@usask.ca if you have any questions about the code herein.
-
-## Other Data Utalized
-
 Besides data produced by SuperDARN and RISR radars, my research efforts utilized data from the following sources:
 - The CHAMP Sattelite Mission: https://directory.eoportal.org/web/eoportal/satellite-missions/c-missions/champ (CHAMP PLPT data)
 - Operating Missions as a Node on the Internet (OMNI): https://omniweb.gsfc.nasa.gov/ (interplanetary magnetic field data)
 - LASP Interactive Solar Irradiance Data Center (LISIRD): https://lasp.colorado.edu/lisird/ (sunspot and solar flux data)
+
+Please contact me by email at mrl280@usask.ca if you have any questions about the code herein.
