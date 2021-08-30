@@ -199,7 +199,7 @@ def two_station_vel_comparison(station1, station2, year, month_range=None, day_r
         df2 = adjust_velocities_los(station=station2, df=df2, ref_beam=station2_ref_beam)
 
     df1 = df1.loc[(np.abs(df1['v']) > 100) & (np.abs(df1['v']) < 1000)]  # Remove extreme values
-    df2 = df2.loc[(np.abs(df1['v']) > 100) & (np.abs(df2['v']) < 1000)]  # Low velocities are usually not of interest
+    df2 = df2.loc[(np.abs(df2['v']) > 100) & (np.abs(df2['v']) < 1000)]  # Low velocities are usually not of interest
 
     df1.reset_index(drop=True, inplace=True)
     df2.reset_index(drop=True, inplace=True)
@@ -310,23 +310,23 @@ if __name__ == '__main__':
 
     else:
 
-        station1 = "dcn"
-        gate_range1 = (20, 74)
-        beam_range1 = (14, 15)
-        station1_ref_beam = 15
-        station2 = "mcm"
-        gate_range2 = (20, 74)
-        beam_range2 = (8, 8)
-        station2_ref_beam = 8
-
-        # station1 = "inv"
+        # station1 = "dcn"
         # gate_range1 = (20, 74)
-        # beam_range1 = (12, 14)
-        # station1_ref_beam = 13
-        # station2 = "kod"
+        # beam_range1 = (14, 15)
+        # station1_ref_beam = 15
+        # station2 = "mcm"
         # gate_range2 = (20, 74)
-        # beam_range2 = (7, 8)
-        # station2_ref_beam = 7
+        # beam_range2 = (8, 8)
+        # station2_ref_beam = 8
+
+        station1 = "inv"
+        gate_range1 = (20, 74)
+        beam_range1 = (12, 14)
+        station1_ref_beam = 13
+        station2 = "kod"
+        gate_range2 = (20, 74)
+        beam_range2 = (7, 8)
+        station2_ref_beam = 7
 
         # station1 = "pgr"
         # gate_range1 = (20, 74)
@@ -346,12 +346,12 @@ if __name__ == '__main__':
         # beam_range2 = (4, 5)
         # station2_ref_beam = 4
 
-        year = 2019
+        year = 2013
         freq_range = (8, 11)  # Koustov suggests < 11
         plot_type = 'contour'
         month_range = None
-        day_range = None
-        even_odd_days = 'odd'
+        day_range = (1, 15)
+        even_odd_days = 'even'
 
         loc_root = str((pathlib.Path().parent.absolute()))
         out_dir = loc_root + "/out"
